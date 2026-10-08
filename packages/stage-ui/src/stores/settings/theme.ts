@@ -2,7 +2,7 @@ import { useLocalStorageManualReset } from '@proj-airi/stage-shared/composables'
 import { converter } from 'culori'
 import { defineStore } from 'pinia'
 
-export const DEFAULT_THEME_COLORS_HUE = 220.44
+export const DEFAULT_THEME_COLORS_HUE = 270
 
 const convert = converter('oklch')
 const getHueFrom = (color?: string) => color ? convert(color)?.h : DEFAULT_THEME_COLORS_HUE

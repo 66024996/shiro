@@ -271,6 +271,21 @@ describe('createChatOrchestratorRuntime', () => {
     expect(providerUserMessage).not.toHaveProperty('tools')
   })
 
+  it('does not replay stored error messages to the provider', async () => {
+    const harness = createHarness()
+    harness.sessionMessages['session-1'] = [
+      { role: 'error', content: 'Remote sent 400: shiro-gemma:latest does not support tools' } as never,
+    ]
+
+    await harness.runtime.ingest('hello', { model: 'gpt-test', chatProvider: provider })
+
+    const providerMessages = conversationToChatMessages(harness.stream.mock.calls[0]![2])
+    const serialized = JSON.stringify(providerMessages)
+    expect(serialized).not.toContain('User encountered error')
+    expect(serialized).not.toContain('does not support tools')
+    expect(providerMessages.some(message => message.role === 'user')).toBe(true)
+  })
+
   // ROOT CAUSE:
   //
   // The composer encoded a reply as localized Markdown inside the user text.

@@ -83,6 +83,37 @@ export const useAiriCardStore = defineStore('airi-card', () => {
     }
   }
 
+  /**
+   * Shiro. The first apply after a launch has no `appliedModules`, so the persisted
+   * inherited-defaults snapshot is normally trusted as is. That snapshot is taken at first
+   * launch, before anything is configured, while onboarding and the model picker write the
+   * chat provider/model straight into the runtime store and never touch the card. Applying
+   * the default card after a restart then wrote the stale empty snapshot over the person's
+   * selection, so chat failed with "No active chat provider or model configured".
+   *
+   * Narrow on purpose, and called only once from `initialize()` (a fresh launch): adopt the
+   * persisted runtime selection only when no global chat provider was ever recorded and the
+   * active card inherits (owns no chat provider). A snapshot that already names a provider,
+   * or a card that owns one, is left untouched, so one card's overrides are not promoted to
+   * defaults, and later card/provider operations behave exactly as upstream.
+   */
+  function adoptRuntimeChatSelectionIfNothingWasConfigured() {
+    const defaults = moduleDefaults.value
+    if (!defaults)
+      return
+    const runtime = readRuntimeModules()
+    if (defaults.consciousness.provider || !runtime.consciousness.provider)
+      return
+
+    const cardOwnsChatProvider = !!resolveAiriExtension(activeCard.value)?.modules.consciousness.provider
+    if (cardOwnsChatProvider)
+      return
+
+    const next = structuredClone(toRaw(defaults))
+    next.consciousness = { provider: runtime.consciousness.provider, model: runtime.consciousness.model }
+    moduleDefaults.value = next
+  }
+
   function rememberInheritedSettings() {
     const runtime = readRuntimeModules()
     const defaults = moduleDefaults.value
@@ -494,7 +525,7 @@ export const useAiriCardStore = defineStore('airi-card', () => {
     initialized = true
     if (!cards.value.has('default')) {
       const defaultCard: AiriCard = {
-        name: 'ReLU',
+        name: t('base.character.defaultName'),
         version: '1.0.0',
         description: t('base.prompt.prefix'),
         extensions: {
@@ -518,6 +549,7 @@ export const useAiriCardStore = defineStore('airi-card', () => {
     if (!cards.value.has(activeCardId.value))
       activeCardId.value = 'default'
 
+    adoptRuntimeChatSelectionIfNothingWasConfigured()
     await applyActiveCardSettings()
   }
 

@@ -26,6 +26,8 @@ export const useLLM = defineStore('llm', () => {
   async function stream(model: string, chatProvider: GenerationProvider, context: Conversation, options?: LlmStreamOptions) {
     const key = modelKey(model, chatProvider.generation(model))
     let toolExecutionStarted = false
+    // Becomes true once the person could already have seen output from this attempt.
+    let outputStarted = false
     const { tools: customTools, describeToolImage, ...streamOptions } = options ?? {}
     const builtinToolsResolver = () => resolveLlmTools({ customTools, describeImage: describeToolImage })
 
@@ -38,6 +40,8 @@ export const useLLM = defineStore('llm', () => {
         onStreamEvent: async (event) => {
           if (event.type === 'tool-call')
             toolExecutionStarted = true
+          if (event.type === 'tool-call' || event.type === 'text-delta')
+            outputStarted = true
           await streamOptions.onStreamEvent?.(event)
         },
         toolsCompatibility: toolsCompatibility.value,
@@ -49,10 +53,24 @@ export const useLLM = defineStore('llm', () => {
     try {
       await runStream()
     }
-    catch (err) {
+    catch (initialError) {
+      let err = initialError
       if (isToolRelatedError(err)) {
+        const alreadyDisabled = toolsCompatibility.value.get(key) === false
         console.warn(`[llm] Auto-disabling tools for "${key}" due to tool-related error`)
         toolsCompatibility.value.set(key, false)
+        // NOTICE: Shiro. Upstream surfaced this 400 and only the NEXT message worked, and
+        // the cache resets on every launch, so each session opened with a failed turn.
+        // Retry once without tools, only if nothing was shown or executed yet.
+        if (!alreadyDisabled && !outputStarted && !toolExecutionStarted) {
+          try {
+            await runStream()
+            return
+          }
+          catch (retryError) {
+            err = retryError
+          }
+        }
       }
       // NOTICE:
       // Auto-degrade content-part arrays to plain strings on the next attempt

@@ -130,6 +130,76 @@ describe('airi-card store', () => {
     expect(visionStore.activeModel).toBe('mock-vision-model')
   })
 
+  // ROOT CAUSE (Shiro, found on a real restart):
+  //
+  // Onboarding and the model picker write the chat provider/model straight into the
+  // consciousness store; they never touch the card. The persisted inherited-defaults
+  // snapshot (`airi-card-module-defaults`) was taken at first launch, when nothing was
+  // selected yet. After a restart `appliedModules` is empty, so the snapshot is not
+  // refreshed, and applying the default card wrote the stale empty provider/model back
+  // over the person's selection ("No active chat provider or model configured").
+  it('keeps a provider chosen outside the card after an app restart', async () => {
+    const consciousnessStore = useConsciousnessStore()
+    const cardStore = useAiriCardStore()
+
+    // Persisted from the first launch: nothing was selected yet.
+    cardStore.moduleDefaults = {
+      consciousness: { provider: '', model: '' },
+      vision: { provider: 'mock-vision-provider', model: 'mock-vision-model' },
+      speech: { provider: 'mock-speech-provider', model: 'mock-speech-model', voice_id: 'mock-speech-voice' },
+      displayModelId: undefined,
+    } as never
+    // Persisted by onboarding, which edits the runtime store only.
+    consciousnessStore.$patch({ activeProvider: 'ollama', activeModel: 'shiro-gemma:latest' })
+
+    await cardStore.initialize()
+
+    expect(consciousnessStore.activeProvider).toBe('ollama')
+    expect(consciousnessStore.activeModel).toBe('shiro-gemma:latest')
+  })
+
+  it('does not replace a provider already recorded in the inherited defaults', async () => {
+    const consciousnessStore = useConsciousnessStore()
+    const cardStore = useAiriCardStore()
+
+    cardStore.moduleDefaults = {
+      consciousness: { provider: 'global-provider', model: 'global-model' },
+      vision: { provider: 'mock-vision-provider', model: 'mock-vision-model' },
+      speech: { provider: 'mock-speech-provider', model: 'mock-speech-model', voice_id: 'mock-speech-voice' },
+      displayModelId: undefined,
+    } as never
+    consciousnessStore.$patch({ activeProvider: 'some-other-provider', activeModel: 'some-other-model' })
+
+    await cardStore.initialize()
+
+    expect(cardStore.moduleDefaults?.consciousness).toEqual({ provider: 'global-provider', model: 'global-model' })
+  })
+
+  it('does not promote another card override into empty defaults', async () => {
+    const consciousnessStore = useConsciousnessStore()
+    const cardStore = useAiriCardStore()
+
+    cardStore.moduleDefaults = {
+      consciousness: { provider: '', model: '' },
+      vision: { provider: 'mock-vision-provider', model: 'mock-vision-model' },
+      speech: { provider: 'mock-speech-provider', model: 'mock-speech-model', voice_id: 'mock-speech-voice' },
+      displayModelId: undefined,
+    } as never
+    cardStore.addCard({
+      name: 'Owns its chat provider',
+      version: '1.0.0',
+      description: '',
+      extensions: { airi: { modules: { consciousness: { provider: 'card-provider', model: 'card-model' }, speech: { provider: '', model: '', voice_id: '' }, vision: { provider: '', model: '' } }, agents: {} } },
+    } as AiriCard)
+    consciousnessStore.$patch({ activeProvider: 'runtime-provider', activeModel: 'runtime-model' })
+    const ownerId = [...cardStore.cards.keys()].find(id => id !== 'default')!
+    cardStore.activeCardId = ownerId
+
+    await cardStore.initialize()
+
+    expect(cardStore.moduleDefaults?.consciousness).toEqual({ provider: '', model: '' })
+  })
+
   // ROOT CAUSE:
   //
   // The default card took a snapshot before sign-in. Its speech provider was
@@ -577,7 +647,8 @@ describe('airi-card store', () => {
 
     expect(cardStore.cards.has(cardId)).toBe(false)
     expect(cardStore.activeCardId).toBe('default')
-    expect(cardStore.activeCard?.name).toBe('ReLU')
+    // Shiro: the default name is translated; the test i18n mock returns the key.
+    expect(cardStore.activeCard?.name).toBe('base.character.defaultName')
   })
 
   it('keeps the built-in fallback card when deletion is requested directly', async () => {
@@ -611,6 +682,7 @@ describe('airi-card store', () => {
     await cardStore.initialize()
 
     expect(cardStore.activeCardId).toBe('default')
-    expect(cardStore.activeCard?.name).toBe('ReLU')
+    // Shiro: the default name is translated; the test i18n mock returns the key.
+    expect(cardStore.activeCard?.name).toBe('base.character.defaultName')
   })
 })

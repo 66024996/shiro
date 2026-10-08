@@ -5,6 +5,8 @@ import { useLocalStorageManualReset } from '@proj-airi/stage-shared/composables'
 import { defineStore } from 'pinia'
 import { onMounted } from 'vue'
 
+import { DEFAULT_LANGUAGE } from '../../constants/language'
+
 export const useSettingsGeneral = defineStore('settings-general', () => {
   const language = useLocalStorageManualReset<string>('settings/language', '')
   const streamerMode = useLocalStorageManualReset<boolean>('settings/streamer-mode', false)
@@ -18,8 +20,8 @@ export const useSettingsGeneral = defineStore('settings-general', () => {
     let language = localStorage.getItem('settings/language')
 
     if (!language) {
-      // Fallback to browser language
-      language = navigator.language || 'en'
+      // Shiro: first-launch default (upstream used navigator.language)
+      language = DEFAULT_LANGUAGE
     }
 
     return resolveSupportedLocale(language, Object.keys(messages!))

@@ -269,18 +269,64 @@ describe('isToolRelatedError', () => {
     })
   }
 
-  it('stops sending tools after the model reports that it does not support them', async () => {
+  // NOTICE: Shiro intentionally differs from upstream here. Upstream rejected the first
+  // turn and only the next message worked; Shiro recovers the failing turn inline.
+  it('retries the failing turn once without tools when the model does not support them', async () => {
     const store = useLLM()
 
     streamTextMock.mockImplementationOnce(() => {
       throw new Error('model-a does not support tools')
     })
-    await expect(store.stream('model-a', provider, helloTurns, { tools: [customTool] })).rejects.toThrow('does not support tools')
+    streamTextMock.mockImplementationOnce(() => createMockStreamResult())
+
+    await expect(store.stream('model-a', provider, helloTurns, { tools: [customTool] })).resolves.toBeUndefined()
+
+    expect(streamTextMock).toHaveBeenCalledTimes(2)
+    expect(streamTextMock.mock.calls[0]?.[0]?.tools?.map(toolNameFrom)).toContain('custom-tool')
+    expect(streamTextMock.mock.calls[1]?.[0]?.tools).toBeUndefined()
+  })
+
+  it('stops sending tools on later turns after the model reports that it does not support them', async () => {
+    const store = useLLM()
+
+    streamTextMock.mockImplementationOnce(() => {
+      throw new Error('model-a does not support tools')
+    })
+    streamTextMock.mockImplementationOnce(() => createMockStreamResult())
+    await store.stream('model-a', provider, helloTurns, { tools: [customTool] })
 
     streamTextMock.mockImplementationOnce(() => createMockStreamResult())
     await store.stream('model-a', provider, helloTurns, { tools: [customTool] })
 
-    expect(streamTextMock.mock.calls[1]?.[0]?.tools).toBeUndefined()
+    expect(streamTextMock).toHaveBeenCalledTimes(3)
+    expect(streamTextMock.mock.calls[2]?.[0]?.tools).toBeUndefined()
+  })
+
+  it('surfaces the error when the retry without tools fails too', async () => {
+    const store = useLLM()
+
+    streamTextMock.mockImplementationOnce(() => {
+      throw new Error('model-a does not support tools')
+    })
+    streamTextMock.mockImplementationOnce(() => {
+      throw new Error('connection refused')
+    })
+
+    await expect(store.stream('model-a', provider, helloTurns, { tools: [customTool] })).rejects.toThrow('connection refused')
+    expect(streamTextMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('does not replay a turn that already started a tool before the tool error', async () => {
+    streamTextMock.mockImplementationOnce((options: { onEvent: (event: unknown) => Promise<void> }) => {
+      const steps = (async () => {
+        await options.onEvent({ type: 'tool-call.done', toolCallId: 'call-1', toolName: 'write', args: {} })
+        throw new Error('model-a does not support tools')
+      })()
+      return { ...createMockStreamResult(), steps }
+    })
+
+    await expect(useLLM().stream('model-a', provider, helloTurns, { tools: [customTool] })).rejects.toThrow('does not support tools')
+    expect(streamTextMock).toHaveBeenCalledOnce()
   })
 
   it('merges runtime-registered tools from the llm-tools store into the builtin tool resolver', async () => {

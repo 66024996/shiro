@@ -9,8 +9,18 @@ import type {
   TerminalState,
 } from '../types'
 
-import { spawn } from 'node:child_process'
-import { env, kill as killProcess, cwd as processCwd } from 'node:process'
+import { execFile, spawn } from 'node:child_process'
+import { realpathSync } from 'node:fs'
+import { env, kill as killProcess, platform, cwd as processCwd } from 'node:process'
+
+import {
+  buildShellArgs,
+  buildTerminalEnv,
+  clampTerminalTimeout,
+  detectShellKind,
+  isCwdAllowed,
+  resolveAllowedCwds,
+} from './guards'
 
 export const TERMINAL_OUTPUT_MAX_CHARS = 16_384
 
@@ -37,6 +47,12 @@ const PROCESS_GROUP_KILL_GRACE_MS = 5_000
  */
 function signalProcessGroup(child: ChildProcess, signal: NodeJS.Signals) {
   const pid = child.pid
+  if (platform === 'win32' && pid != null) {
+    // Windows has no POSIX process groups: kill the whole tree explicitly.
+    execFile('taskkill', ['/pid', String(pid), '/T', '/F'], { windowsHide: true }, () => {})
+    return
+  }
+
   if (pid != null) {
     try {
       killProcess(-pid, signal)
@@ -98,6 +114,27 @@ function summarizeCommand(command: string) {
   return compact.length > 160 ? `${compact.slice(0, 157)}...` : compact
 }
 
+function toRealPath(value: string): string {
+  try {
+    return realpathSync(value)
+  }
+  catch {
+    return value
+  }
+}
+
+/**
+ * Defense in depth: the policy layer already rejects disallowed directories, but the
+ * runner re-checks (with symlinks resolved) so a direct caller cannot bypass it.
+ */
+function assertCwdAllowed(requested: string, config: ComputerUseConfig): string {
+  const roots = resolveAllowedCwds(config)
+  // Symlinks are resolved only for the permission check; callers keep the path they asked for.
+  if (!isCwdAllowed(toRealPath(requested), roots.map(toRealPath)))
+    throw new Error(`terminal working directory is not allowed: ${requested}`)
+  return requested
+}
+
 export function createLocalShellRunner(config: ComputerUseConfig): TerminalRunner {
   const state: TerminalState = {
     effectiveCwd: processCwd(),
@@ -122,18 +159,23 @@ export function createLocalShellRunner(config: ComputerUseConfig): TerminalRunne
       return { ...state }
     },
     execute: async (input: TerminalExecActionInput) => {
-      const effectiveCwd = input.cwd?.trim() || state.effectiveCwd || processCwd()
-      const timeoutMs = Math.max(1, input.timeoutMs ?? config.timeoutMs)
+      const effectiveCwd = assertCwdAllowed(input.cwd?.trim() || state.effectiveCwd || processCwd(), config)
+      const timeoutMs = clampTerminalTimeout(input.timeoutMs, config)
+      const shell = buildShellArgs(detectShellKind(config.terminalShell), input.command)
 
       const startedAt = Date.now()
       const result = await new Promise<TerminalCommandResult>((resolve, reject) => {
-        const child = spawn(config.terminalShell, ['-lc', input.command], {
+        const child = spawn(config.terminalShell, shell.args, {
           cwd: effectiveCwd,
-          env,
+          // Allowlisted environment only: no tokens/secrets leak into commands.
+          env: buildTerminalEnv(env),
           stdio: ['ignore', 'pipe', 'pipe'],
-          // Become a process-group leader so a timeout can reap the whole group
+          // POSIX: become a process-group leader so a timeout can reap the whole group
           // (the shell plus any background grandchildren), not just the shell.
-          detached: true,
+          // Windows: no process groups; the tree is killed with `taskkill /T`.
+          detached: platform !== 'win32',
+          windowsHide: true,
+          windowsVerbatimArguments: shell.windowsVerbatimArguments,
         })
 
         const stdout = createOutputCapture()

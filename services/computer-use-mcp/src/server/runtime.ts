@@ -12,6 +12,7 @@ import { createDesktopSessionController } from '../desktop-session'
 import { createDryRunExecutor } from '../executors/dry-run'
 import { createLinuxX11Executor } from '../executors/linux-x11'
 import { createMacOSLocalExecutor } from '../executors/macos-local'
+import { createWindowsLocalExecutor } from '../executors/windows-local'
 import { ComputerUseSession } from '../session'
 import { RunStateManager } from '../state'
 import { TaskMemoryManager } from '../task-memory/manager'
@@ -48,6 +49,12 @@ function createExecutor(config: ComputerUseConfig, options: ComputerUseServerOpt
     throw new Error(`macos-local executor requires a darwin host, current platform is ${platform}`)
   }
 
+  if (config.executor === 'windows-local' && platform !== 'win32') {
+    throw new Error(`windows-local executor requires a win32 host, current platform is ${platform}`)
+  }
+
+  if (config.executor === 'windows-local')
+    return createWindowsLocalExecutor(config)
   if (config.executor === 'linux-x11')
     return createLinuxX11Executor(config)
   if (config.executor === 'macos-local')

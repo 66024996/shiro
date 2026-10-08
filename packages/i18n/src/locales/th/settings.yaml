@@ -1,0 +1,62 @@
+common:
+  save: บันทึก
+dialogs:
+  onboarding:
+    official:
+      title: ผู้ให้บริการทางการของ AIRI
+    title: ยินดีต้อนรับสู่ชิโระค่ะ
+    description: มาตั้งค่าผู้ให้บริการ AI ตัวแรกเพื่อเริ่มต้นกันนะคะ
+    selectProvider: เลือกผู้ให้บริการ AI
+    configureProvider: 'ตั้งค่า {provider}'
+    apiKey: API Key
+    apiKeyHelp: 'รับ API Key จาก {provider} แล้ววางที่นี่'
+    baseUrl: Base URL
+    baseUrlHelp: URL ของ API (ถ้าไม่แน่ใจให้ใช้ค่าเริ่มต้น)
+    accountId: Account ID
+    validationRunning: กำลังทดสอบ
+    validationSuccess: ตรวจสอบการตั้งค่าสำเร็จ
+    validationPartial: ตรวจสอบการตั้งค่าได้บางส่วน
+    validationFailed: ตรวจสอบการตั้งค่าไม่สำเร็จ
+    validationError: 'ตรวจสอบไม่ได้: {error}'
+    testGeneration: ทดสอบการเชื่อมต่อ API
+    testGenerationRunning: กำลังทดสอบ...
+    testGenerationFailed: ทดสอบการเชื่อมต่อไม่สำเร็จ
+    retryPingCheck: ลองใหม่
+    skipForNow: ไว้ก่อน
+    saveAndContinue: บันทึกและไปต่อ
+    next: ถัดไป
+    retry: ลองใหม่
+    credentialsSafeLabel: เก็บ API Key และข้อมูลรับรองของคุณให้ปลอดภัยนะคะ
+    credentialsSafeLocal: >-
+      ระบบนี้ทำงานในเครื่องของคุณเอง และจะไม่ขโมยข้อมูลรับรองของผู้ให้บริการ AI / LLM
+      แต่ API Key เป็นข้อมูลสำคัญ โปรดเก็บให้ปลอดภัยและอย่าแชร์ให้ใครค่ะ
+    credentialsSafeOpenSource: >-
+      โปรเจกต์นี้เป็นโอเพนซอร์สที่ {github} ถ้าอยากตรวจดูว่าจัดการข้อมูลรับรองอย่างไร
+      เปิดดูโค้ดได้เลยค่ะ
+    enableChatCheck: >-
+      อนุญาตให้ส่งข้อความ "ping" ไปยังโมเดลแชตตัวแรกที่ใช้ได้ เพื่อตรวจสอบว่าพร้อมใช้งาน
+    start: เริ่มกันเลย!
+    loginPrompt: เข้าสู่ระบบเพื่อใช้ผู้ให้บริการทางการสำหรับประสบการณ์ที่ดีที่สุด
+    loginAction: เข้าสู่ระบบ
+    setupWithoutSigningIn: ตั้งค่าด้วยผู้ให้บริการของคุณเอง
+    flux: Flux
+    buyFlux: เติม Flux
+    select-model: เลือกโมเดล
+    no-models: ไม่มีโมเดลที่ใช้ได้
+    no-models-help: >-
+      กรุณากลับไปขั้นตอนก่อนหน้าแล้วตรวจสอบ API Key หรือการเชื่อมต่ออินเทอร์เน็ตค่ะ
+    permissions:
+      title: จัดการสิทธิ์
+      description: ให้สิทธิ์ที่จำเป็นตอนนี้ หรือข้ามไปตั้งค่าภายหลังก็ได้ค่ะ
+      notificationsTitle: การแจ้งเตือน
+      notificationsDescription: อนุญาตให้แจ้งเตือนและอัปเดตสถานะสำคัญ
+      microphoneTitle: ไมโครโฟน
+      microphoneDescription: อนุญาตให้ใช้ไมโครโฟนสำหรับสั่งงานด้วยเสียงและถอดเสียง
+      requestAction: ขอสิทธิ์
+      optionalHint: ไม่ให้สิทธิ์เหล่านี้ก็ใช้งานต่อได้ค่ะ
+      stateGranted: ได้รับสิทธิ์แล้ว
+      stateNotGranted: ยังไม่ได้รับสิทธิ์
+language:
+  title: ภาษา
+  description: |
+    ภาษาของหน้าจอ สามารถตั้งภาษาของตัวละครได้ภายหลัง

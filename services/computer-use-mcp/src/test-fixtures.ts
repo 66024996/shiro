@@ -7,6 +7,18 @@ import type {
   TerminalState,
 } from './types'
 
+import { existsSync } from 'node:fs'
+import { cwd } from 'node:process'
+
+/**
+ * First POSIX shell that exists on this host, so tests do not fail on machines
+ * without zsh. Tests that really need zsh must use `hasZsh` + `describe.skipIf`.
+ */
+export const hasZsh = existsSync('/bin/zsh')
+/** False on Windows hosts: POSIX-shell runner tests are skipped there (see shell-compat tests). */
+export const hasPosixShell = ['/bin/zsh', '/bin/bash', '/bin/sh'].some(candidate => existsSync(candidate))
+export const testPosixShell = ['/bin/zsh', '/bin/bash', '/bin/sh'].find(candidate => existsSync(candidate)) ?? '/bin/sh'
+
 export function createTestConfig(overrides: Partial<ComputerUseConfig> = {}): ComputerUseConfig {
   const baseConfig: ComputerUseConfig = {
     sessionRoot: '/tmp/computer-use-mcp',
@@ -30,7 +42,8 @@ export function createTestConfig(overrides: Partial<ComputerUseConfig> = {}): Co
     requireSessionTagForMutatingActions: true,
     requireAllowedBoundsForMutatingActions: true,
     requireCoordinateAlignmentForMutatingActions: true,
-    terminalShell: '/bin/zsh',
+    terminalShell: testPosixShell,
+    terminalAllowedCwds: ['/tmp', cwd()],
     remoteSshHost: '20.196.212.37',
     remoteSshUser: 'airi',
     remoteSshPort: 22,

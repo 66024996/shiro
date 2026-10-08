@@ -1,0 +1,165 @@
+character-switcher:
+  title: เปลี่ยนตัวละคร
+  manage: จัดการตัวละคร
+  empty: ยังไม่มีตัวละคร
+  failed: เปลี่ยนตัวละครไม่ได้ค่ะ ลองใหม่อีกครั้งนะคะ
+mobile-tools:
+  sign-in: เข้าสู่ระบบ
+  account-description: บัญชีและการตั้งค่า
+  sound: เสียง
+  character-voice: เสียงของตัวละคร
+  title: การตั้งค่า
+  appearance: การแสดงผล
+  dark-mode: โหมดมืด
+  application: แอปพลิเคชัน
+  more: เพิ่มเติม
+  background: พื้นหลัง
+  settings: การตั้งค่าทั้งหมด
+  about: เกี่ยวกับ
+  view: มุมมอง
+  close-view: บันทึกและปิดตัวควบคุมมุมมอง
+  hearing: การฟัง
+chat:
+  provider-configuration:
+    title: ชิโระยังไม่มีโมเดลสำหรับคุยค่ะ
+    description: ไปที่การตั้งค่า เลือกผู้ให้บริการและตรวจสอบการตั้งค่าให้เรียบร้อยก่อนส่งข้อความนะคะ
+    action: เปิดการตั้งค่าผู้ให้บริการ
+  voice-input: สั่งงานด้วยเสียง
+  error-details:
+    show: แสดงรายละเอียด
+    hide: ซ่อนรายละเอียด
+  images:
+    empty: แบ่งปันความคิดหรือรูปภาพให้ชิโระดูได้นะคะ
+    use-vision: ใช้โมเดลมองภาพกับรูปในแชต
+    use-vision-description: เลือกผู้ให้บริการและโมเดลด้านล่าง โมเดลนี้จะอ่านรูปที่แนบก่อนที่โมเดลแชตจะตอบ ถ้าไม่มีโมเดลมองภาพ รูปจะถูกส่งตรงไปยังโมเดลแชต
+    attach: แนบรูปภาพ
+    remove: 'ลบ {name}'
+    unsupported: 'ใช้ได้เฉพาะรูป PNG, JPEG, WebP หรือ GIF ค่ะ'
+    too-large: 'แต่ละรูปต้องมีขนาดไม่เกิน 3 MB ค่ะ'
+    too-many: 'แนบรูปได้ครั้งละไม่เกิน {count} รูปค่ะ'
+    total-too-large: 'รูปที่แนบรวมกันต้องมีขนาดไม่เกิน 3 MB ค่ะ'
+    read-failed: 'ชิโระอ่านรูปนี้ไม่ได้ค่ะ ลองใหม่อีกครั้งนะคะ'
+    no-description: 'โมเดลมองภาพไม่ได้ส่งคำอธิบายรูปกลับมา ตรวจสอบที่ การตั้งค่า → โมดูล → การมองเห็น แล้วลองใหม่นะคะ'
+    reading: 'กำลังอ่านรูปภาพ…'
+    description: 'รูปภาพที่แนบ'
+  actions:
+    reply: ตอบกลับ
+    retry: ลองใหม่
+    send: ส่งข้อความ
+    stop: หยุดการตอบ
+  message:
+    character-name:
+      airi: ชิโระ
+      core-system: ระบบ
+      you: คุณ
+  reply:
+    cancel: ยกเลิกการตอบกลับ
+    message: ข้อความ
+    replying-to: 'กำลังตอบกลับ {name}'
+  reasoning: การคิดวิเคราะห์
+  swipe-demo:
+    show-label: แสดงป้ายกำกับ
+    delete: ลบ
+    archive: เก็บถาวร
+    pin: ปักหมุด
+    actions: แสดงการกระทำ
+    row: 'บทสนทนา {n}'
+  sessions:
+    delete-short: ลบ
+    confirm-delete-short: ยืนยันลบ
+    title: บทสนทนา
+    new: บทสนทนาใหม่
+    current: ปัจจุบัน
+    confirm-delete: ลบบทสนทนานี้พร้อมข้อความทั้งหมดไหมคะ?
+    cancel: ยกเลิก
+    empty: ยังไม่มีบทสนทนา
+    cloud-badge: ซิงก์กับคลาวด์แล้ว
+    new-chat-fallback: แชตใหม่
+    delete: ลบบทสนทนา
+render-error:
+  title: '{renderer} แสดงโมเดลนี้ไม่ได้'
+  description: เลือกโมเดลแล้ว แต่เวทีแสดงผลไม่สามารถแสดงได้
+startup:
+  failed: เริ่มต้นระบบไม่สำเร็จ
+  failed-resource: 'โหลด {resource} ไม่ได้'
+  recover: ลองใหม่อีกครั้ง ถ้ายังไม่ได้ให้เปิดดูรายละเอียดด้านล่าง
+  recover-model: ลองใหม่อีกครั้ง หรือจะดำเนินการต่อโดยไม่มีตัวละครก็ได้ แล้วเลือกโมเดลอื่นภายหลัง
+  details: เกิดอะไรขึ้น?
+  close-details: ปิดรายละเอียด
+  retry: ลองใหม่
+  continue-without-model: ดำเนินการต่อ
+  model-timeout: โมเดลตัวละครโหลดนานเกินไป ตรวจสอบการเชื่อมต่อแล้วลองใหม่นะคะ
+  resources:
+    auth: การตั้งค่าบัญชี
+    modelIndex: รายการโมเดล
+    card: การตั้งค่าตัวละคร
+    chat: ประวัติแชต
+    services: บริการของแอป
+    modelData: โมเดลที่บันทึกไว้
+    modelSelection: การตั้งค่าโมเดล
+    audio: การตั้งค่าเสียง
+    route: หน้า
+    model: โมเดลตัวละคร
+message: พิมพ์อะไรสักหน่อยสิคะ...
+send-mode:
+  title: ปุ่มส่งข้อความ
+  enter: Enter
+  ctrl-enter: Ctrl + Enter
+  double-enter: กด Enter สองครั้ง
+speech-output:
+  mute: ปิดเสียงพูด
+  unmute: เปิดเสียงพูด
+operations:
+  load-models: โหลดโมเดล
+  load-models-status:
+    loading: กำลังโหลด
+    ready: พร้อมแล้ว
+select-a-audio-input: เลือกอุปกรณ์รับเสียง
+select-a-model: เลือกโมเดล
+select-a-voice: เลือกเสียง
+viewers:
+  debug-menu:
+    emotions: อารมณ์
+    emotions-btn:
+      angry: 😠 โกรธ
+      awkward: 😳 เขิน
+      happy: 😄 ดีใจ
+      neutral: 🙂 ปกติ
+      question: 🤔 สงสัย
+      sad: 😫 เศร้า
+      surprised: 🤯 ตกใจ
+      think: 🤨 คิด
+    vrm:
+      camera: กล้อง
+      model:
+        title: โมเดล
+profile-switcher:
+  no-profile: ไม่มีโปรไฟล์
+  no-profiles: ยังไม่มีโปรไฟล์
+  save-as-new: บันทึกเป็นโปรไฟล์ใหม่
+  new-profile-name: ชื่อโปรไฟล์
+  manage: จัดการโปรไฟล์
+waiting: กำลังรอ
+websocket-status:
+  connected: เชื่อมต่อแล้ว
+  disconnected: ไม่มีการเชื่อมต่อ
+  open-settings: เปิดการตั้งค่าการเชื่อมต่อ
+
+computer-use:
+  label: ควบคุมคอมพิวเตอร์
+  description: อนุญาตให้หน้าต่างแชตนี้ตรวจดูและควบคุมแอปบนคอมพิวเตอร์เครื่องนี้
+
+status:
+  preparing: กำลังเตรียมไมโครโฟน
+  listening: กำลังฟังอยู่ค่ะ
+  paused: หยุดฟังชั่วคราวระหว่างที่ชิโระพูด
+  transcribing: กำลังถอดเสียง
+  hearing-error: ถอดเสียงไม่ได้ค่ะ
+  no-transcript: ข้อความจากเสียงที่จับได้จะแสดงตรงนี้
+  signing-in: ทำการเข้าสู่ระบบให้เสร็จในเบราว์เซอร์
+  confirming: กำลังยืนยันการเข้าสู่ระบบ
+  signed-in: เข้าสู่ระบบแล้ว
+  sign-in-error: เข้าสู่ระบบไม่สำเร็จ
+  sign-in-unconfirmed: ยืนยันเซสชันไม่ได้ กรุณาเข้าสู่ระบบอีกครั้ง
+  dismiss: ปิด
+  configure-hearing: เลือกและตั้งค่าผู้ให้บริการการฟังในการตั้งค่าก่อนนะคะ

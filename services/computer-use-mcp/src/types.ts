@@ -1,5 +1,5 @@
 export type ApprovalMode = 'never' | 'actions' | 'all'
-export type ExecutorKind = 'dry-run' | 'macos-local' | 'linux-x11'
+export type ExecutorKind = 'dry-run' | 'macos-local' | 'linux-x11' | 'windows-local'
 export type ExecutionMode = 'dry-run' | 'local-windowed' | 'remote'
 export type ExecutionTransport = 'local' | 'ssh-stdio'
 export type RiskLevel = 'low' | 'medium' | 'high'
@@ -385,6 +385,24 @@ export type PendingExecutableAction
     | { kind: 'desktop_ensure_chrome', input: DesktopEnsureChromeApprovalInput }
     | { kind: 'pty_create', input: PtyCreateApprovalInput }
 
+export type TerminalRiskTier = 'safe' | 'read_only' | 'unknown' | 'dangerous' | 'forbidden'
+export type TerminalAccessLevel = 'observe' | 'assist' | 'execute'
+export type TerminalDecision = 'execute' | 'confirm' | 'block'
+
+/** Result of the terminal command parser + risk classifier; recorded in the audit log. */
+export interface TerminalRiskSummary {
+  tier: TerminalRiskTier
+  decision: TerminalDecision
+  /** Minimum access level a command needs: observe < assist < execute. */
+  level: TerminalAccessLevel
+  reasons: string[]
+  categories: string[]
+  /** Syntax red flags found by the parser (chaining, redirection, expansion, ...). */
+  flags: string[]
+  /** Thai sentence Shiro can say instead of a stiff confirmation dialog. */
+  userMessageTh: string
+}
+
 export interface PolicyDecision {
   allowed: boolean
   requiresApproval: boolean
@@ -392,6 +410,7 @@ export interface PolicyDecision {
   reasons: string[]
   riskLevel: RiskLevel
   estimatedOperationUnits: number
+  terminalRisk?: TerminalRiskSummary
 }
 
 export interface SessionTraceEntry {
@@ -607,6 +626,12 @@ export interface ComputerUseConfig {
   requireAllowedBoundsForMutatingActions: boolean
   requireCoordinateAlignmentForMutatingActions: boolean
   terminalShell: string
+  /** Highest terminal access level the agent may use (default: execute). */
+  terminalAccessLevel?: TerminalAccessLevel
+  /** Directories terminal commands may run in (default: process cwd + home dir). */
+  terminalAllowedCwds?: string[]
+  /** Hard cap for any terminal command timeout (default: 60000). */
+  terminalMaxTimeoutMs?: number
   remoteSshHost?: string
   remoteSshUser?: string
   remoteSshPort: number

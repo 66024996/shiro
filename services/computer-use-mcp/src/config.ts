@@ -1,4 +1,4 @@
-import type { ApprovalMode, Bounds, ComputerUseConfig, DisplaySize, ExecutorKind } from './types'
+import type { ApprovalMode, Bounds, ComputerUseConfig, DisplaySize, ExecutorKind, TerminalAccessLevel } from './types'
 
 import { join } from 'node:path'
 import { cwd, env, platform } from 'node:process'
@@ -29,6 +29,10 @@ function normalizeHomePathToken(value: string) {
 function resolveDefaultOpenableApps(executor: ExecutorKind, hostPlatform: NodeJS.Platform) {
   if (executor === 'linux-x11') {
     return ['Terminal', 'Visual Studio Code', 'Google Chrome']
+  }
+
+  if (executor === 'windows-local') {
+    return ['Windows Terminal', 'Visual Studio Code', 'Google Chrome', 'Notepad', 'Calculator', 'File Explorer']
   }
 
   if (executor === 'macos-local') {
@@ -106,9 +110,16 @@ function parseBounds(value: string | undefined): Bounds | undefined {
 }
 
 function parseExecutor(value: string | undefined): ExecutorKind {
-  if (value === 'linux-x11' || value === 'macos-local')
+  if (value === 'linux-x11' || value === 'macos-local' || value === 'windows-local')
     return value
   return 'dry-run'
+}
+
+function parseTerminalAccessLevel(value: string | undefined): TerminalAccessLevel {
+  const normalized = value?.trim().toLowerCase()
+  if (normalized === 'observe' || normalized === 'assist' || normalized === 'execute')
+    return normalized
+  return 'execute'
 }
 
 function parseApprovalMode(value: string | undefined): ApprovalMode {
@@ -210,11 +221,19 @@ export function resolveComputerUseConfig(): ComputerUseConfig {
         ? `${launchHostProcess} -> ssh -> remote desktop-runner`
         : executor === 'macos-local'
           ? `${launchHostProcess} -> swift/quartz + open`
-          : `${launchHostProcess} -> local dry-run`),
+          : executor === 'windows-local'
+            ? `${launchHostProcess} -> powershell + win32`
+            : `${launchHostProcess} -> local dry-run`),
     requireSessionTagForMutatingActions,
     requireAllowedBoundsForMutatingActions,
     requireCoordinateAlignmentForMutatingActions,
-    terminalShell: env.COMPUTER_USE_TERMINAL_SHELL?.trim() || env.SHELL?.trim() || resolveDefaultTerminalShell(hostPlatform),
+    // NOTICE: On Windows ignore $SHELL (often Git Bash) and default to Windows PowerShell 5.1.
+    terminalShell: env.COMPUTER_USE_TERMINAL_SHELL?.trim()
+      || (hostPlatform === 'win32' ? undefined : env.SHELL?.trim())
+      || resolveDefaultTerminalShell(hostPlatform),
+    terminalAccessLevel: parseTerminalAccessLevel(env.COMPUTER_USE_TERMINAL_LEVEL),
+    terminalAllowedCwds: parseList(env.COMPUTER_USE_TERMINAL_ALLOWED_CWDS, []),
+    terminalMaxTimeoutMs: parseInteger(env.COMPUTER_USE_TERMINAL_MAX_TIMEOUT_MS, 60_000),
     remoteSshHost,
     remoteSshUser,
     remoteSshPort: parseInteger(env.COMPUTER_USE_REMOTE_SSH_PORT, 22),

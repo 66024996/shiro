@@ -2,6 +2,7 @@ import { createTestingPinia } from '@pinia/testing'
 import { setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { DEFAULT_LANGUAGE } from '../../constants/language'
 import { useSettingsGeneral } from './general'
 
 vi.mock('vue-i18n', () => ({
@@ -41,15 +42,16 @@ describe('store settings-general', () => {
   // flushed to disk. On next startup, getLanguage() finds no persisted value
   // and falls back to navigator.language (OS locale), ignoring the user's
   // previous selection.
-  it('issue #1658: falls back to navigator.language when localStorage is empty', () => {
-    // Simulate Electron restart where localStorage for language is lost
+  // NOTICE: Shiro intentionally differs from upstream here. Upstream falls back to
+  // navigator.language; Shiro starts in Thai on a fresh install regardless of OS locale.
+  it('falls back to the Shiro default language (not navigator.language) when localStorage is empty', () => {
     vi.stubGlobal('navigator', { language: 'zh-CN' })
 
     const settingsStore = useSettingsGeneral()
     const resolvedLanguage = settingsStore.getLanguage()
 
-    // navigator.language 'zh-CN' gets remapped to 'zh-Hans'
-    expect(resolvedLanguage).toBe('zh-Hans')
+    expect(resolvedLanguage).toBe(DEFAULT_LANGUAGE)
+    expect(resolvedLanguage).not.toBe('zh-Hans')
     expect(localStorageMock.getItem).toHaveBeenCalledWith('settings/language')
   })
 

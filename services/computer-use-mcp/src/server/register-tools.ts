@@ -201,9 +201,11 @@ export function registerComputerUseTools(params: RegisterComputerUseToolsOptions
           foregroundContext: context,
           windowAutomation: runtime.config.executor === 'macos-local'
             ? 'NSWorkspace + CGWindowList + Quartz'
-            : runtime.config.executor === 'linux-x11'
-              ? 'remote X11 runner'
-              : 'dry-run',
+            : runtime.config.executor === 'windows-local'
+              ? 'PowerShell + Win32'
+              : runtime.config.executor === 'linux-x11'
+                ? 'remote X11 runner'
+                : 'dry-run',
           supportedAppsForOpenFocus: runtime.config.openableApps,
           approvalUx: 'electron-dialog',
           coordScope: 'global-screen',

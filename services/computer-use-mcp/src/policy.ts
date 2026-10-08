@@ -1,6 +1,8 @@
 import type { ActionInvocation, ComputerUseConfig, ForegroundContext, PolicyDecision } from './types'
 
 import { resolveConfiguredOpenableApp } from './app-aliases'
+import { classifyTerminalCommand, terminalLevelRank } from './terminal-safety'
+import { isCwdAllowed, resolveAllowedCwds } from './terminal/guards'
 
 function includesPattern(value: string | undefined, patterns: string[]) {
   const normalizedValue = value?.trim().toLowerCase()
@@ -95,6 +97,9 @@ const deniedShortcuts = new Set([
   'command+tab',
   'alt+tab',
   'option+tab',
+  // Shiro (Windows): closing the foreground app / system security screen.
+  'alt+f4',
+  'alt+control+delete',
 ])
 
 export function evaluateActionPolicy(params: {
@@ -185,9 +190,43 @@ export function evaluateActionPolicy(params: {
     riskLevel = 'high'
   }
 
+  // Shiro terminal pipeline: parse -> classify -> decide. The host (not the LLM) owns
+  // this decision, and the full assessment is attached to the decision so the audit
+  // log records tier, level, flags and reasons for every command.
+  let terminalMandatoryApproval = false
+  let terminalRisk: PolicyDecision['terminalRisk']
   if (params.action.kind === 'terminal_exec') {
-    requiresApproval = true
-    riskLevel = 'high'
+    const input = params.action.input
+    terminalRisk = classifyTerminalCommand(input.command, { openableApps: params.config.openableApps })
+
+    const ceiling = params.config.terminalAccessLevel ?? 'execute'
+    const allowedCwds = resolveAllowedCwds(params.config)
+
+    if (input.cwd?.trim() && !isCwdAllowed(input.cwd.trim(), allowedCwds)) {
+      reasons.push(`working directory is outside the allowed terminal directories: ${input.cwd.trim()}`)
+      allowed = false
+      riskLevel = 'high'
+    }
+    else if (terminalRisk.decision === 'block') {
+      reasons.push(`command blocked by Shiro safety policy: ${terminalRisk.reasons.join('; ')}`)
+      allowed = false
+      riskLevel = 'high'
+    }
+    else if (terminalLevelRank(terminalRisk.level) > terminalLevelRank(ceiling)) {
+      reasons.push(`terminal access level is "${ceiling}" but this command needs "${terminalRisk.level}"`)
+      allowed = false
+      riskLevel = 'medium'
+    }
+    else if (terminalRisk.decision === 'confirm') {
+      reasons.push(`command needs confirmation (${terminalRisk.tier}): ${terminalRisk.reasons.join('; ')}`)
+      requiresApproval = true
+      // UNKNOWN and DANGEROUS always need a human, even when approvalMode is `never`.
+      terminalMandatoryApproval = true
+      riskLevel = terminalRisk.tier === 'dangerous' ? 'high' : 'medium'
+    }
+    else {
+      riskLevel = 'low'
+    }
   }
 
   if (params.action.kind === 'clipboard_read_text' || params.action.kind === 'clipboard_write_text' || params.action.kind === 'secret_read_env_value') {
@@ -215,6 +254,11 @@ export function evaluateActionPolicy(params: {
     requiresApproval = true
   }
 
+  if (terminalMandatoryApproval && allowed) {
+    // Safety floor: `never` mode must not auto-run unknown or dangerous terminal commands.
+    requiresApproval = true
+  }
+
   return {
     allowed,
     requiresApproval,
@@ -222,5 +266,6 @@ export function evaluateActionPolicy(params: {
     reasons,
     riskLevel,
     estimatedOperationUnits,
+    ...(terminalRisk ? { terminalRisk } : {}),
   }
 }

@@ -1,0 +1,103 @@
+operations:
+  load-models: โหลดโมเดล
+  load-models-status:
+    loading: กำลังโหลด
+    ready: พร้อมแล้ว
+'controls-island':
+  'fade-on-hover':
+    enable: ซ่อนอัตโนมัติ
+    disable: แสดงตลอด
+  'open-settings': เปิดการตั้งค่า
+  'open-chat': เปิดแชต
+  'hide-chat': ซ่อนแชต
+  'refresh': รีเฟรช
+  'center-main-window': ย้ายไปกลางหน้าจอ
+  'open-hearing-controls': เปิดตัวควบคุมการฟัง
+  'drag-to-move-window': ลากเพื่อย้ายหน้าต่าง
+  'mute': ปิดเสียง
+  'unmute': เปิดเสียง
+  'switch-to-light-mode': เปลี่ยนเป็นโหมดสว่าง
+  'switch-to-dark-mode': เปลี่ยนเป็นโหมดมืด
+  'pin-on-top': ปักไว้ด้านบน
+  'unpin-from-top': เลิกปักไว้ด้านบน
+  'switch-profile': เปลี่ยนโปรไฟล์
+  'close': ปิด
+  'expand': ขยาย
+  'collapse': ย่อ
+  'login': เข้าสู่ระบบ
+  'logging-in': กำลังเข้าสู่ระบบ...
+  'account': บัญชี
+  'logout': ออกจากระบบ
+
+'chat-window':
+  style:
+    title: รูปแบบหน้าต่างแชต
+    legacy: หน้าต่างแบบคลาสสิก
+    floating-attached: ลอยอยู่ข้างตัวละคร
+    floating-free: ลอยอยู่ตรงไหนของหน้าจอก็ได้
+    floating-danmaku: ลอยเป็นฟีดข้อความ
+    pinned: ปักไว้ด้านบน
+  resize: ลากเพื่อปรับขนาดแชต
+  move: ลากเพื่อย้ายแชต
+  fold: ซ่อนแชต
+  composer:
+    show: แสดงกล่องข้อความ
+    hide: ซ่อนกล่องข้อความ
+
+widgets:
+  close: ปิดวิดเจ็ต
+  empty:
+    title: ไม่มีวิดเจ็ตที่ทำงานอยู่
+    description: วิดเจ็ตจะแสดงที่นี่เมื่อมีเครื่องมือหรือปลั๊กอินสร้างขึ้นมา
+  loading: กำลังโหลดวิดเจ็ต…
+  waiting: 'กำลังรอข้อมูลวิดเจ็ต "{id}"…'
+
+inlay:
+  close: ปิด
+
+about:
+  subtitle: เวอร์ชันเดสก์ท็อป
+  current-version: เวอร์ชันปัจจุบัน
+  common:
+    cancel: ยกเลิก
+  links:
+    title: ลิงก์
+    home: หน้าแรก
+    documentation: เอกสาร
+    github: GitHub
+  update:
+    lane:
+      label: ช่องทางอัปเดต
+      description: เลือกช่องทางการออกเวอร์ชันที่จะติดตาม
+      placeholder: เลือกช่องทางอัปเดต
+    channels:
+      auto: อัตโนมัติ
+      stable: เสถียร
+      alpha: Alpha
+      beta: Beta
+      nightly: Nightly
+      canary: Canary
+    status:
+      downloading: กำลังดาวน์โหลดอัปเดต...
+      error-prefix: ข้อผิดพลาด
+      latest: 'เป็นเวอร์ชันล่าสุดแล้ว (v{version})'
+      downloaded:
+        windows: 'อัปเดตพร้อมติดตั้งแบบเงียบ (v{version})'
+        restart: 'อัปเดตจะติดตั้งเมื่อรีสตาร์ต (v{version})'
+    actions:
+      download: ดาวน์โหลดอัปเดต
+      download-short: ดาวน์โหลด
+      confirm-download: ยืนยันการดาวน์โหลด
+      check-for-updates: ตรวจสอบอัปเดต
+      checking: กำลังตรวจสอบ...
+      latest-version: เวอร์ชันล่าสุด
+      disabled-dev: ปิดการอัปเดตในโหมดนักพัฒนา
+      managed-by-store: อัปเดตผ่านร้านค้าแอปของคุณ
+      retry-check: ตรวจสอบอีกครั้ง
+      restart-silent: รีสตาร์ตเพื่ออัปเดตแบบเงียบ
+      restart-install: รีสตาร์ตเพื่อติดตั้งอัปเดต
+      confirm-restart: ยืนยันการรีสตาร์ต
+    dialog:
+      title: มีอัปเดตใหม่
+      description: 'มีเวอร์ชันใหม่ (v{version}) แล้ว'
+      no-release-notes-markdown: _ไม่มีบันทึกการออกเวอร์ชัน_

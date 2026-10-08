@@ -1,5 +1,5 @@
 :root {
-  --chromatic-hue: 220.44;
+  --chromatic-hue: 270;
   --chromatic-chroma: calc(0.18 + (cos(var(--chromatic-hue) * 3.14159265 / 180) * 0.04));
   --chromatic-chroma-50: calc(var(--chromatic-chroma) * 0.3);
   --chromatic-chroma-100: calc(var(--chromatic-chroma) * 0.5);

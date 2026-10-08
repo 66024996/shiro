@@ -14,7 +14,7 @@ import { storeToRefs } from 'pinia'
 import { DropShadowFilter } from 'pixi-filters'
 import { onMounted, onUnmounted, shallowRef, useTemplateRef, watch } from 'vue'
 
-import { DEFAULT_TACHIE_EMOTION, isTachieEmotion } from '../../../constants/emotions'
+import { DEFAULT_TACHIE_EMOTION, isTachieEmotion, TACHIE_EMOTION_FALLBACKS } from '../../../constants/emotions'
 import { useTachie } from '../../../stores/tachie'
 import {
   loadTachieZip,
@@ -245,7 +245,8 @@ function setEmotion(emotion: string, _intensity = 1): TachieEmotion | undefined 
     return undefined
 
   const requested = isTachieEmotion(emotion) ? emotion : DEFAULT_TACHIE_EMOTION
-  const resolved = model.textures.has(requested) ? requested : DEFAULT_TACHIE_EMOTION
+  const resolved = [requested, ...(TACHIE_EMOTION_FALLBACKS[requested] ?? [])]
+    .find(candidate => model.textures.has(candidate)) ?? DEFAULT_TACHIE_EMOTION
   const texture = model.textures.get(resolved)
   if (!texture)
     return undefined

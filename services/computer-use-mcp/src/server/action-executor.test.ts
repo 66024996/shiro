@@ -1004,4 +1004,62 @@ describe('createExecuteAction', () => {
       backingPixel: { x: 122, y: 580 },
     })
   })
+
+  describe('terminal command pipeline (parse -> classify -> decide -> audit)', () => {
+    const run = async (command: string, overrides: Partial<ComputerUseConfig> = {}) => {
+      const ctx = createRuntimeForActionTest({ approvalMode: 'actions', ...overrides })
+      ctx.session.createPendingAction.mockImplementation((entry: object) => ({ id: 'pending-1', createdAt: new Date().toISOString(), ...entry }))
+      const executeAction = createExecuteAction(ctx.runtime)
+      const result = await executeAction({ kind: 'terminal_exec', input: { command } }, 'terminal_exec')
+      return { ...ctx, result }
+    }
+
+    it('blocks FORBIDDEN commands, never reaches the runner, and audits the risk assessment', async () => {
+      const { runtime, session, result } = await run('Format-Volume -DriveLetter D')
+
+      expect(result.isError).toBe(true)
+      expect(runtime.terminalRunner.execute).not.toHaveBeenCalled()
+      expect(session.createPendingAction).not.toHaveBeenCalled()
+      expect(session.record).toHaveBeenCalledWith(expect.objectContaining({
+        event: 'denied',
+        policy: expect.objectContaining({
+          allowed: false,
+          terminalRisk: expect.objectContaining({ tier: 'forbidden', decision: 'block' }),
+        }),
+      }))
+    })
+
+    it('queues DANGEROUS commands for approval instead of running them, even in never mode', async () => {
+      for (const approvalMode of ['actions', 'never'] as const) {
+        const { runtime, session } = await run('Remove-Item C:\\Users\\me\\old.txt', { approvalMode })
+
+        expect(runtime.terminalRunner.execute).not.toHaveBeenCalled()
+        expect(session.createPendingAction).toHaveBeenCalledTimes(1)
+        expect(session.record).toHaveBeenCalledWith(expect.objectContaining({
+          event: 'approval_required',
+          policy: expect.objectContaining({
+            requiresApproval: true,
+            terminalRisk: expect.objectContaining({ tier: 'dangerous', decision: 'confirm' }),
+          }),
+        }))
+      }
+    })
+
+    it('queues UNKNOWN commands for approval', async () => {
+      const { runtime, session } = await run('some-unknown-tool --flag', { approvalMode: 'never' })
+      expect(runtime.terminalRunner.execute).not.toHaveBeenCalled()
+      expect(session.createPendingAction).toHaveBeenCalledTimes(1)
+    })
+
+    it('runs READ_ONLY commands immediately and audits them', async () => {
+      const { runtime, session } = await run('Get-Process | Select-Object -First 3')
+      expect(runtime.terminalRunner.execute).toHaveBeenCalledTimes(1)
+      expect(session.createPendingAction).not.toHaveBeenCalled()
+      expect(session.record).toHaveBeenCalledWith(expect.objectContaining({
+        policy: expect.objectContaining({
+          terminalRisk: expect.objectContaining({ tier: 'read_only', decision: 'execute' }),
+        }),
+      }))
+    })
+  })
 })

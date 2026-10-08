@@ -43,6 +43,10 @@
       "types": "./dist/locales/fr/index.d.mts",
       "default": "./dist/locales/fr/index.mjs"
     },
+    "./locales/th": {
+      "types": "./dist/locales/th/index.d.mts",
+      "default": "./dist/locales/th/index.mjs"
+    },
     "./locales/vi": {
       "types": "./dist/locales/vi/index.d.mts",
       "default": "./dist/locales/vi/index.mjs"

@@ -2,7 +2,7 @@ import { execPath } from 'node:process'
 
 import { describe, expect, it } from 'vitest'
 
-import { createTestConfig } from '../test-fixtures'
+import { createTestConfig, hasPosixShell, hasZsh } from '../test-fixtures'
 import { createLocalShellRunner, TERMINAL_OUTPUT_MAX_CHARS } from './runner'
 
 /**
@@ -23,8 +23,11 @@ async function expectProcessReaped(pid: number, timeoutMs = 3_000): Promise<void
   throw new Error(`process ${pid} still alive after ${timeoutMs}ms — its process group was not reaped`)
 }
 
-describe('createLocalShellRunner', () => {
-  it('executes commands and keeps cwd sticky across calls', async () => {
+// These tests use POSIX shells, /tmp and process groups. On hosts without a POSIX
+// shell (Windows) they are skipped; terminal/shell-compat.test.ts covers PowerShell/CMD.
+describe.skipIf(!hasPosixShell)('createLocalShellRunner (POSIX shell)', () => {
+  // Needs zsh specifically; skipped (with a visible reason) on hosts without it.
+  it.skipIf(!hasZsh)('executes commands under zsh and keeps cwd sticky across calls', async () => {
     const runner = createLocalShellRunner(createTestConfig({
       terminalShell: '/bin/zsh',
     }))

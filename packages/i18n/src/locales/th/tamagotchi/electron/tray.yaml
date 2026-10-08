@@ -1,0 +1,27 @@
+menu:
+  labels:
+    label:
+      show: แสดง
+      adjust_sizes: ปรับขนาด
+      recommended_size: แนะนำ (450x600)
+      full_height: เต็มความสูง
+      half_height: ครึ่งความสูง
+      full_screen: เต็มหน้าจอ
+      align_to: จัดตำแหน่งที่
+      center: กึ่งกลาง
+      top_left: บนซ้าย
+      top_right: บนขวา
+      bottom_left: ล่างซ้าย
+      bottom_right: ล่างขวา
+      settings: การตั้งค่า...
+      about: เกี่ยวกับ...
+      open_inlay: เปิด Inlay...
+      open_widgets: เปิดวิดเจ็ต...
+      open_caption: เปิดคำบรรยาย...
+      close_caption: ปิดคำบรรยาย...
+      caption_overlay: คำบรรยายซ้อนหน้าจอ
+      follow_window: ตามหน้าต่าง
+      reset_position: รีเซ็ตตำแหน่ง
+      devtools: เครื่องมือนักพัฒนา
+      troubleshoot_beatsync: แก้ปัญหา BeatSync...
+      quit: ออก

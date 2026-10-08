@@ -1,1 +1,1 @@
-export const chromaticHueDefault = 220.44
+export const chromaticHueDefault = 270

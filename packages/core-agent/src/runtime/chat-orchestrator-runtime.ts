@@ -501,6 +501,11 @@ export function createChatOrchestratorRuntime(deps: ChatOrchestratorRuntimeDeps)
     const nowTs = now()
     const messagesById = new Map(history.flatMap(message => message.id ? [[message.id, message] as const] : []))
     const turns = history.flatMap((message, historyIndex): Turn[] => {
+      // NOTICE: Shiro. Stored `error` items are for the person (UI) and the debug log.
+      // Upstream replays them to the model as "User encountered error: ...", which made
+      // Shiro talk about 400s and model names. Technical errors must not reach her.
+      if (message.role === 'error')
+        return []
       if (message.role === 'assistant' && message.generationTranscript)
         return [structuredClone(unwrapMessage(message.generationTranscript))]
       const source = message.role === 'user'
