@@ -32,7 +32,7 @@ import { resolveLlmTools } from './ai/chat-llm/tool-resolver'
 import { useLlmToolsStore } from './ai/chat-llm/tools'
 import { useLlmToolsetPromptsStore } from './ai/chat-llm/toolset-prompts'
 import { useAuthStore } from './auth'
-import { createMinecraftContext, createRuntimePromptContext, createUserAccountContext } from './chat/context-providers'
+import { createMinecraftContext, createUserAccountContext } from './chat/context-providers'
 import { useChatContextStore } from './chat/context-store'
 import { describeChatImages, replaceToolResultImages } from './chat/image-projection'
 import { useChatSessionStore } from './chat/session-store'
@@ -458,9 +458,10 @@ export const useChatStore = defineStore('chat', () => {
     },
     getActiveSessionId: () => activeSessionId.value,
     getActiveProvider: () => activeProvider.value,
-    getSystemPromptSupplement: () => llmToolsetPromptsStore.activeToolsetPrompt,
+    // Shiro: keep the emotion/ACT instructions in the system message instead of
+    // the user turn's [Context] block, so small models do not echo them.
+    getSystemPromptSupplement: () => [llmToolsetPromptsStore.activeToolsetPrompt, runtimePrompt.value].filter(Boolean).join('\n\n'),
     runtimeContextProviders: [
-      () => createRuntimePromptContext(runtimePrompt.value),
       createMinecraftContext,
     ],
     createId: nanoid,

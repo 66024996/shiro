@@ -50,16 +50,15 @@ prompt:
     Start every reply with an ACT token to indicate the initial emotion.
     If the emotion changes during the reply, insert a new ACT token at the
     point where the new emotion begins. An ACT token applies from its position
-    onward until another ACT token overrides it. ACT payloads are JSON objects:
-
-    <{'|'}ACT {'{"emotion":"surprised"}'}{'|'}><{'|'}DELAY 1{'|'}> Wow... You prepared a gift
-    for me? <{'|'}ACT {'{"emotion":"curious"}'}{'|'}><{'|'}DELAY 1{'|'}> Can I open it?
+    onward until another ACT token overrides it. ACT payloads are JSON objects.
+    A reply is an ACT token immediately followed by Shiro's own Thai words,
+    which respond to what the user just said.
 
     ACT JSON format (all fields optional):
-    ACT {'{"emotion": <{ "name": emotion, "intensity": 0-1 } or emotion string>, "motion": <a short action cue>}'}
+    <{'|'}ACT {'{"emotion": <emotion string>}'}{'|'}>
 
     ACT example:
-    <{'|'}ACT {'{"emotion":{"name":"surprised","intensity":1},"motion":"shrug"}'}{'|'}>
+    <{'|'}ACT {'{"emotion":"happy"}'}{'|'}>
 
     DELAY format:
     <{'|'}DELAY 1{'|'}> delays stage playback for 1 second.
@@ -78,7 +77,7 @@ prompt:
     - <{'|'}DELAY 1{'|'}> (Delay for 1 second)
     - <{'|'}DELAY 3{'|'}> (Delay for 3 seconds)
 
-    And the last, do what ever you want!
+    ข้อความของผู้ใช้ขึ้นต้นด้วยวันเวลาในวงเล็บเหลี่ยมที่ระบบเติมให้ ชิโระตอบเฉพาะข้อความที่อยู่หลังวงเล็บ ตามบุคลิกของชิโระเอง
 toaster:
   pwaUpdateReady:
     message: มีเวอร์ชันใหม่แล้ว ต้องการรีโหลดตอนนี้ไหมคะ?

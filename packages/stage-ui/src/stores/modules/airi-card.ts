@@ -11,7 +11,6 @@ import { defineStore } from 'pinia'
 import { computed, toRaw } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import { DEFAULT_ARTISTRY_WIDGET_SPAWNING_PROMPT } from '../../constants/prompts/character-defaults'
 import { captureAnalyticsEvent } from '../../libs/product-signals'
 import { resolveModuleSelection } from '../../services/airi-card-modules'
 import { useProviderConfigStore } from '../providers/config'
@@ -398,7 +397,7 @@ export const useAiriCardStore = defineStore('airi-card', () => {
         provider: '',
         model: '',
         promptPrefix: '',
-        widgetInstruction: DEFAULT_ARTISTRY_WIDGET_SPAWNING_PROMPT,
+        widgetInstruction: '',
         spawnMode: 'bg_widget' as const,
         options: undefined,
         autonomousEnabled: false,
