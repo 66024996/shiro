@@ -1,0 +1,5 @@
+.venv/
+.venv_omnivoice/
+hf_cache/
+__pycache__/
+*.py[cod]
