@@ -261,6 +261,45 @@ describe('isToolRelatedError', () => {
     expect(streamTextMock.mock.calls[0]?.[0]?.tools?.map(toolNameFrom)).toEqual(['custom-tool'])
   })
 
+  it('sends only the recent user turns when the app limits history', async () => {
+    const store = useLLM()
+    store.maxHistoryUserTurns = 1
+    streamTextMock.mockImplementationOnce(() => createMockStreamResult())
+
+    await store.stream('model-a', provider, {
+      turns: [
+        { id: 'old', type: 'user', content: [{ type: 'text', text: 'old question' }] },
+        { id: 'new', type: 'user', content: [{ type: 'text', text: 'new question' }] },
+      ],
+    })
+
+    const sent = JSON.stringify(streamTextMock.mock.calls[0]?.[0]?.messages)
+    expect(sent).toContain('new question')
+    expect(sent).not.toContain('old question')
+  })
+
+  it('removes emoji from streamed reply text when the app asks for it', async () => {
+    const store = useLLM()
+    store.removeEmojiFromReplies = true
+    streamTextMock.mockImplementationOnce((options: { onEvent: (event: unknown) => Promise<void> }) => {
+      const steps = (async () => {
+        await options.onEvent({ type: 'text.delta', delta: 'ได้ค่ะ 😊' })
+        await options.onEvent({ type: 'text.delta', delta: '🚀' })
+        return []
+      })()
+      return { ...createMockStreamResult(), steps }
+    })
+    const onStreamEvent = vi.fn()
+
+    await store.stream('model-a', provider, helloTurns, { onStreamEvent })
+
+    const texts = onStreamEvent.mock.calls
+      .map(([event]) => event as { type: string, text?: string })
+      .filter(event => event.type === 'text-delta')
+      .map(event => event.text)
+    expect(texts).toEqual(['ได้ค่ะ '])
+  })
+
   for (const message of [
     'Invalid schema for function \'broken\': \'dict\' is not valid under any of the given schemas',
     'invalid_function_parameters',

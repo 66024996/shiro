@@ -8,6 +8,8 @@ import { listModels } from '@xsai/model'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
+import { removeEmoji } from './emoji'
+import { keepRecentUserTurns } from './history-window'
 import { resolveLlmTools } from './tool-resolver'
 
 export type { StreamEvent, StreamOptions } from '@proj-airi/core-agent'
@@ -30,6 +32,13 @@ export const useLLM = defineStore('llm', () => {
    * An app with a small local model disables unused sources, because each tool adds prompt tokens.
    */
   const disabledFixedToolSources = ref<FixedToolSource[]>([])
+  /**
+   * Number of recent user turns that a request sends, with their replies. System turns always stay.
+   * Leave it undefined to send the full history. See {@link keepRecentUserTurns}.
+   */
+  const maxHistoryUserTurns = ref<number>()
+  /** Removes emoji from streamed reply text, so the chat and the speech voice never get them. */
+  const removeEmojiFromReplies = ref(false)
 
   function resolveRequestTools(customTools: StreamOptions['tools'], describeImage?: DescribeToolImage) {
     const disabled = new Set(disabledFixedToolSources.value)
@@ -49,11 +58,14 @@ export const useLLM = defineStore('llm', () => {
     let outputStarted = false
     const { tools: customTools, describeToolImage, ...streamOptions } = options ?? {}
     const builtinToolsResolver = () => resolveRequestTools(customTools, describeToolImage)
+    const conversation = maxHistoryUserTurns.value === undefined
+      ? context
+      : keepRecentUserTurns(context, maxHistoryUserTurns.value)
 
     const runStream = () => coreStreamFrom({
       model,
       chatProvider,
-      conversation: context,
+      conversation,
       options: {
         ...streamOptions,
         onStreamEvent: async (event) => {
@@ -61,6 +73,12 @@ export const useLLM = defineStore('llm', () => {
             toolExecutionStarted = true
           if (event.type === 'tool-call' || event.type === 'text-delta')
             outputStarted = true
+          if (event.type === 'text-delta' && removeEmojiFromReplies.value) {
+            const text = removeEmoji(event.text)
+            if (text)
+              await streamOptions.onStreamEvent?.({ ...event, text })
+            return
+          }
           await streamOptions.onStreamEvent?.(event)
         },
         toolsCompatibility: toolsCompatibility.value,
@@ -129,6 +147,8 @@ export const useLLM = defineStore('llm', () => {
 
   return {
     disabledFixedToolSources,
+    maxHistoryUserTurns,
+    removeEmojiFromReplies,
     models,
     stream,
   }
