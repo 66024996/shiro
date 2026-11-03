@@ -49,3 +49,15 @@ pages:
       use-model: ใช้โมเดลนี้
       status-error: อ่านสถานะ Ollama ไม่สำเร็จ
       activate-error: เปิดใช้โมเดล Ollama ไม่สำเร็จ
+    memory:
+      title: ความจำ
+      description: ชิโระจะจำเฉพาะสิ่งที่คุณขอให้จำ และเก็บไว้ในเครื่องนี้เท่านั้น
+      how-to: 'พูดว่า "ชิโระ จำไว้ว่า…" เพื่อให้จำ หรือ "ชิโระ ลืมเรื่องนี้" เพื่อลบ'
+      empty: ชิโระยังไม่ได้จำอะไรเลยค่ะ
+      kind:
+        long-term: จำถาวร
+        temporary: 'จำถึง {time}'
+      refresh: รีเฟรช
+      forget: ลืม
+      load-error: โหลดความจำไม่สำเร็จ
+      forget-error: ลบความจำไม่สำเร็จ

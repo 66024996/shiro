@@ -72,6 +72,18 @@ pages:
       use-model: Use this model
       status-error: Failed to get Ollama status.
       activate-error: Failed to activate the Ollama model.
+    memory:
+      title: Memory
+      description: Shiro remembers only what you ask her to remember. Memories stay on this device.
+      how-to: Say "Shiro, remember that…" to add a memory, or "Shiro, forget this" to remove one.
+      empty: Shiro does not remember anything yet.
+      kind:
+        long-term: Long-term
+        temporary: Until {time}
+      refresh: Refresh
+      forget: Forget
+      load-error: Failed to load memories.
+      forget-error: Failed to forget the memory.
   modules:
     mcp-server:
       description: Connect and manage MCP server and tools

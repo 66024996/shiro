@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import LocalAiMemorySection from '../../components/settings/local-ai-memory-section.vue'
 import LocalAiOllamaSection from '../../components/settings/local-ai-ollama-section.vue'
 import LocalAiSpeechSection from '../../components/settings/local-ai-speech-section.vue'
 </script>
@@ -7,6 +8,7 @@ import LocalAiSpeechSection from '../../components/settings/local-ai-speech-sect
   <div :class="['flex flex-col gap-4 pb-12']">
     <LocalAiSpeechSection />
     <LocalAiOllamaSection />
+    <LocalAiMemorySection />
   </div>
 </template>
 

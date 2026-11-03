@@ -10,6 +10,7 @@ import { useInferencePreload } from '@proj-airi/stage-ui/composables'
 import { usePiniaSynced } from '@proj-airi/stage-ui/libs/pinia'
 import { useCharacterOrchestratorStore } from '@proj-airi/stage-ui/stores/character'
 import { useChatStore } from '@proj-airi/stage-ui/stores/chat'
+import { useChatContextStore } from '@proj-airi/stage-ui/stores/chat/context-store'
 import { usePluginHostInspectorStore } from '@proj-airi/stage-ui/stores/devtools/plugin-host-debug'
 import { useDisplayModelsStore } from '@proj-airi/stage-ui/stores/display-models'
 import { useModsServerChannelStore } from '@proj-airi/stage-ui/stores/mods/api/channel-server'
@@ -71,6 +72,7 @@ import {
   useTamagotchiMcpToolsStore,
   useTamagotchiPluginToolsStore,
 } from './stores/tools'
+import { syncMemoryContext } from './stores/tools/builtin/memory'
 import { resolveInitialRendererRoutePath, resolveRendererWindowContext } from './window-context'
 
 const { isDark: dark } = useTheme()
@@ -107,9 +109,17 @@ async function refreshPluginRuntimeTools() {
 
 // Every renderer creates the runtime tool stores for synchronized state. Only
 // the main Stage renderer discovers tools and keeps executors.
+const chatContextStore = useChatContextStore()
+// Only the leader composes chat requests, so only the leader loads memories into the prompt.
+let stopMemoryContextHook: (() => void) | undefined
 const stopLeadershipListener = syncedPinia.onLeadershipChange((isLeader) => {
-  if (!isLeader)
+  if (!isLeader) {
+    stopMemoryContextHook?.()
+    stopMemoryContextHook = undefined
     return
+  }
+
+  stopMemoryContextHook ??= chatStore.onBeforeMessageComposed(() => syncMemoryContext(chatContextStore.ingestContextMessage))
 
   void builtinToolsStore.refresh().catch((error) => {
     console.warn('[App] Failed to refresh built-in runtime tools:', error)
@@ -347,6 +357,7 @@ watch(themeColorsHueDynamic, () => {
 onUnmounted(() => {
   stopIOTraceRecordingBridge?.()
   stopLeadershipListener?.()
+  stopMemoryContextHook?.()
   chatStore.dispose()
   fullStageRuntime?.dispose()
 })

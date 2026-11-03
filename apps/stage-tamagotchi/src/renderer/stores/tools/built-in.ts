@@ -6,6 +6,7 @@ import { defineStore } from 'pinia'
 
 import { computerUseTools } from './builtin/computer-use'
 import { imageJournalTools } from './builtin/image-journal'
+import { memoryTools } from './builtin/memory'
 import { weatherTools } from './builtin/weather'
 import { widgetsTools } from './builtin/widgets'
 
@@ -17,6 +18,15 @@ export const computerUseToolReferences = [
 export const widgetToolReferences = [
   { name: 'stage_widgets' },
   { name: 'get_weather' },
+] satisfies ChatToolReference[]
+
+/**
+ * Memory tools are active in every request, because the user can ask Shiro to remember or
+ * forget something at any time. The model decides when to call them.
+ */
+export const memoryToolReferences = [
+  { name: 'memory_remember' },
+  { name: 'memory_forget' },
 ] satisfies ChatToolReference[]
 
 export const artistryToolReferences = [
@@ -40,12 +50,13 @@ export const useTamagotchiBuiltinToolsStore = defineStore('tamagotchi-builtin-to
       widgetsTools(),
       weatherTools(),
       computerUseTools(),
+      memoryTools(),
     ])).flat()
 
     llmToolsStore.removeToolsByIds(...registeredToolIds())
     llmToolsStore.addTools(...tools.map(tool => ({
       ...tool,
-      defaultActive: false,
+      defaultActive: memoryToolReferences.some(reference => reference.name === tool.function.name),
       requiresExplicitSelection: computerUseToolReferences.some(reference => reference.name === tool.function.name),
       id: `${toolIdPrefix}${tool.function.name}`,
     } satisfies ExecutableTool)))
