@@ -25,22 +25,30 @@ function createCard(overrides: Partial<AiriCard> = {}): AiriCard {
 }
 
 describe('createShiroDefaultCard', () => {
-  it('creates Shiro identity and adds the personality prompt', () => {
-    const card = createCard({ systemPrompt: 'Keep answers useful.' })
+  it('replaces the default identity with the Shiro persona', () => {
+    const card = createCard({ systemPrompt: 'Your name is AIRI.', description: 'Good morning! You are finally awake.' })
 
     const shiroCard = createShiroDefaultCard(card)
 
     expect(shiroCard.name).toBe('ชิโระ')
-    expect(shiroCard.description).toContain('ผู้ช่วย AI ส่วนตัว')
-    expect(shiroCard.systemPrompt).toContain('Keep answers useful.')
-    expect(shiroCard.systemPrompt).toContain(SHIRO_PERSONALITY_PROMPT)
+    expect(shiroCard.description).toContain('ดุแต่รัก')
+    expect(shiroCard.systemPrompt).toBe(SHIRO_PERSONALITY_PROMPT)
+    expect(`${shiroCard.description}
+${shiroCard.systemPrompt}`).not.toContain('AIRI')
   })
 
-  it('does not duplicate the personality prompt', () => {
+  it('replaces an older Shiro prompt instead of appending to it', () => {
+    const card = createCard({ name: 'ชิโระ', systemPrompt: 'คุณคือชิโระ ผู้ช่วย AI ส่วนตัวรุ่นเก่า' })
+
+    const shiroCard = createShiroDefaultCard(card)
+
+    expect(shiroCard.systemPrompt).toBe(SHIRO_PERSONALITY_PROMPT)
+  })
+
+  it('returns the same card when it is already up to date', () => {
     const card = createShiroDefaultCard(createCard())
 
     expect(createShiroDefaultCard(card)).toBe(card)
-    expect(card.systemPrompt?.match(/คุณคือชิโระ/g)).toHaveLength(1)
   })
 
   it('preserves the card provider configuration', () => {
@@ -50,5 +58,11 @@ describe('createShiroDefaultCard', () => {
     const shiroCard = createShiroDefaultCard(card)
 
     expect(shiroCard.extensions.airi.modules.consciousness.provider).toBe('local-provider')
+  })
+
+  it('keeps the persona boundaries against control and threats', () => {
+    expect(SHIRO_PERSONALITY_PROMPT).toContain('ดุเพราะรัก ไม่ใช่ดุเพราะต้องการควบคุม')
+    expect(SHIRO_PERSONALITY_PROMPT).toContain('ห้ามข่มขู่')
+    expect(SHIRO_PERSONALITY_PROMPT).toContain('ยันเดเระ')
   })
 })

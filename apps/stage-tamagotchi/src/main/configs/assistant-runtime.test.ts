@@ -22,7 +22,7 @@ describe('assistant runtime profile', () => {
     const runtime = resolveAssistantRuntimeProfile()
 
     expect(runtime.name).toBe('Shiro')
-    expect(runtime.personality).toBe('ยันเดเระขี้เล่น')
+    expect(runtime.personality).toBe('ดุแต่รัก ยันเดเระ')
   })
 
   it('keeps the runtime in normal mode when gaming is disabled', () => {

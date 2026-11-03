@@ -69,7 +69,7 @@ export function resolveAssistantRuntimeProfile(
     name: profile.name ?? 'Shiro',
     displayName: profile.displayName ?? profile.name ?? 'ชิโระ',
     wakeWord: profile.wakeWord ?? 'ชิโระ',
-    personality: profile.personality ?? 'ยันเดเระขี้เล่น',
+    personality: profile.personality ?? 'ดุแต่รัก ยันเดเระ',
     defaultMode,
     gamingMode: profile.gamingMode ?? true,
     visionDisabledByDefault: profile.visionDisabledByDefault ?? true,
