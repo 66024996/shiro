@@ -61,7 +61,7 @@ export const useDisplayModelsStore = defineStore('display-models', () => {
   let generateLive2DPreview: (file: File) => Promise<string | undefined>
   let generateVrmPreview: (file: File) => Promise<string | undefined>
   let generateSpinePreview: (file: File) => Promise<string | undefined>
-  let generateTachiePreview: (file: File) => Promise<string | undefined>
+  let generateTachiePreview: ((file: File) => Promise<string | undefined>) | undefined
   let generateMMDPreview: (file: File) => Promise<string | undefined>
 
   const displayModelsFromIndexedDBLoading = ref(false)
@@ -111,7 +111,11 @@ export const useDisplayModelsStore = defineStore('display-models', () => {
   const loadLive2DModelPreview = (file: File) => generateLive2DPreview(file)
   const loadVrmModelPreview = (file: File) => generateVrmPreview(file)
   const loadSpineModelPreview = (file: File) => generateSpinePreview(file)
-  const loadTachieModelPreview = (file: File) => generateTachiePreview(file)
+  const loadTachieModelPreview = async (file: File) => {
+    // Tachie previews need no WebGL runtime, so a window that skipped initialize() can still import a PNG set.
+    generateTachiePreview ??= (await import('@proj-airi/stage-ui-tachie/utils/tachie-preview')).loadTachieModelPreview
+    return generateTachiePreview(file)
+  }
   const loadMMDModelPreview = (file: File) => generateMMDPreview(file)
 
   async function addDisplayModel(format: DisplayModelFormat, file: File) {

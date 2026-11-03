@@ -44,6 +44,7 @@ import { bindSpeakingStateToPlaybackManager } from '../../libs/speech/playback-s
 import { createStageTtsSession } from '../../libs/speech/tts-session'
 import { getSpeechBusContext, speechOutputGetPlaybackState, speechOutputSpeakingEvent } from '../../services/speech/bus'
 import { useLlmStreamingControlStore } from '../../stores/ai/chat-llm/streaming-control'
+import { useAssistantModeStore } from '../../stores/assistant-mode'
 import { useAudioContext, useSpeakingStore } from '../../stores/audio'
 import { useBackgroundStore } from '../../stores/background'
 import { useChatStore } from '../../stores/chat'
@@ -263,6 +264,7 @@ const { enabled: microphoneEnabled, permissionGranted: microphonePermissionGrant
 // there is no read cursor to count against.
 const chatPresence = computed<PresenceBubbleState>(() => chatSending.value ? presenceBubbleThinking : presenceBubbleIdle)
 const presenceBubble = computed<PresenceBubbleState>(() => presenceOverride.value ?? chatPresence.value)
+const { gamingMode } = storeToRefs(useAssistantModeStore())
 const shiroAvatarState = computed<ShiroAvatarState>(() => {
   if (nowSpeaking.value)
     return 'speaking'
@@ -273,7 +275,7 @@ const shiroAvatarState = computed<ShiroAvatarState>(() => {
   if (microphoneEnabled.value && microphonePermissionGranted.value)
     return 'listening'
 
-  return 'idle'
+  return gamingMode.value ? 'gaming' : 'idle'
 })
 watch(shiroAvatarState, (state) => {
   if (stageModelRenderer.value !== 'tachie')
