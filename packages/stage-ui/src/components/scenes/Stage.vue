@@ -315,6 +315,7 @@ watch(tachieSceneRef, (scene) => {
   scene?.setEmotion(resolveShiroAvatarEmotion(shiroAvatarState.value), 1)
 })
 watch(shiroAvatarState, (state, previousState) => {
+  avatarStateStore.currentState = state
   if (stageModelRenderer.value === 'tachie') {
     tachieSceneRef.value?.setEmotion(resolveShiroAvatarEmotion(state), 1)
     return

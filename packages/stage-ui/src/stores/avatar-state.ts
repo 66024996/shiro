@@ -82,6 +82,8 @@ export const useAvatarStateStore = defineStore('avatar-state', () => {
   const pendingApprovals = ref(0)
   const errorActive = ref(false)
   const replyEmotion = ref<AvatarReplyEmotion>()
+  /** The state that the stage shows now. The stage sets it, and Developer Mode reads it. */
+  const currentState = ref<ShiroAvatarState>('idle')
   let errorTimer: ReturnType<typeof setTimeout> | undefined
 
   /** Shows the error state for a short time. */
@@ -105,6 +107,7 @@ export const useAvatarStateStore = defineStore('avatar-state', () => {
     pendingApprovals,
     errorActive,
     replyEmotion,
+    currentState,
     flashError,
     setApprovalPending,
   }

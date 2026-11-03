@@ -32,6 +32,7 @@ import { resolveLlmTools } from './ai/chat-llm/tool-resolver'
 import { useLlmToolsStore } from './ai/chat-llm/tools'
 import { useLlmToolsetPromptsStore } from './ai/chat-llm/toolset-prompts'
 import { useAuthStore } from './auth'
+import { useChatMetricsStore } from './chat-metrics'
 import { createMinecraftContext, createUserAccountContext } from './chat/context-providers'
 import { useChatContextStore } from './chat/context-store'
 import { describeChatImages, replaceToolResultImages } from './chat/image-projection'
@@ -205,6 +206,7 @@ export const useChatStore = defineStore('chat', () => {
   const pendingQueuedSendCount = shallowRef(0)
   let ownedActiveTurnSpan: typeof activeTurnSpan.value
   let stopLeadershipListener: (() => void) | undefined
+  const chatMetrics = useChatMetricsStore()
   const analyticsHooks = createChatAnalyticsHooks({
     getSessionMessages: sessionId => chatSession.getSessionMessages(sessionId),
   })
@@ -469,6 +471,18 @@ export const useChatStore = defineStore('chat', () => {
     onStateChange: syncRuntimeState,
     onSendSettled: settleOwnedActiveTurnSpan,
     ...analyticsHooks,
+    // The chat metrics store keeps the numbers of the last rounds for a developer view.
+    onLlmRequestStarted: event => chatMetrics.requestStarted(event),
+    onLlmFirstToken: event => chatMetrics.firstToken(event),
+    onLlmGeneration: event => chatMetrics.generation(event),
+    onMessageRound: (event) => {
+      analyticsHooks.onMessageRound?.(event)
+      chatMetrics.roundFinished(event, 'completed')
+    },
+    onMessageRoundFailed: (event) => {
+      analyticsHooks.onMessageRoundFailed?.(event)
+      chatMetrics.roundFinished(event, 'failed')
+    },
     onLifecycle: record => contextObservability.recordLifecycle(record),
     onPromptProjection: payload => contextObservability.capturePromptProjection(payload),
     onUserMessageAppended: ({ sessionId, message, messageText, source, model, provider, roundId, turnIndex }) => {
