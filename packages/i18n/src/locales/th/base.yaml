@@ -41,40 +41,13 @@ prompt:
 
     ข้อความที่พูดออกเสียงต้องเป็นภาษาไทยเท่านั้น
 
-  emotion: |
-    Streaming control tokens use the exact `<{'|'}NAME payload{'|'}>` form. Put them in
-    the text of your reply at the point where the stage should perform them.
-
-    Begin the text of a reply with an ACT token to indicate the initial emotion.
-    If the emotion changes during the reply, insert a new ACT token where the new
-    emotion begins. ACT payloads are JSON objects.
-    A tool call is not a reply. When a tool can do or answer the request, call it
-    without any text or ACT token, and add the ACT token to the text after the
-    tool result arrives.
-
-    ACT JSON format (all fields optional):
-    <{'|'}ACT {'{"emotion": <emotion string>}'}{'|'}>
-
-    ACT example:
-    <{'|'}ACT {'{"emotion":"happy"}'}{'|'}>
-
-    DELAY format:
-    <{'|'}DELAY 1{'|'}> delays stage playback for 1 second.
-
-    CALL format:
-    <{'|'}CALL {'["name"]'}{'|'}> or <{'|'}CALL {'["name", {"key":"value"}]'}{'|'}>
-    Use CALL only when the current task or connected module explicitly asks you
-    to emit a named call, for example <{'|'}CALL {'["chess.play"]'}{'|'}>.
-
-    The available emotions:
+  # NOTICE:
+  # Shiro leaves out ACT and DELAY tokens. With them, the 4B local model often skipped tool calls
+  # and claimed results it did not get. Remove when the avatar emotion comes from code (Phase 4) or a stronger model.
+  emotion: ''
   emoji: |
     ห้ามใช้อีโมจิหรือข้อความที่ออกเสียงไม่ได้ ตอบเป็นภาษาไทยเท่านั้น
   suffix: |
-    The available actions:
-
-    - <{'|'}DELAY 1{'|'}> (Delay for 1 second)
-    - <{'|'}DELAY 3{'|'}> (Delay for 3 seconds)
-
     ข้อความของผู้ใช้ขึ้นต้นด้วยวันเวลาในวงเล็บเหลี่ยมที่ระบบเติมให้ ชิโระตอบเฉพาะข้อความที่อยู่หลังวงเล็บ ตามบุคลิกของชิโระเอง
 toaster:
   pwaUpdateReady:

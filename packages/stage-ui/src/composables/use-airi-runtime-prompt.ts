@@ -9,7 +9,12 @@ const RUNTIME_PROMPT_KEYS = [
   'base.prompt.suffix',
 ]
 
-/** Returns the localized emotion and emoji prompt for each model request. */
+/**
+ * Returns the localized emotion and emoji prompt for each model request.
+ *
+ * A locale with an empty `base.prompt.emotion` leaves out the emotion tokens and the emotion list.
+ * Shiro uses this, because a small local model calls tools less often when it must start each reply with an ACT token.
+ */
 export function useAiriRuntimePrompt() {
   const { locale, t, te } = useI18n()
 
@@ -17,11 +22,18 @@ export function useAiriRuntimePrompt() {
     if (!RUNTIME_PROMPT_KEYS.every(key => te(key, locale.value)))
       return ''
 
+    const emotionPrompt = t('base.prompt.emotion').trim()
+    const emotionParts = emotionPrompt
+      ? [
+          emotionPrompt,
+          EMOTION_VALUES
+            .map(emotion => `- ${emotion} (Emotion for feeling ${EMOTION_EmotionMotionName_value[emotion]})`)
+            .join('\n'),
+        ]
+      : []
+
     return [
-      t('base.prompt.emotion'),
-      EMOTION_VALUES
-        .map(emotion => `- ${emotion} (Emotion for feeling ${EMOTION_EmotionMotionName_value[emotion]})`)
-        .join('\n'),
+      ...emotionParts,
       t('base.prompt.suffix'),
       t('base.prompt.emoji'),
     ].join('\n\n')
