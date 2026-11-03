@@ -250,6 +250,30 @@ function getDetector() {
 
 let context: ReturnType<typeof createContext> | undefined
 
+/**
+ * Starts the renderer that runs Beat Sync, for a desktop app that creates it on demand.
+ *
+ * Without a host, the helpers expect a running detector renderer, as before.
+ */
+export interface BeatSyncHost {
+  /** Creates the detector renderer if it does not run, and waits until it answers. */
+  ensure: () => Promise<void>
+  /** Returns whether the detector renderer runs. */
+  started: () => Promise<boolean>
+}
+
+let host: BeatSyncHost | undefined
+
+/** Registers the host of the Beat Sync renderer. Call it once in each renderer of the desktop app. */
+export function setBeatSyncHost(nextHost: BeatSyncHost | undefined) {
+  host = nextHost
+}
+
+/** True when a host exists and its detector renderer does not run, so a call has nothing to reach. */
+async function hostNotStarted() {
+  return host !== undefined && !(await host.started())
+}
+
 function installCapacitorHandlers(context: ReturnType<typeof createContext>) {
   defineInvokeHandler(context, beatSyncToggleInvokeEventa, async (enabled) => {
     if (enabled)
@@ -290,12 +314,21 @@ export function toggleBeatSync(enabled: boolean) {
     }
   }
 
-  if (isStageTamagotchi() || isStageCapacitor()) {
-    const toggleFn = defineInvoke(getContext(), beatSyncToggleInvokeEventa)
-    return toggleFn(enabled)
-  }
+  if (isStageTamagotchi() || isStageCapacitor())
+    return toggleThroughContext(enabled)
 
   throw new Error('Unknown environment for beatSyncToggle()')
+}
+
+async function toggleThroughContext(enabled: boolean) {
+  if (host) {
+    if (enabled)
+      await host.ensure()
+    else if (!(await host.started()))
+      return
+  }
+
+  return defineInvoke(getContext(), beatSyncToggleInvokeEventa)(enabled)
 }
 
 export async function getBeatSyncState() {
@@ -304,6 +337,8 @@ export async function getBeatSyncState() {
   }
 
   if (isStageTamagotchi() || isStageCapacitor()) {
+    if (await hostNotStarted())
+      return { isActive: false }
     return defineInvoke(getContext(), beatSyncGetStateInvokeEventa)()
   }
 
@@ -315,11 +350,17 @@ export function updateBeatSyncParameters(params: Partial<AnalyserWorkletParamete
     return getDetector().updateParameters(params)
   }
 
-  if (isStageTamagotchi() || isStageCapacitor()) {
-    return defineInvoke(getContext(), beatSyncUpdateParametersInvokeEventa)(params)
-  }
+  if (isStageTamagotchi() || isStageCapacitor())
+    return updateParametersThroughContext(params)
 
   throw new Error('Unknown environment for updateBeatSyncParameters()')
+}
+
+async function updateParametersThroughContext(params: Partial<AnalyserWorkletParameters>) {
+  // A detector that does not run gets the parameters when it starts, from the settings page.
+  if (await hostNotStarted())
+    return
+  return defineInvoke(getContext(), beatSyncUpdateParametersInvokeEventa)(params)
 }
 
 export function listenBeatSyncStateChange(listener: (state: BeatSyncDetectorState) => void) {
@@ -352,6 +393,8 @@ export async function getBeatSyncInputByteFrequencyData() {
   }
 
   if (isStageTamagotchi() || isStageCapacitor()) {
+    if (await hostNotStarted())
+      return new Uint8Array(inputAnalyserFFTSize / 2)
     return defineInvoke(getContext(), beatSyncGetInputByteFrequencyDataInvokeEventa)()
   }
 
