@@ -175,14 +175,14 @@ on a Ryzen 5 5600H with an RTX 3050 Laptop GPU (4 GB). Idle, normal mode, Live2D
 - Live2D is capped at 30 fps by default. Without a cap, it draws at the screen refresh rate.
 - The stage no longer starts an unused DuckDB-wasm database.
 - Render scale 1 instead of 2 saves less than 1% GPU, so the default stays 2.
+- The hidden Beat Sync window starts when Beat Sync is turned on, not at app start. An idle session runs 3 renderer processes instead of 4.
 
 The speech server is the largest part of the app:
 
-- It takes about 2 GB of VRAM. The model weights take 1.9 GB in fp16. So the LLM keeps about a third of its layers on the CPU.
-- Its private memory is about 4.4 GB, but its working set is about 1.2 GB. Torch and CUDA take about 1.9 GB, and loading the model adds about 2.6 GB of commit that is mostly not in RAM.
+- It takes about 2 GB of VRAM: 1.2 GB of fp16 model weights and 0.8 GB for the fp32 audio tokenizer. So the LLM keeps about a third of its layers on the CPU.
+- Its private memory is about 4.4 GB, but its working set is about 1.2 GB. Torch and CUDA take about 1.9 GB of commit.
+- Loading the model adds about 2.6 GB of commit, the same size as its GPU memory. Windows (WDDM) commits system memory to back each GPU allocation, so it can move the allocation out of VRAM. A test that allocated 800 MB on the GPU, without a CPU copy, added 770 MB of commit. The app can lower it only by using less VRAM.
 - It is ready about 27 seconds after the app starts. The model load takes about 14 seconds.
-
-Not done yet: create the hidden BeatSync window only when beat sync is turned on (about 115 MB), and find out why the speech server keeps 2.6 GB of commit after the model loads.
 
 ## Verification
 

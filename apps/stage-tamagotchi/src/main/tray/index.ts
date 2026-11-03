@@ -108,7 +108,7 @@ export function setupTray(params: {
   settingsWindow: SettingsWindowManager
   captionWindow: ReturnType<typeof setupCaptionWindowManager>
   widgetsWindow: WidgetsWindowManager
-  beatSyncBgWindow: Awaited<ReturnType<typeof setupBeatSync>>
+  beatSyncBgWindow: ReturnType<typeof setupBeatSync>
   aboutWindow: () => Promise<BrowserWindow>
   inlayWindow: () => Promise<BrowserWindow>
   serverChannel: ServerChannel
@@ -243,7 +243,7 @@ export function setupTray(params: {
         ...is.dev || env.MAIN_APP_DEBUG || env.APP_DEBUG
           ? [
               { type: 'header', label: params.i18n.t('tamagotchi.electron.tray.menu.labels.label.devtools') },
-              { label: params.i18n.t('tamagotchi.electron.tray.menu.labels.label.troubleshoot_beatsync'), click: () => params.beatSyncBgWindow.webContents.openDevTools({ mode: 'detach' }) },
+              { label: params.i18n.t('tamagotchi.electron.tray.menu.labels.label.troubleshoot_beatsync'), click: () => void params.beatSyncBgWindow.ensure().then(window => window.webContents.openDevTools({ mode: 'detach' })) },
               { type: 'separator' },
             ] as const
           : [],

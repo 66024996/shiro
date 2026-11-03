@@ -18,6 +18,7 @@ import { handleHotUpdate, routes } from 'vue-router/auto-routes'
 
 import App from './App.vue'
 
+import { initializeBeatSyncHostBridge } from './bridges/beat-sync-host'
 import { i18n } from './modules/i18n'
 import { resolveRendererWindowContext } from './window-context'
 
@@ -46,6 +47,7 @@ configureAnalyticsAdapter(async (options) => {
   return createOpenpanelAdapter(options)
 })
 registerAuthorizationHandler(browserAuthorizationHandler)
+initializeBeatSyncHostBridge()
 
 const pinia = createPinia()
 const synced = setupSynced({

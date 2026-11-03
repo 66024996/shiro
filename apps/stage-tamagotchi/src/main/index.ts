@@ -29,6 +29,7 @@ import {
   electronShiroSpeechStatusGet,
   electronShiroSpeechVoiceImport,
 } from '../shared/eventa'
+import { electronBeatSyncHostEnsure, electronBeatSyncHostStarted } from '../shared/eventa/beat-sync-host'
 import { openDebugger, setupDebugger } from './app/debugger'
 import { nullFileLoggerHandle, setupFileLogger } from './app/file-logger'
 import { resolveIsWayland } from './app/ozone'
@@ -353,7 +354,9 @@ app.whenReady().then(async () => {
   })
 
   // Beat Sync uses a background renderer because Web Audio processing needs a DOM runtime.
-  const beatSync = injeca.provide('windows:beat-sync', () => setupBeatSync())
+  // The Beat Sync renderer starts on the first request, so this only creates its owner.
+  const beatSyncHost = setupBeatSync()
+  const beatSync = injeca.provide('windows:beat-sync', () => beatSyncHost)
 
   const devtoolsMarkdownStressWindow = injeca.provide('windows:devtools:markdown-stress', () => setupDevtoolsWindow())
 
@@ -457,6 +460,10 @@ app.whenReady().then(async () => {
       defineInvokeHandler(context, electronShiroSpeechStatusGet, () => deps.shiroSpeechRuntime.getStatus())
       defineInvokeHandler(context, electronShiroSpeechVoiceImport, payload => deps.shiroSpeechRuntime.importVoice(payload.transcript))
       defineInvokeHandler(context, electronOllamaStatusGet, () => getOllamaStatus())
+      defineInvokeHandler(context, electronBeatSyncHostEnsure, async () => {
+        await beatSyncHost.ensure()
+      })
+      defineInvokeHandler(context, electronBeatSyncHostStarted, () => beatSyncHost.started())
       setupComputerUse(context, userApproval)
       setupMemoryService(context, deps.memoryStore)
       setupDesktopControlService(context, deps.desktopControl)
