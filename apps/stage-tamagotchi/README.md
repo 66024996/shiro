@@ -160,6 +160,30 @@ The main process applies the policy in `src/main/services/airi/desktop-control/p
 Each action writes one line to `<userData>/desktop-control/audit.jsonl`. The log keeps the command or path, never file text or command output.
 It moves to `audit.jsonl.1` at 1 MiB.
 
+## Performance
+
+Measured on 2026-11-04 with a production build (`pnpm -F @proj-airi/stage-tamagotchi build`, then `electron .`),
+on a Ryzen 5 5600H with an RTX 3050 Laptop GPU (4 GB). Idle, normal mode, Live2D, LLM not loaded:
+
+| | Before | After |
+| --- | --- | --- |
+| App CPU (whole machine) | 6.3% | 2.5% |
+| App GPU 3D | 13-14% | 3.5% |
+| Main renderer private memory | 315 MB | 245 MB |
+| Time to the main window | 5.0-5.3 s | 4.6-5.1 s |
+
+- Live2D is capped at 30 fps by default. Without a cap, it draws at the screen refresh rate.
+- The stage no longer starts an unused DuckDB-wasm database.
+- Render scale 1 instead of 2 saves less than 1% GPU, so the default stays 2.
+
+The speech server is the largest part of the app:
+
+- It takes about 2 GB of VRAM. The model weights take 1.9 GB in fp16. So the LLM keeps about a third of its layers on the CPU.
+- Its private memory is about 4.4 GB, but its working set is about 1.2 GB. Torch and CUDA take about 1.9 GB, and loading the model adds about 2.6 GB of commit that is mostly not in RAM.
+- It is ready about 27 seconds after the app starts. The model load takes about 14 seconds.
+
+Not done yet: create the hidden BeatSync window only when beat sync is turned on (about 115 MB), and find out why the speech server keeps 2.6 GB of commit after the model loads.
+
 ## Verification
 
 Run the focused runtime tests:
