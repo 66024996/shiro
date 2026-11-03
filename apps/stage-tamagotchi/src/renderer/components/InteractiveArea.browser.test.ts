@@ -6,6 +6,7 @@ import SharedInteractiveArea from '@proj-airi/stage-layouts/components/Layouts/I
 import MobileInteractiveArea from '@proj-airi/stage-layouts/components/Layouts/MobileInteractiveArea'
 
 import { PiniaColada } from '@pinia/colada'
+import { resetElectronEventaContextForTesting } from '@proj-airi/electron-vueuse'
 import { useThreeViewControl } from '@proj-airi/stage-ui-three'
 import { browserAuthorizationHandler, registerAuthorizationHandler } from '@proj-airi/stage-ui/libs/auth'
 import { useChatStore } from '@proj-airi/stage-ui/stores/chat'
@@ -14,7 +15,7 @@ import { useChatStreamStore } from '@proj-airi/stage-ui/stores/chat/stream-store
 import { useL2dViewControl } from '@proj-airi/stage-ui/stores/live2d'
 import { useSettingsStageModel } from '@proj-airi/stage-ui/stores/settings/stage-model'
 import { createPinia, disposePinia } from 'pinia'
-import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest'
 import { render } from 'vitest-browser-vue'
 import { page, userEvent } from 'vitest/browser'
 import { defineComponent, h, nextTick } from 'vue'
@@ -23,8 +24,25 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 
 import InteractiveArea from './InteractiveArea.vue'
 
+import { artistryToolReferences, computerUseToolReferences } from '../stores/tools'
+
 import '@unocss/reset/tailwind.css'
 import 'virtual:uno.css'
+
+beforeEach(() => {
+  vi.stubGlobal('electron', {
+    ipcRenderer: {
+      on: vi.fn(),
+      removeListener: vi.fn(),
+      send: vi.fn(),
+    },
+  })
+  onTestFinished(() => resetElectronEventaContextForTesting())
+})
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
 
 function createTestI18n() {
   return createI18n({
@@ -180,6 +198,38 @@ async function expectElectronReplyBubble(screen: Awaited<ReturnType<typeof rende
 describe('interactive area synchronized state', () => {
   beforeEach(async () => {
     await page.viewport(1280, 720)
+  })
+
+  it('lets the user opt into approved computer control on Windows', async () => {
+    vi.stubGlobal('platform', 'win32')
+
+    const { chat, screen } = await renderArea()
+    const toggle = screen.getByTestId('computer-use-toggle')
+    const send = vi.spyOn(chat, 'send')
+      .mockResolvedValueOnce({ messages: [], sessionId: 'session-b' })
+      .mockResolvedValueOnce({ messages: [], sessionId: 'session-b' })
+
+    await expect.element(toggle).not.toBeDisabled()
+    expect(toggle.element().getAttribute('aria-pressed')).toBe('false')
+    expect(toggle.element().getAttribute('title')).toBe('stage.computer-use.approval-required-windows')
+
+    await submitDraft(screen, 'Send without computer access.')
+
+    await vi.waitFor(() => {
+      expect(send).toHaveBeenNthCalledWith(1, expect.objectContaining({
+        tools: artistryToolReferences,
+      }))
+    })
+
+    await userEvent.click(toggle)
+    expect(toggle.element().getAttribute('aria-pressed')).toBe('true')
+    await submitDraft(screen, 'List the open windows.')
+
+    await vi.waitFor(() => {
+      expect(send).toHaveBeenNthCalledWith(2, expect.objectContaining({
+        tools: [...artistryToolReferences, ...computerUseToolReferences],
+      }))
+    })
   })
 
   it('centers the mobile textarea when no reply preview is visible', async () => {

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Shiro
+Exec=shiro %U
+Terminal=false
+Type=Application
+Icon=ai.moeru.shiro
+StartupWMClass=Shiro
+Comment=Shiro is a local-first personal AI assistant with voice interaction and an animated avatar.
+Categories=Utility;

@@ -1,3 +1,4 @@
+import type { CardModuleDefaults } from '../../services/airi-card-modules'
 import type { AiriCard } from './airi-card'
 
 import { createPinia, setActivePinia } from 'pinia'
@@ -143,12 +144,13 @@ describe('airi-card store', () => {
     const cardStore = useAiriCardStore()
 
     // Persisted from the first launch: nothing was selected yet.
-    cardStore.moduleDefaults = {
+    const persistedDefaults: CardModuleDefaults = {
       consciousness: { provider: '', model: '' },
       vision: { provider: 'mock-vision-provider', model: 'mock-vision-model' },
       speech: { provider: 'mock-speech-provider', model: 'mock-speech-model', voice_id: 'mock-speech-voice' },
       displayModelId: undefined,
-    } as never
+    }
+    cardStore.moduleDefaults = persistedDefaults
     // Persisted by onboarding, which edits the runtime store only.
     consciousnessStore.$patch({ activeProvider: 'ollama', activeModel: 'shiro-gemma:latest' })
 
@@ -162,12 +164,13 @@ describe('airi-card store', () => {
     const consciousnessStore = useConsciousnessStore()
     const cardStore = useAiriCardStore()
 
-    cardStore.moduleDefaults = {
+    const persistedDefaults: CardModuleDefaults = {
       consciousness: { provider: 'global-provider', model: 'global-model' },
       vision: { provider: 'mock-vision-provider', model: 'mock-vision-model' },
       speech: { provider: 'mock-speech-provider', model: 'mock-speech-model', voice_id: 'mock-speech-voice' },
       displayModelId: undefined,
-    } as never
+    }
+    cardStore.moduleDefaults = persistedDefaults
     consciousnessStore.$patch({ activeProvider: 'some-other-provider', activeModel: 'some-other-model' })
 
     await cardStore.initialize()
@@ -179,18 +182,19 @@ describe('airi-card store', () => {
     const consciousnessStore = useConsciousnessStore()
     const cardStore = useAiriCardStore()
 
-    cardStore.moduleDefaults = {
+    const persistedDefaults: CardModuleDefaults = {
       consciousness: { provider: '', model: '' },
       vision: { provider: 'mock-vision-provider', model: 'mock-vision-model' },
       speech: { provider: 'mock-speech-provider', model: 'mock-speech-model', voice_id: 'mock-speech-voice' },
       displayModelId: undefined,
-    } as never
-    cardStore.addCard({
+    }
+    cardStore.moduleDefaults = persistedDefaults
+    await cardStore.addCard({
       name: 'Owns its chat provider',
       version: '1.0.0',
       description: '',
       extensions: { airi: { modules: { consciousness: { provider: 'card-provider', model: 'card-model' }, speech: { provider: '', model: '', voice_id: '' }, vision: { provider: '', model: '' } }, agents: {} } },
-    } as AiriCard)
+    } as AiriCard, 'scratch')
     consciousnessStore.$patch({ activeProvider: 'runtime-provider', activeModel: 'runtime-model' })
     const ownerId = [...cardStore.cards.keys()].find(id => id !== 'default')!
     cardStore.activeCardId = ownerId

@@ -190,6 +190,7 @@ websocket-status:
 computer-use:
   label: Use computer
   description: Allow this chat window to inspect and control native apps on this computer.
+  approval-required-windows: Windows asks you to approve each computer action.
 
 status:
   preparing: Preparing microphone

@@ -40,3 +40,10 @@ export const SHIRO_STATE_TO_TACHIE: Record<ShiroAvatarState, TachieEmotion> = {
   error: 'error',
   permission: 'permission',
 }
+
+export function resolveShiroAvatarEmotion(state: ShiroAvatarState | undefined): TachieEmotion {
+  if (!state)
+    return 'neutral'
+
+  return SHIRO_STATE_TO_TACHIE[state] ?? 'neutral'
+}

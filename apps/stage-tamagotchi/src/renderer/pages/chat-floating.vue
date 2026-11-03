@@ -242,7 +242,7 @@ function moveByKeyboard(delta: WindowDelta) {
               @click="sessionsDrawerOpen = true"
             >
               <div class="i-solar:chat-line-bold shrink-0 text-neutral-400 dark:text-neutral-500" />
-              <span class="truncate text-sm font-medium">{{ activeCard?.name || 'AIRI' }}</span>
+              <span class="truncate text-sm font-medium">{{ activeCard?.name || 'ชิโระ' }}</span>
             </button>
             <ChatSpeechMuteButton :class="['shrink-0 rounded-full!']" />
             <ChatWindowStyleMenu :class="['shrink-0 rounded-full!']" />

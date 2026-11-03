@@ -22,8 +22,8 @@ useChatDraftHandover(interactiveArea)
 <template>
   <ChatPageShell>
     <WindowTitleBar
-      :title="activeCard?.name || 'AIRI'"
-      icon="i-solar:chat-line-bold"
+      :title="activeCard?.name || 'ชิโระ'"
+      mascot
       @title-click="sessionsDrawerOpen = true"
     >
       <template #actions>

@@ -20,6 +20,11 @@ import { electronGetUpdaterPreferences, electronSetUpdaterPreferences } from '..
 const buildInfo = useBuildInfo()
 const { t } = useI18n()
 const { copy: copyToClipboard, isSupported: isClipboardSupported } = useClipboard()
+const aboutLinks = computed(() => [{
+  label: t('tamagotchi.stage.about.links.github'),
+  href: 'https://github.com/66024996/shiro',
+  icon: 'i-simple-icons:github',
+}])
 
 const {
   state: updateState,
@@ -241,9 +246,10 @@ onMounted(() => {
   >
     <div :class="['mx-auto max-w-[min(960px,calc(100%-2rem))]', 'p-6']">
       <AboutContent
-        title="Project"
-        highlight="AIRI"
+        title=""
+        highlight="Shiro"
         :subtitle="t('tamagotchi.stage.about.subtitle')"
+        :links="aboutLinks"
       >
         <template #before-build-info>
           <!-- Main Content Card -->
@@ -293,7 +299,7 @@ onMounted(() => {
                 v-if="requiresWindowsAdminUpdatePrompt"
                 :class="['text-sm rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-amber-700 dark:text-amber-200']"
               >
-                AIRI is installed in a protected Windows folder. Update install may require a UAC admin prompt.
+                {{ t('tamagotchi.stage.about.update.status.protected-install') }}
                 <div :class="['mt-1 text-xs break-all text-amber-700/80 dark:text-amber-100/80']">
                   Path: {{ updateInstallDirectory }}
                 </div>
@@ -310,7 +316,7 @@ onMounted(() => {
                   v-if="isDowngradeUpdate"
                   :class="['text-sm rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-amber-700 dark:text-amber-200']"
                 >
-                  Selected channel offers an older build than your current version. Installing this update will downgrade AIRI.
+                  {{ t('tamagotchi.stage.about.update.status.downgrade-available') }}
                 </div>
                 <div>
                   <Button
@@ -344,7 +350,7 @@ onMounted(() => {
                   v-if="isDowngradeUpdate"
                   :class="['text-sm rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-amber-700 dark:text-amber-200']"
                 >
-                  Downgrade package downloaded from selected channel. Restart will install an older version.
+                  {{ t('tamagotchi.stage.about.update.status.downgrade-downloaded') }}
                 </div>
                 <div>
                   <DoubleCheckButton
@@ -400,6 +406,45 @@ onMounted(() => {
                 </div>
               </div>
             </div>
+          </div>
+
+          <div
+            :class="[
+              'flex flex-col gap-3',
+              'rounded-2xl bg-neutral-200/80 p-4 backdrop-blur-sm dark:bg-neutral-800',
+            ]"
+          >
+            <h2 :class="['text-lg font-semibold']">
+              {{ t('tamagotchi.stage.about.model-notices.title') }}
+            </h2>
+            <p :class="['text-sm text-neutral-600 dark:text-neutral-300']">
+              {{ t('tamagotchi.stage.about.model-notices.omnivoice') }}
+            </p>
+            <a
+              href="https://huggingface.co/hotdogs/omnivoice-thai"
+              target="_blank"
+              rel="noreferrer"
+              :class="['text-sm text-blue-600 dark:text-blue-400']"
+            >
+              {{ t('tamagotchi.stage.about.model-notices.omnivoice-source') }}
+            </a>
+            <p :class="['text-sm font-medium']">
+              {{ t('tamagotchi.stage.about.model-notices.higgs') }}
+            </p>
+            <a
+              href="https://huggingface.co/eustlb/higgs-audio-v2-tokenizer"
+              target="_blank"
+              rel="noreferrer"
+              :class="['text-sm text-blue-600 dark:text-blue-400']"
+            >
+              {{ t('tamagotchi.stage.about.model-notices.higgs-source') }}
+            </a>
+            <p :class="['text-sm text-neutral-600 dark:text-neutral-300']">
+              {{ t('tamagotchi.stage.about.model-notices.higgs-attribution') }}
+            </p>
+            <p :class="['text-xs text-neutral-500 dark:text-neutral-400']">
+              {{ t('tamagotchi.stage.about.model-notices.license-files') }}
+            </p>
           </div>
         </template>
       </AboutContent>

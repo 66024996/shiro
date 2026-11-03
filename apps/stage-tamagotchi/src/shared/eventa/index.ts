@@ -36,11 +36,33 @@ export const electronStartTrackMousePosition = defineInvokeEventa('eventa:invoke
 export const electronStartDraggingWindow = defineInvokeEventa('eventa:invoke:electron:start-dragging-window')
 
 export const electronOpenMainDevtools = defineInvokeEventa('eventa:invoke:electron:windows:main:devtools:open')
+export const electronAssistantGetWakeWord = defineInvokeEventa<string>('eventa:invoke:electron:assistant:get-wake-word')
 export const electronCenterMainWindow = defineInvokeEventa<Rectangle>('eventa:invoke:electron:windows:main:center')
 export const electronOpenEditor = defineInvokeEventa<void>('eventa:invoke:electron:windows:editor:open')
 export const electronOpenSettings = defineInvokeEventa<void, { route?: string }>('eventa:invoke:electron:windows:settings:open')
 export const electronSettingsNavigate = defineEventa<{ route: string }>('eventa:event:electron:windows:settings:navigate')
 export const electronOpenChat = defineInvokeEventa('eventa:invoke:electron:windows:chat:open')
+
+export interface ShiroSpeechServiceStatus {
+  state: 'starting' | 'ready' | 'error' | 'unsupported'
+  voiceConfigured: boolean
+  message?: {
+    kind: 'runtime-unsupported' | 'runtime-missing' | 'service-not-running' | 'service-starting' | 'service-invalid-response' | 'service-failed'
+  } | {
+    kind: 'service-http-error'
+    status: number
+  }
+}
+
+export interface OllamaServiceStatus {
+  state: 'available' | 'unavailable'
+  models: string[]
+  message?: string
+}
+
+export const electronShiroSpeechStatusGet = defineInvokeEventa<ShiroSpeechServiceStatus>('eventa:invoke:electron:shiro:speech:status:get')
+export const electronShiroSpeechVoiceImport = defineInvokeEventa<{ imported: boolean }, { transcript: string }>('eventa:invoke:electron:shiro:speech:voice:import')
+export const electronOllamaStatusGet = defineInvokeEventa<OllamaServiceStatus>('eventa:invoke:electron:ollama:status:get')
 
 export const ioTraceRecordingChanged = defineEventa<IOTraceRecordingState>('eventa:event:electron:io-trace-recording:changed')
 export const ioTraceRecordingGet = defineInvokeEventa<IOTraceRecordingState>('eventa:invoke:electron:io-trace-recording:get')
@@ -586,27 +608,6 @@ export const widgetsIframeRequestResultEvent = defineEventa<WidgetsIframeRequest
 // Onboarding window events
 export const electronOnboardingClose = defineInvokeEventa('eventa:invoke:electron:windows:onboarding:close')
 export const electronOpenOnboarding = defineInvokeEventa('eventa:invoke:electron:windows:onboarding:open')
-
-// Auth — OIDC Authorization Code + PKCE flow via system browser
-export interface ElectronAuthTokens {
-  accessToken: string
-  refreshToken?: string
-  idToken?: string
-  expiresIn: number
-}
-export const electronAuthStartLogin = defineInvokeEventa<void>('eventa:invoke:electron:auth:start-login')
-/** Transient sign-in feedback shared with all windows; contains no credentials. */
-export interface ElectronAuthStatus {
-  attemptId: string
-  state: 'waiting' | 'confirming' | 'success' | 'error'
-  error?: string
-}
-export const electronAuthStatus = defineEventa<ElectronAuthStatus>('eventa:event:electron:auth:status')
-export const electronAuthGetStatus = defineInvokeEventa<ElectronAuthStatus | undefined>('eventa:invoke:electron:auth:get-status')
-export const electronAuthComplete = defineInvokeEventa<void, Pick<ElectronAuthStatus, 'attemptId' | 'error'>>('eventa:invoke:electron:auth:complete')
-export const electronAuthCallback = defineEventa<ElectronAuthTokens & { attemptId: string }>('eventa:event:electron:auth:callback')
-export const electronAuthCallbackError = defineEventa<{ error: string }>('eventa:event:electron:auth:callback-error')
-export const electronAuthLogout = defineInvokeEventa<void>('eventa:invoke:electron:auth:logout')
 
 export const i18nSetLocale = defineInvokeEventa<void, Locale>('eventa:invoke:electron:i18n:set-locale')
 export const i18nGetLocale = defineInvokeEventa<string | undefined>('eventa:invoke:electron:i18n:get-locale')

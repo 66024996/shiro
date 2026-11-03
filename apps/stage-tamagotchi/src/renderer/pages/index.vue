@@ -29,17 +29,16 @@ import { useChatSessionStore } from '@proj-airi/stage-ui/stores/chat/session-sto
 import { useHearingSpeechInputPipeline, useHearingStore } from '@proj-airi/stage-ui/stores/modules/hearing'
 import { useOnboardingStore } from '@proj-airi/stage-ui/stores/onboarding'
 import { useSettings, useSettingsAudioDevice } from '@proj-airi/stage-ui/stores/settings'
-import { refDebounced, useBroadcastChannel } from '@vueuse/core'
+import { refDebounced, useBroadcastChannel, useLocalStorage } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { computed, onMounted, onUnmounted, ref, shallowRef, toRef, watch } from 'vue'
 import { toast } from 'vue-sonner'
 
-import AuthStatusIsland from '../components/stage-islands/auth-status-island.vue'
 import ControlsIslandRoot from '../components/stage-islands/controls-island/controls-island-root.vue'
 import ControlsIsland from '../components/stage-islands/controls-island/index.vue'
 import ResourceStatusIsland from '../components/stage-islands/resource-status-island/index.vue'
 
-import { electronAppIsWayland, electronOpenOnboarding } from '../../shared/eventa'
+import { electronAppIsWayland, electronAssistantGetWakeWord, electronOpenOnboarding } from '../../shared/eventa'
 import { useModelSettingsRuntimeOwner } from '../composables/model-settings-runtime-owner'
 import { useScreenAmbientLight } from '../composables/use-screen-ambient-light'
 import { stageOpaqueAttribute } from '../composables/use-stage-painted-mask'
@@ -53,11 +52,10 @@ import {
   DEFAULT_ASSISTANT_SPEECH_INPUT_COOLDOWN_MS,
   shouldSuppressVoiceInput,
 } from '../utils/voice-input-suppression'
+import { resolveWakeWordInput } from '../utils/wake-word'
 
 const hearingStatusElement = ref<HTMLElement>()
-const authStatusElement = ref<HTMLElement>()
 const { isOutside: outsideHearingStatus } = useElectronMouseInElement(hearingStatusElement)
-const { isOutside: outsideAuthStatus } = useElectronMouseInElement(authStatusElement)
 const controlsIslandRef = ref<InstanceType<typeof ControlsIsland>>()
 const controlsIslandInteractionActive = shallowRef(false)
 const widgetStageRef = ref<InstanceType<typeof WidgetStage>>()
@@ -74,6 +72,10 @@ const shouldFadeOnCursorWithin = ref(false)
 
 const onboardingStore = useOnboardingStore()
 const openOnboarding = useElectronEventaInvoke(electronOpenOnboarding)
+const getAssistantWakeWord = useElectronEventaInvoke(electronAssistantGetWakeWord)
+const assistantWakeWord = shallowRef('')
+const wakeWordRequired = useLocalStorage('settings/hearing/wake-word-required', true)
+const wakeWordInputState = { commandExpiresAt: 0 }
 
 const { isOutside: isOutsideWindow } = useElectronMouseInWindow()
 // The island already pairs its cursor signal with a DOM one and owns that decision, so
@@ -311,7 +313,7 @@ function handleFadeOnHoverInteractionChange() {
     return
   }
 
-  if (controlsOverlayActive.value || !outsideHearingStatus.value || !outsideAuthStatus.value) {
+  if (controlsOverlayActive.value || !outsideHearingStatus.value) {
     // Portaled controls must receive clicks even outside the Island's bounds.
     isIgnoringMouseEvents.value = false
     shouldFadeOnCursorWithin.value = false
@@ -354,7 +356,7 @@ function handleFadeOnHoverInteractionChange() {
 }
 
 watch(
-  [outsideHearingStatus, outsideAuthStatus, isOutside, isOutsideFor250Ms, isPointerOverStageCanvas, isAroundWindowBorder, isAroundWindowBorderFor250Ms, isOutsideWindow, isTransparent, isTransparentForMouseEvents, controlsOverlayActive, fadeOnHoverEnabled, alwaysOnTop, stagePaused, isWayland],
+  [outsideHearingStatus, isOutside, isOutsideFor250Ms, isPointerOverStageCanvas, isAroundWindowBorder, isAroundWindowBorderFor250Ms, isOutsideWindow, isTransparent, isTransparentForMouseEvents, controlsOverlayActive, fadeOnHoverEnabled, alwaysOnTop, stagePaused, isWayland],
   handleFadeOnHoverInteractionChange,
   { immediate: true },
 )
@@ -611,7 +613,13 @@ function handleStreamingSentenceEnd(delta: string) {
   if (isVoiceInputSuppressed())
     return
 
-  const finalText = delta
+  const command = wakeWordRequired.value
+    ? resolveWakeWordInput(delta, assistantWakeWord.value, wakeWordInputState, Date.now())
+    : { status: 'command' as const, text: delta.trim() }
+  if (command.status !== 'command')
+    return
+
+  const finalText = command.text
   if (!finalText || !finalText.trim())
     return
 
@@ -625,7 +633,7 @@ function handleStreamingSentenceEnd(delta: string) {
 
 /** Replaces the caption with the provider's current volatile transcript. */
 function handleStreamingTranscriptionUpdate(text: string) {
-  if (isVoiceInputSuppressed())
+  if (wakeWordRequired.value || isVoiceInputSuppressed())
     return
 
   replaceHearingInput(text)
@@ -634,7 +642,7 @@ function handleStreamingTranscriptionUpdate(text: string) {
 
 /** Publishes the provider's final streaming-ASR text to the caption overlay. */
 function handleStreamingSpeechEnd(text: string) {
-  if (isVoiceInputSuppressed())
+  if (wakeWordRequired.value || isVoiceInputSuppressed())
     return
 
   postSpeakerCaption(text, 'replace')
@@ -664,9 +672,17 @@ const voiceInputSession = useVoiceInputSession(stream, {
   inspectAfterTranscription: ({ metadata }) => inspectVoiceInputProviderRequestGate(getVoiceInputGeneration(metadata)),
   onRecordingReady: () => ({ generation: voiceInputGeneration }),
   onTranscriptionResult: ({ text }) => {
-    postSpeakerCaption(text)
-    toast(`Voice input transcribed: ${text}`)
-    voiceTranscriptBuffer.push(text)
+    const command = wakeWordRequired.value
+      ? resolveWakeWordInput(text, assistantWakeWord.value, wakeWordInputState, Date.now())
+      : { status: 'command' as const, text: text.trim() }
+    if (command.status !== 'command')
+      return
+    if (!command.text)
+      return
+
+    postSpeakerCaption(command.text)
+    toast(`Voice input transcribed: ${command.text}`)
+    voiceTranscriptBuffer.push(command.text)
   },
   onTranscriptionEmpty: () => {
     if (transcriptionError.value) {
@@ -731,6 +747,7 @@ async function stopAudioInteractionConsumers(options: StopAudioInteractionOption
 
   clearAssistantSpeechResumeTimer()
   clearHearingInput()
+  wakeWordInputState.commandExpiresAt = 0
   voiceInputGeneration += 1
 
   await Promise.all([
@@ -760,6 +777,10 @@ watch(enabled, async (val) => {
       enabled.value = false
   }
 }, { immediate: true })
+
+watch(wakeWordRequired, () => {
+  wakeWordInputState.commandExpiresAt = 0
+})
 
 watch([activeTranscriptionProvider, activeTranscriptionModel, supportsStreamInput], async () => {
   streamingTranscriptionUnavailable.value = false
@@ -793,6 +814,12 @@ watch(nowSpeaking, async (speaking) => {
 })
 
 onMounted(() => {
+  void getAssistantWakeWord()
+    .then((wakeWord) => {
+      assistantWakeWord.value = wakeWord
+    })
+    .catch(error => reportVoiceInputFailure('load wake word', error))
+
   if (onboardingStore.needsOnboarding) {
     openOnboarding()
   }
@@ -846,9 +873,6 @@ const cursorPosition = computed(() => ({
   >
     <div v-show="!settingsStore.streamerMode" ref="hearingStatusElement" :class="['absolute bottom-3 left-1/2 z-30 w-fit -translate-x-1/2']">
       <HearingStatus align="center" />
-    </div>
-    <div v-show="!settingsStore.streamerMode" ref="authStatusElement" :class="['absolute left-1/2 top-3 z-40 w-fit -translate-x-1/2']">
-      <AuthStatusIsland />
     </div>
     <!-- Stage is always in DOM so TresCanvas can measure dimensions -->
     <div

@@ -2,6 +2,7 @@
 import type { Live2DLipSync, Live2DLipSyncOptions } from '@proj-airi/model-driver-lipsync'
 import type { Profile } from '@proj-airi/model-driver-lipsync/shared/wlipsync'
 import type { CaptionChannelEvent, PresenceBubbleState } from '@proj-airi/stage-shared'
+import type { ShiroAvatarState } from '@proj-airi/stage-ui-tachie'
 import type { VrmInteractionTarget } from '@proj-airi/stage-ui-three'
 import type { SpeechProviderWithExtraOptions } from '@xsai-ext/providers/utils'
 import type { UnElevenLabsOptions } from 'unspeech'
@@ -18,7 +19,7 @@ import { presenceBubbleIdle, presenceBubbleThinking } from '@proj-airi/stage-sha
 import { defaultLive2DMotionControlDynamics, Live2DScene, useLive2DMotionControl, useLive2dParams, useSettingsLive2d } from '@proj-airi/stage-ui-live2d'
 import { MMDScene } from '@proj-airi/stage-ui-mmd'
 import { SpineScene } from '@proj-airi/stage-ui-spine'
-import { TachieScene } from '@proj-airi/stage-ui-tachie'
+import { resolveShiroAvatarEmotion, TachieScene } from '@proj-airi/stage-ui-tachie'
 import { ThreeScene } from '@proj-airi/stage-ui-three'
 import { animations } from '@proj-airi/stage-ui-three/assets/vrm'
 import { createQueue } from '@proj-airi/stream-kit'
@@ -41,7 +42,7 @@ import { getDefinedProvider } from '../../libs/providers/providers'
 import { OFFICIAL_SPEECH_PROVIDER_ID, OFFICIAL_SPEECH_STREAMING_PROVIDER_ID } from '../../libs/providers/providers/official'
 import { bindSpeakingStateToPlaybackManager } from '../../libs/speech/playback-speaking-state'
 import { createStageTtsSession } from '../../libs/speech/tts-session'
-import { getSpeechBusContext, speechOutputGetPlaybackState } from '../../services/speech/bus'
+import { getSpeechBusContext, speechOutputGetPlaybackState, speechOutputSpeakingEvent } from '../../services/speech/bus'
 import { useLlmStreamingControlStore } from '../../stores/ai/chat-llm/streaming-control'
 import { useAudioContext, useSpeakingStore } from '../../stores/audio'
 import { useBackgroundStore } from '../../stores/background'
@@ -51,7 +52,7 @@ import { useSpeechStore } from '../../stores/modules/speech'
 import { useSettingsPresenceBubble } from '../../stores/presence-bubble'
 import { useProviderConfigStore } from '../../stores/providers/config'
 import { useProviderStore } from '../../stores/providers/provider'
-import { useSettings } from '../../stores/settings'
+import { useSettings, useSettingsAudioDevice } from '../../stores/settings'
 import { useSpeechOutputControlStore } from '../../stores/speech-output-control'
 import { useSpeechRuntimeStore } from '../../stores/speech-runtime'
 
@@ -143,8 +144,9 @@ const {
   spineRenderScale,
 } = storeToRefs(settingsStore)
 const { mouthOpenSize, nowSpeaking } = storeToRefs(useSpeakingStore())
+const speechBusContext = getSpeechBusContext()
 const disposePlaybackStateHandler = defineInvokeHandler(
-  getSpeechBusContext(),
+  speechBusContext,
   speechOutputGetPlaybackState,
   () => ({ speaking: nowSpeaking.value }),
 )
@@ -252,6 +254,7 @@ function resetAssistantSpeechSurface(source: string) {
 
 const { sending: chatSending } = storeToRefs(useChatStore())
 const { presenceOverride } = storeToRefs(useSettingsPresenceBubble())
+const { enabled: microphoneEnabled, permissionGranted: microphonePermissionGranted } = storeToRefs(useSettingsAudioDevice())
 
 // `sending` is raised before the request leaves and cleared once the send
 // settles, which is the span the character has nothing to say yet.
@@ -260,6 +263,25 @@ const { presenceOverride } = storeToRefs(useSettingsPresenceBubble())
 // there is no read cursor to count against.
 const chatPresence = computed<PresenceBubbleState>(() => chatSending.value ? presenceBubbleThinking : presenceBubbleIdle)
 const presenceBubble = computed<PresenceBubbleState>(() => presenceOverride.value ?? chatPresence.value)
+const shiroAvatarState = computed<ShiroAvatarState>(() => {
+  if (nowSpeaking.value)
+    return 'speaking'
+
+  if (chatSending.value)
+    return 'thinking'
+
+  if (microphoneEnabled.value && microphonePermissionGranted.value)
+    return 'listening'
+
+  return 'idle'
+})
+watch(shiroAvatarState, (state) => {
+  if (stageModelRenderer.value !== 'tachie')
+    return
+
+  const emotion = resolveShiroAvatarEmotion(state)
+  tachieSceneRef.value?.setEmotion(emotion, 1)
+}, { immediate: true })
 const { activeCard } = storeToRefs(useAiriCardStore())
 const speechStore = useSpeechStore()
 const { ssmlEnabled, activeSpeechProvider, activeSpeechModel, activeSpeechVoice, pitch } = storeToRefs(speechStore)
@@ -647,6 +669,19 @@ bindSpeakingStateToPlaybackManager(playbackManager, {
       // BroadcastChannel may be closed - don't break playback
     }
   },
+})
+
+playbackManager.onStart(({ item }) => {
+  speechBusContext.emit(speechOutputSpeakingEvent, { intentId: item.intentId, speaking: true })
+})
+playbackManager.onEnd(({ item }) => {
+  speechBusContext.emit(speechOutputSpeakingEvent, { intentId: item.intentId, speaking: false })
+})
+playbackManager.onInterrupt(({ item }) => {
+  speechBusContext.emit(speechOutputSpeakingEvent, { intentId: item.intentId, speaking: false })
+})
+playbackManager.onReject(({ item }) => {
+  speechBusContext.emit(speechOutputSpeakingEvent, { intentId: item.intentId, speaking: false })
 })
 
 function startLipSyncLoop() {

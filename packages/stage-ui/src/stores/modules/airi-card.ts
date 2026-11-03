@@ -104,7 +104,11 @@ export const useAiriCardStore = defineStore('airi-card', () => {
     if (defaults.consciousness.provider || !runtime.consciousness.provider)
       return
 
-    const cardOwnsChatProvider = !!resolveAiriExtension(activeCard.value)?.modules.consciousness.provider
+    const card = activeCard.value
+    if (!card)
+      return
+
+    const cardOwnsChatProvider = !!resolveAiriExtension(card).modules.consciousness.provider
     if (cardOwnsChatProvider)
       return
 

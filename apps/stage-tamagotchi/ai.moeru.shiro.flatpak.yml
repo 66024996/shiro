@@ -1,10 +1,10 @@
-app-id: ai.moeru.airi
+app-id: ai.moeru.shiro
 runtime: org.freedesktop.Platform
 runtime-version: '24.08'
 sdk: org.freedesktop.Sdk
 base: org.electronjs.Electron2.BaseApp
 base-version: '24.08'
-command: airi.sh
+command: shiro.sh
 
 finish-args:
   # GUI environment
@@ -26,28 +26,28 @@ finish-args:
   - --system-talk-name=org.freedesktop.UPower
   # Filesystem permissions
   - --filesystem=xdg-download:rw
-  - --filesystem=xdg-config/airi:create
-  # Electron uses ~/.config/airi when XDG_CONFIG_HOME is not set.
-  - --filesystem=~/.config/airi:create
+  - --filesystem=xdg-config/shiro:create
+  # Electron uses ~/.config/shiro when XDG_CONFIG_HOME is not set.
+  - --filesystem=~/.config/shiro:create
 
 modules:
-  - name: AIRI-App
+  - name: Shiro-App
     buildsystem: simple
     build-commands:
       - mkdir -p /app/bin
-      - mkdir -p /app/lib/airi
-      - cp -r payload/. /app/lib/airi/
-      - install airi.sh /app/bin/airi.sh
-      - chmod +x /app/lib/airi/airi
-      # Desktop-file launches run Exec=airi directly inside the sandbox; the manifest
-      # `command` does not apply to them, so /app/bin/airi must be a real entry point
+      - mkdir -p /app/lib/shiro
+      - cp -r payload/. /app/lib/shiro/
+      - install shiro.sh /app/bin/shiro.sh
+      - chmod +x /app/lib/shiro/shiro
+      # Desktop-file launches run Exec=shiro directly inside the sandbox; the manifest
+      # `command` does not apply to them, so /app/bin/shiro must be a real entry point
       # that resolves to the zypak wrapper script.
-      - ln -s /app/bin/airi.sh /app/bin/airi
-      - install -Dm644 ai.moeru.airi.desktop /app/share/applications/ai.moeru.airi.desktop
-      - install -Dm644 ai.moeru.airi.metainfo.xml /app/share/metainfo/ai.moeru.airi.metainfo.xml
+      - ln -s /app/bin/shiro.sh /app/bin/shiro
+      - install -Dm644 ai.moeru.shiro.desktop /app/share/applications/ai.moeru.shiro.desktop
+      - install -Dm644 ai.moeru.shiro.metainfo.xml /app/share/metainfo/ai.moeru.shiro.metainfo.xml
       # build-export rejects icons larger than the hicolor size directory they land in,
       # so Flatpak installs the 512x512 derivative while Electron keeps the 1024x1024 source.
-      - install -Dm644 build/icon-512.png /app/share/icons/hicolor/512x512/apps/ai.moeru.airi.png
+      - install -Dm644 build/icon-512.png /app/share/icons/hicolor/512x512/apps/ai.moeru.shiro.png
     sources:
       - type: dir
         only-arches: [x86_64]
@@ -58,9 +58,9 @@ modules:
         path: dist/linux-arm64-unpacked
         dest: payload
       - type: file
-        path: ai.moeru.airi.desktop
+        path: ai.moeru.shiro.desktop
       - type: file
-        path: ai.moeru.airi.metainfo.xml
+        path: ai.moeru.shiro.metainfo.xml
       - type: file
         path: build/icon-512.png
         dest: build
@@ -92,7 +92,7 @@ modules:
       # almost the same as ours, most of the structure of this manifest is based on bitwarden's:
       # https://github.com/bitwarden/clients/blob/b8d55c4db178de67f1778bc307f7c22aad01f4a9/apps/desktop/resources/com.bitwarden.desktop.devel.yaml
       - type: script
-        dest-filename: airi.sh
+        dest-filename: shiro.sh
         commands:
           - ulimit -c 0
           - export TMPDIR="$XDG_RUNTIME_DIR/app/$FLATPAK_ID"
@@ -100,4 +100,4 @@ modules:
             if [ -n "$WAYLAND_DISPLAY" ]; then
               export ELECTRON_OZONE_PLATFORM_HINT=auto
             fi
-          - exec zypak-wrapper /app/lib/airi/airi "$@"
+          - exec zypak-wrapper /app/lib/shiro/shiro "$@"

@@ -11,23 +11,32 @@ import messages from '@proj-airi/i18n/locales'
 
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { Format, LogLevel, setGlobalFormat, setGlobalHookPostLog, setGlobalLogLevel, useLogg } from '@guiiai/logg'
+import { defineInvokeHandler } from '@moeru/eventa'
 import { createContext } from '@moeru/eventa/adapters/electron/main'
 import { hasSelectedScreenCaptureSource, initScreenCaptureForMain } from '@proj-airi/electron-screen-capture/main'
-import { app, ipcMain, protocol, session } from 'electron'
+import { app, dialog, ipcMain, protocol, session } from 'electron'
 import { noop } from 'es-toolkit'
 import { createLoggLogger, injeca, lifecycle } from 'injeca'
 import { isLinux } from 'std-env'
 
 import devIcon from '../../resources/icon-dev.png?asset'
 
+import {
+  electronAssistantGetWakeWord,
+  electronOllamaStatusGet,
+  electronShiroSpeechStatusGet,
+  electronShiroSpeechVoiceImport,
+} from '../shared/eventa'
 import { openDebugger, setupDebugger } from './app/debugger'
 import { nullFileLoggerHandle, setupFileLogger } from './app/file-logger'
 import { resolveIsWayland } from './app/ozone'
 import { installSingleInstanceGuard } from './app/single-instance'
 import { createArtistryConfig } from './configs/artistry'
+import { describeAssistantRuntime, resolveAssistantRuntimeProfile, resolveToolPermission } from './configs/assistant-runtime'
 import { createGlobalAppConfig } from './configs/global'
+import { shiroIdentity } from './configs/identity'
 import { createIOTraceRecordingConfig } from './configs/io-trace-recording'
-import { emitAppBeforeQuit, emitAppWindowAllClosed } from './libs/bootkit/lifecycle'
+import { emitAppBeforeQuit, emitAppWindowAllClosed, onAppBeforeQuit } from './libs/bootkit/lifecycle'
 import { getElectronMainDirname, setElectronMainDirname } from './libs/electron/location'
 import { createI18n } from './libs/i18n'
 import { setupAppleSpeechTranscriptionService } from './services/airi/apple-speech-transcription'
@@ -43,7 +52,9 @@ import { setupArtistryBridge } from './services/airi/widgets/artistry-bridge'
 import { setupAutoUpdater } from './services/electron/auto-updater'
 import { setupGlobalShortcutService } from './services/electron/global-shortcut'
 import { setupPermissionHandlers } from './services/electron/media-permissions'
+import { getOllamaStatus } from './services/electron/ollama-status'
 import { setupSherpawModelAssetsProtocol } from './services/electron/sherpaw-model-assets'
+import { createShiroSpeechRuntime } from './services/electron/shiro-speech-runtime'
 import { setupTray } from './tray'
 import { setupAboutWindowReusable } from './windows/about'
 import { setupBeatSync } from './windows/beat-sync'
@@ -63,6 +74,9 @@ import { setupWidgetsWindowManager } from './windows/widgets'
 // TODO: once we refactored eventa to support window-namespaced contexts,
 // we can remove the setMaxListeners call below since eventa will be able to dispatch and
 // manage events within eventa's context system.
+app.setName(shiroIdentity.appName)
+const appUserDataPath = env.APP_USER_DATA_PATH?.trim()
+app.setPath('userData', appUserDataPath || join(app.getPath('appData'), 'shiro'))
 ipcMain.setMaxListeners(100)
 
 setElectronMainDirname(dirname(fileURLToPath(import.meta.url)))
@@ -75,11 +89,6 @@ setGlobalLogLevel(LogLevel.Log)
 setupDebugger()
 
 const log = useLogg('main').useGlobalConfig()
-
-const appUserDataPath = env.APP_USER_DATA_PATH?.trim()
-if (appUserDataPath) {
-  app.setPath('userData', appUserDataPath)
-}
 
 // Thanks to [@blurymind](https://github.com/blurymind),
 //
@@ -143,10 +152,9 @@ if (isLinux) {
 // Dev runs use the Electron default icon, so replace it with a marked dev icon.
 if (is.dev)
   app.dock?.setIcon(devIcon)
-electronApp.setAppUserModelId('ai.moeru.airi')
+electronApp.setAppUserModelId(shiroIdentity.appId)
 
-// Track the real user-facing AIRI window because the process also owns hidden utility windows.
-// The second-instance handler should restore the main UI instead of accidentally surfacing internals.
+// Track the user-facing Shiro window; hidden utility windows are separate.
 let userFacingMainWindow: BrowserWindow | undefined
 let extensionManagementWebContentsId: number | undefined
 const shouldStartMainProcess = installSingleInstanceGuard({ app, getWindow: () => userFacingMainWindow })
@@ -178,14 +186,27 @@ app.whenReady().then(async () => {
 
   injeca.setLogger(createLoggLogger(useLogg('injeca').useGlobalConfig()))
 
-  const appConfig = injeca.provide('configs:app', () => createGlobalAppConfig())
+  const appConfigInstance = createGlobalAppConfig()
+  const appConfig = injeca.provide('configs:app', () => appConfigInstance)
+  const assistantProfile = appConfigInstance.get()?.assistantProfile ?? {
+    name: shiroIdentity.appName,
+    displayName: 'ชิโระ',
+    wakeWord: 'ชิโระ',
+    personality: shiroIdentity.personality,
+    defaultMode: shiroIdentity.defaultMode,
+    gamingMode: true,
+    visionDisabledByDefault: true,
+    localFirst: true,
+  }
+  const assistantRuntimeProfile = resolveAssistantRuntimeProfile(assistantProfile)
+  log.log(`Assistant runtime initialized: ${describeAssistantRuntime(assistantRuntimeProfile)}`)
   const artistryConfig = injeca.provide('configs:artistry', () => createArtistryConfig())
   const ioTraceRecordingConfig = injeca.provide('configs:io-trace-recording', () => createIOTraceRecordingConfig())
   const electronApp = injeca.provide('host:electron:app', () => app)
   const autoUpdater = injeca.provide('services:auto-updater', {
     dependsOn: { appConfig },
     build: ({ dependsOn }) => setupAutoUpdater({
-      enabled: import.meta.env.VITE_DISTRIBUTION !== 'steam',
+      enabled: false,
       getStoredUpdateLane: () => dependsOn.appConfig.get()?.updateChannel,
       setStoredUpdateLane: (lane) => {
         const currentConfig = dependsOn.appConfig.get()
@@ -262,10 +283,26 @@ app.whenReady().then(async () => {
     build: ({ dependsOn }) => setupExtensionHost({
       ...dependsOn,
       getExtensionManagementWebContentsId: () => extensionManagementWebContentsId,
+      getToolPermission: toolName => resolveToolPermission(toolName, appConfigInstance.get()?.assistantProfile ?? {
+        name: assistantRuntimeProfile.name,
+        displayName: assistantRuntimeProfile.displayName,
+        wakeWord: assistantRuntimeProfile.wakeWord,
+        personality: assistantRuntimeProfile.personality,
+        defaultMode: assistantRuntimeProfile.mode,
+        gamingMode: assistantRuntimeProfile.gamingMode,
+        visionDisabledByDefault: assistantRuntimeProfile.visionDisabledByDefault,
+        localFirst: assistantRuntimeProfile.localFirst,
+      }),
     }),
   })
 
   const globalShortcut = injeca.provide('services:global-shortcut', () => setupGlobalShortcutService())
+  const shiroSpeechRuntime = injeca.provide('services:shiro-speech-runtime', async () => {
+    const runtime = createShiroSpeechRuntime(app, dialog)
+    await runtime.start()
+    onAppBeforeQuit(() => runtime.stop())
+    return runtime
+  })
 
   // Beat Sync uses a background renderer because Web Audio processing needs a DOM runtime.
   const beatSync = injeca.provide('windows:beat-sync', () => setupBeatSync())
@@ -364,9 +401,13 @@ app.whenReady().then(async () => {
   }
 
   injeca.invoke({
-    dependsOn: { mainWindow, tray, serverChannel, airiHttpServer, godotStageManager, pluginHost, mcpStdioManager, onboardingWindow: onboardingWindowManager, widgetsWindow: widgetsManager, spotlightWindow, artistryConfig },
+    dependsOn: { mainWindow, tray, serverChannel, airiHttpServer, godotStageManager, pluginHost, mcpStdioManager, onboardingWindow: onboardingWindowManager, widgetsWindow: widgetsManager, spotlightWindow, artistryConfig, shiroSpeechRuntime },
     callback: async (deps) => {
       const { context } = createContext(ipcMain)
+      defineInvokeHandler(context, electronAssistantGetWakeWord, () => assistantRuntimeProfile.wakeWord)
+      defineInvokeHandler(context, electronShiroSpeechStatusGet, () => deps.shiroSpeechRuntime.getStatus())
+      defineInvokeHandler(context, electronShiroSpeechVoiceImport, payload => deps.shiroSpeechRuntime.importVoice(payload.transcript))
+      defineInvokeHandler(context, electronOllamaStatusGet, () => getOllamaStatus())
       setupComputerUse(context)
       await setupArtistryBridge({
         widgetsManager: deps.widgetsWindow,

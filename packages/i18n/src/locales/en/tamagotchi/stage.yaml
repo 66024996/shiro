@@ -79,6 +79,14 @@ notice:
 about:
   subtitle: Desktop ver.
   current-version: Current Version
+  model-notices:
+    title: Model notices
+    omnivoice: OmniVoice Thai was created by UKA (@nanofatdog). It is licensed under Apache License 2.0.
+    omnivoice-source: 'Source: https://huggingface.co/hotdogs/omnivoice-thai'
+    higgs: Higgs Audio 2 tokenizer
+    higgs-source: 'Source: https://huggingface.co/eustlb/higgs-audio-v2-tokenizer'
+    higgs-attribution: “Boson Higgs Audio 2 is licensed under the Boson Community License, Copyright © Boson AI USA, Inc. All Rights Reserved.”
+    license-files: The app bundle includes the Apache, Boson, and Meta Llama 3 license files.
   common:
     cancel: Cancel
   links:
@@ -102,6 +110,9 @@ about:
       downloading: Downloading update...
       error-prefix: Error
       latest: Up to date (v{version}).
+      protected-install: Shiro is installed in a protected Windows folder. Update installation can require a UAC admin prompt.
+      downgrade-available: The selected channel offers an older version. Installing this update downgrades Shiro.
+      downgrade-downloaded: The older update is ready. Restart to install it.
       downloaded:
         windows: Update ready to install silently (v{version}).
         restart: Update ready to install on restart (v{version}).

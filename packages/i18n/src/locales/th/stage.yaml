@@ -148,6 +148,7 @@ websocket-status:
 computer-use:
   label: ควบคุมคอมพิวเตอร์
   description: อนุญาตให้หน้าต่างแชตนี้ตรวจดูและควบคุมแอปบนคอมพิวเตอร์เครื่องนี้
+  approval-required-windows: Windows จะแสดงคำขออนุมัติก่อนทำแต่ละคำสั่ง
 
 status:
   preparing: กำลังเตรียมไมโครโฟน

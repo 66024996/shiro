@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>ai.moeru.shiro</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <name>Shiro</name>
+  <summary>Local-first personal AI assistant with voice interaction and an animated avatar</summary>
+  <description>
+    <p>
+      Shiro is a local-first personal AI assistant with voice interaction and an animated avatar.
+    </p>
+  </description>
+  <launchable type="desktop-id">ai.moeru.shiro.desktop</launchable>
+  <content_rating type="oars-1.1" />
+</component>

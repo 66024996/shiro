@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import ShiroAvatar from '../branding/shiro-avatar.vue'
+
 import { useAppRuntime } from '../../composables/runtime'
 
 defineProps<{
   title: string
-  icon: string
+  icon?: string
+  mascot?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -15,28 +18,33 @@ const { platform } = useAppRuntime()
 
 <template>
   <div
-    bg="neutral-100 dark:neutral-900" w="100dvw"
-    top="0"
-    fixed z-100 w-full select-none py-2 pr-4 drag-region
     :class="[
+      'fixed top-0 z-100 w-full py-2 pr-4',
+      'w-[100dvw] select-none drag-region',
+      'bg-neutral-100 dark:bg-neutral-900',
       platform === 'macos' ? 'pl-20' : 'pl-4',
     ]"
   >
-    <div flex drag-region>
+    <div :class="['flex drag-region']">
       <div
-        bg="hover:neutral-200 hover:dark:neutral-800"
-        transition="all duration-200 ease-in-out"
-        flex cursor-pointer select-none items-center gap-2 rounded-md px-1.5 py-0.5
-        class="[-webkit-app-region:no-drag]"
+        :class="[
+          'flex cursor-pointer select-none items-center gap-2 rounded-md px-1.5 py-0.5',
+          'bg-transparent transition-all duration-200 ease-in-out',
+          'hover:bg-neutral-200 dark:hover:bg-neutral-800',
+          '[-webkit-app-region:no-drag]',
+        ]"
         @click="emit('titleClick')"
       >
-        <div :class="icon" select-none text="neutral-400 dark:neutral-500" whitespace-nowrap />
-        <div><span select-none whitespace-nowrap text-sm>{{ title }}</span></div>
+        <ShiroAvatar v-if="mascot" size="sm" />
+        <div
+          v-else-if="icon"
+          :class="[icon, 'select-none whitespace-nowrap text-neutral-400 dark:text-neutral-500']"
+        />
+        <div><span :class="['select-none whitespace-nowrap text-sm']">{{ title }}</span></div>
       </div>
-      <div w-full drag-region />
+      <div :class="['w-full drag-region']" />
       <div
-        flex items-center gap-1
-        class="[-webkit-app-region:no-drag]"
+        :class="['flex items-center gap-1 [-webkit-app-region:no-drag]']"
       >
         <slot name="actions" />
       </div>
