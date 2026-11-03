@@ -79,12 +79,33 @@ Gaming Mode replaces the stage model with a PNG avatar and moves the main window
 Turn it on with the gamepad button in the controls island, or in **Settings > Gaming avatar**.
 Automatic game detection is not implemented yet.
 
-- **Settings > Gaming avatar** has one image slot for each emotion. Only Normal is required.
+- **Settings > Gaming avatar** has one image slot for each avatar state and emotion. Only Normal is required.
 - On save, the editor fits every image onto the canvas of the Normal image and stores the set as a `.tachie.zip` display model.
 - During Gaming Mode, the main stage window sets a stage model override. The Live2D or VRM scene unmounts, so it stops using the GPU. The saved model selection does not change.
 - The main window returns to its earlier bounds when Gaming Mode ends. A size that the user sets while compact is reused until the app quits.
 
 The override does not replace the Godot stage. When the Godot sidecar runs, Gaming Mode keeps the Godot renderer.
+
+## Avatar states
+
+The avatar shows one of 12 states. `useAvatarStateStore` in `packages/stage-ui/src/stores/avatar-state.ts` holds the signals, and `resolveAvatarState` picks the state.
+The first matching rule wins:
+
+| State | When |
+| --- | --- |
+| Permission | A confirmation dialog is open. |
+| Error | A desktop action or a chat turn failed in the last 4 seconds. A denied action is not an error. |
+| Listening | The user talks, or the wake word "ชิโระ" opened the 8-second command window. |
+| Speaking | The voice plays. A reply emotion replaces it. |
+| Thinking | A chat request runs. |
+| Happy, Angry, Concerned, Sad, Surprised | The reply emotion, until 4 seconds after the reply and the voice end. |
+| Gaming | Gaming Mode is on. |
+| Idle | Nothing else. |
+
+- The reply emotion comes from Thai phrases in the reply, in `src/renderer/utils/reply-emotion.ts`. Shiro's prompt has no ACT emotion tokens, because the small local model then skips tool calls.
+- The main process reports approval dialogs and desktop action results through the `electronAssistantActivity` event. `useAvatarSignals` turns them into signals in the main stage window.
+- A PNG avatar has one image for each state. A missing image falls back to a close one, and then to Normal.
+- Live2D, VRM, and other renderers show each state as a stage emotion, through `AVATAR_STATE_STAGE_EMOTION`. So a new renderer needs only that mapping, not new state logic.
 
 ## Memory
 

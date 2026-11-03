@@ -41,6 +41,7 @@ import { getElectronMainDirname, setElectronMainDirname } from './libs/electron/
 import { createI18n } from './libs/i18n'
 import { setupAppleSpeechTranscriptionService } from './services/airi/apple-speech-transcription'
 import { setupAppleVisionService } from './services/airi/apple-vision'
+import { AssistantActivityEvents } from './services/airi/assistant-activity'
 import { setupServerChannel } from './services/airi/channel-server'
 import { setupComputerUse } from './services/airi/computer-use'
 import { AuditLog, DesktopControlService, FileAccess, setupDesktopControlService, StartAppCatalog } from './services/airi/desktop-control'
@@ -315,11 +316,14 @@ app.whenReady().then(async () => {
     return store
   })
 
-  const userApproval = createNativeUserApproval()
+  // The approval dialog and desktop actions report here. The main window forwards the events to the avatar.
+  const assistantActivity = new AssistantActivityEvents()
+  const userApproval = createNativeUserApproval(pending => assistantActivity.emit({ type: 'approval', pending }))
   const desktopControl = injeca.provide('services:desktop-control', () => {
     const homeDir = app.getPath('home')
     return new DesktopControlService({
       approve: userApproval,
+      onActionFinished: result => assistantActivity.emit({ type: 'action-result', ...result }),
       auditLog: new AuditLog({ path: join(app.getPath('userData'), 'desktop-control', 'audit.jsonl') }),
       files: new FileAccess({
         homeDir,
@@ -408,6 +412,7 @@ app.whenReady().then(async () => {
     dependsOn: { editorWindow, settingsWindow, chatWindow, widgetsManager, noticeWindow, beatSync, autoUpdater, serverChannel, godotStageManager, mcpStdioManager, i18n, onboardingWindowManager, appleSpeechTranscription, appleVision, ioTraceRecording },
     build: async ({ dependsOn }) => setupMainWindow({
       ...dependsOn,
+      assistantActivity,
       onWindowCreated: (window) => {
         userFacingMainWindow = window
       },

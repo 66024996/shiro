@@ -52,6 +52,8 @@ export interface DesktopControlServiceOptions {
   /** Working folder for terminal commands. */
   homeDir: string
   platform?: NodeJS.Platform
+  /** Called after each action with its audit decision, for example to show an error on the avatar. */
+  onActionFinished?: (result: { action: DesktopAction, decision: AuditDecision, ok: boolean }) => void
 }
 
 /** What an action does after its checks pass. */
@@ -234,13 +236,16 @@ export class DesktopControlService {
   }
 
   private async perform<T>(action: DesktopAction, requestSummary: string, plan: () => Promise<ActionPlan<T>>): Promise<T> {
-    const audit = (summary: string, decision: AuditDecision, error?: unknown) => this.options.auditLog.write({
-      action,
-      summary,
-      decision,
-      ok: error === undefined,
-      ...(error === undefined ? {} : { error: errorMessageFrom(error) ?? 'Unknown error' }),
-    }).catch(cause => console.warn(`[desktop-control] Failed to write the audit log: ${errorMessageFrom(cause) ?? 'Unknown error'}`))
+    const audit = (summary: string, decision: AuditDecision, error?: unknown) => {
+      this.options.onActionFinished?.({ action, decision, ok: error === undefined })
+      return this.options.auditLog.write({
+        action,
+        summary,
+        decision,
+        ok: error === undefined,
+        ...(error === undefined ? {} : { error: errorMessageFrom(error) ?? 'Unknown error' }),
+      }).catch(cause => console.warn(`[desktop-control] Failed to write the audit log: ${errorMessageFrom(cause) ?? 'Unknown error'}`))
+    }
 
     let prepared: ActionPlan<T>
     try {

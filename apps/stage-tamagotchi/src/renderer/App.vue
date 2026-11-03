@@ -64,6 +64,7 @@ import {
 import { electronPluginToolsChanged } from '../shared/eventa/plugin/tools'
 import { initializeIOTraceRecordingBridge } from './bridges/io-trace-recording'
 import { initializeStageThreeRuntimeTraceBridge } from './bridges/stage-three-runtime-trace'
+import { useAvatarSignals } from './composables/use-avatar-signals'
 import { useGamingAvatarRuntime } from './composables/use-gaming-avatar'
 import { useLanguage } from './composables/use-language'
 import { createShiroDefaultCard } from './configs/shiro-personality'
@@ -94,8 +95,10 @@ const isSpotlightWindow = initialRoutePath === '/spotlight'
 // The floating chat resizes from its own grip, which keeps the corner beside the character in place.
 const isFloatingChatWindow = initialRoutePath === '/chat-floating'
 const isSettingsWindow = initialRoutePath === '/settings' || initialRoutePath.startsWith('/settings/')
-if (initialRoutePath === '/')
+if (initialRoutePath === '/') {
   useGamingAvatarRuntime()
+  useAvatarSignals()
+}
 const stopIOTraceRecordingBridge = initialRoutePath === '/'
   ? initializeIOTraceRecordingBridge(context.value)
   : undefined

@@ -12,12 +12,13 @@ import { useI18n } from 'vue-i18n'
 
 /**
  * Slot order in the editor. Shiro's assistant states come first, because the stage uses
- * them most. `speaking` has no own image: it keeps the emotion that the reply selected.
+ * them most. While Shiro speaks, a reply emotion image wins over `speaking`.
  */
 const EDITOR_EMOTIONS: TachieEmotion[] = [
   'neutral',
   'listening',
   'think',
+  'speaking',
   'happy',
   'angry',
   'concerned',

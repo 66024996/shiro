@@ -1,6 +1,7 @@
 import type { BrowserWindow } from 'electron'
 
 import type { I18n } from '../../../libs/i18n'
+import type { AssistantActivityEvents } from '../../../services/airi/assistant-activity'
 import type { ServerChannel } from '../../../services/airi/channel-server'
 import type { GodotStageManager } from '../../../services/airi/godot-stage'
 import type { IOTraceRecordingService } from '../../../services/airi/io-trace-recording'
@@ -28,6 +29,7 @@ import {
   electronOpenSettings,
   noticeWindowEventa,
 } from '../../../../shared/eventa'
+import { electronAssistantActivity } from '../../../../shared/eventa/assistant-activity'
 import { createGodotStageService } from '../../../services/airi/godot-stage'
 import { registerIOTraceRecording } from '../../../services/airi/io-trace-recording/register'
 import { createMcpServersService } from '../../../services/airi/mcp-servers'
@@ -52,6 +54,7 @@ export async function setupMainWindowElectronInvokes(params: {
   i18n: I18n
   onboardingWindowManager: OnboardingWindowManager
   ioTraceRecording: IOTraceRecordingService
+  assistantActivity: AssistantActivityEvents
 }) {
   // TODO: once we refactored eventa to support window-namespaced contexts,
   // we can remove the setMaxListeners call below since eventa will be able to dispatch and
@@ -79,5 +82,7 @@ export async function setupMainWindowElectronInvokes(params: {
   defineInvokeHandler(context, electronGetChatButtonState, () => params.chatWindow.getButtonState())
   const stopChatButtonState = params.chatWindow.onButtonStateChange(state => context.emit(electronChatButtonStateChanged, state))
   params.window.once('closed', stopChatButtonState)
+  const stopAssistantActivity = params.assistantActivity.subscribe(activity => context.emit(electronAssistantActivity, activity))
+  params.window.once('closed', stopAssistantActivity)
   defineInvokeHandler(context, noticeWindowEventa.openWindow, payload => params.noticeWindow.open(payload))
 }

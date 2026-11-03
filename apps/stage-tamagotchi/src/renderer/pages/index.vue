@@ -24,6 +24,7 @@ import { WidgetStage } from '@proj-airi/stage-ui/components/scenes'
 import { useVoiceInputSession } from '@proj-airi/stage-ui/composables'
 import { useCanvasPixelIsTransparentAtPoint } from '@proj-airi/stage-ui/composables/canvas-alpha'
 import { useSpeakingStore } from '@proj-airi/stage-ui/stores/audio'
+import { useAvatarStateStore } from '@proj-airi/stage-ui/stores/avatar-state'
 import { useChatStore } from '@proj-airi/stage-ui/stores/chat'
 import { useChatSessionStore } from '@proj-airi/stage-ui/stores/chat/session-store'
 import { useHearingSpeechInputPipeline, useHearingStore } from '@proj-airi/stage-ui/stores/modules/hearing'
@@ -31,7 +32,7 @@ import { useOnboardingStore } from '@proj-airi/stage-ui/stores/onboarding'
 import { useSettings, useSettingsAudioDevice } from '@proj-airi/stage-ui/stores/settings'
 import { refDebounced, useBroadcastChannel, useLocalStorage } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
-import { computed, onMounted, onUnmounted, ref, shallowRef, toRef, watch } from 'vue'
+import { computed, onMounted, onScopeDispose, onUnmounted, ref, shallowRef, toRef, watch } from 'vue'
 import { toast } from 'vue-sonner'
 
 import ControlsIslandRoot from '../components/stage-islands/controls-island/controls-island-root.vue'
@@ -52,7 +53,7 @@ import {
   DEFAULT_ASSISTANT_SPEECH_INPUT_COOLDOWN_MS,
   shouldSuppressVoiceInput,
 } from '../utils/voice-input-suppression'
-import { resolveWakeWordInput } from '../utils/wake-word'
+import { resolveWakeWordInput, WAKE_WORD_COMMAND_WINDOW_MS } from '../utils/wake-word'
 
 const hearingStatusElement = ref<HTMLElement>()
 const { isOutside: outsideHearingStatus } = useElectronMouseInElement(hearingStatusElement)
@@ -608,13 +609,32 @@ async function sendVoiceInputTextToChat(text: string) {
   }
 }
 
+const avatarState = useAvatarStateStore()
+let wakeWordAvatarTimer: ReturnType<typeof setTimeout> | undefined
+
+/** Applies the wake word policy, and shows the listening avatar while the command window is open. */
+function resolveWakeWordForAvatar(text: string) {
+  const result = resolveWakeWordInput(text, assistantWakeWord.value, wakeWordInputState, Date.now())
+  if (wakeWordAvatarTimer)
+    clearTimeout(wakeWordAvatarTimer)
+  wakeWordAvatarTimer = undefined
+  avatarState.awaitingCommand = result.status === 'activated'
+  if (result.status === 'activated') {
+    wakeWordAvatarTimer = setTimeout(() => {
+      avatarState.awaitingCommand = false
+      wakeWordAvatarTimer = undefined
+    }, WAKE_WORD_COMMAND_WINDOW_MS)
+  }
+  return result
+}
+
 /** Sends completed streaming-ASR sentences to captions and chat. */
 function handleStreamingSentenceEnd(delta: string) {
   if (isVoiceInputSuppressed())
     return
 
   const command = wakeWordRequired.value
-    ? resolveWakeWordInput(delta, assistantWakeWord.value, wakeWordInputState, Date.now())
+    ? resolveWakeWordForAvatar(delta)
     : { status: 'command' as const, text: delta.trim() }
   if (command.status !== 'command')
     return
@@ -673,7 +693,7 @@ const voiceInputSession = useVoiceInputSession(stream, {
   onRecordingReady: () => ({ generation: voiceInputGeneration }),
   onTranscriptionResult: ({ text }) => {
     const command = wakeWordRequired.value
-      ? resolveWakeWordInput(text, assistantWakeWord.value, wakeWordInputState, Date.now())
+      ? resolveWakeWordForAvatar(text)
       : { status: 'command' as const, text: text.trim() }
     if (command.status !== 'command')
       return
@@ -695,6 +715,17 @@ const voiceInputSession = useVoiceInputSession(stream, {
   onTranscriptionError: ({ error }) => {
     reportVoiceInputFailure('transcribe speech', error)
   },
+})
+
+// The avatar listens while a voice segment records, that is, while the user talks.
+watch(voiceInputSession.isRecording, (recording) => {
+  avatarState.userSpeaking = recording
+}, { immediate: true })
+onScopeDispose(() => {
+  avatarState.userSpeaking = false
+  avatarState.awaitingCommand = false
+  if (wakeWordAvatarTimer)
+    clearTimeout(wakeWordAvatarTimer)
 })
 
 /** Starts the active streaming or recorder-backed voice-input consumers. */

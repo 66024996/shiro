@@ -46,6 +46,7 @@ pages:
       neutral: Normal
       listening: Listening
       think: Thinking
+      speaking: Speaking
       happy: Happy
       angry: Angry
       concerned: Concerned

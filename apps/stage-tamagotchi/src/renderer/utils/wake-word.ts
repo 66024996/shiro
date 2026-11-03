@@ -8,7 +8,8 @@ export type WakeWordInputResult = { status: 'ignored' }
   | { status: 'activated' }
   | { status: 'command', text: string }
 
-const COMMAND_WINDOW_MS = 8000
+/** How long the app accepts a command after the wake word alone. */
+export const WAKE_WORD_COMMAND_WINDOW_MS = 8000
 const WAKE_WORD_SEPARATORS
   = /^[\s,，.!?。！？:：-]+/u
 
@@ -38,7 +39,7 @@ export function resolveWakeWordInput(
       return { status: 'command', text: command }
     }
 
-    state.commandExpiresAt = now + COMMAND_WINDOW_MS
+    state.commandExpiresAt = now + WAKE_WORD_COMMAND_WINDOW_MS
     return { status: 'activated' }
   }
 

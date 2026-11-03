@@ -19,8 +19,9 @@ export type RequestUserApproval = (request: UserApprovalRequest) => Promise<bool
  *
  * Only one dialog is open at a time. A later request waits until the user answers the
  * earlier one. "Deny" is the default button, so pressing Enter or Escape denies.
+ * `onPendingChange` reports when a dialog opens and closes, so the avatar can show it.
  */
-export function createNativeUserApproval(): RequestUserApproval {
+export function createNativeUserApproval(onPendingChange?: (pending: boolean) => void): RequestUserApproval {
   const mutex = new Mutex()
   return request => mutex.runExclusive(async () => {
     const parent = BrowserWindow.getFocusedWindow()
@@ -35,9 +36,15 @@ export function createNativeUserApproval(): RequestUserApproval {
       cancelId: 1,
       noLink: true,
     }
-    const result = parent
-      ? await dialog.showMessageBox(parent, options)
-      : await dialog.showMessageBox(options)
-    return result.response === 0
+    onPendingChange?.(true)
+    try {
+      const result = parent
+        ? await dialog.showMessageBox(parent, options)
+        : await dialog.showMessageBox(options)
+      return result.response === 0
+    }
+    finally {
+      onPendingChange?.(false)
+    }
   })
 }
