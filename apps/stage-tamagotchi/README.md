@@ -10,24 +10,30 @@ Run `pnpm -F @proj-airi/stage-tamagotchi build` to build the app.
 
 ## Computer use
 
-The desktop chat composer starts with **Use computer** on. Turn it off to send a request without desktop access.
-The selection is local to the composer. A new composer starts with it on. While a request runs, its selection is locked.
+The desktop chat composer starts with **Use computer** on, except on Windows, where it starts off.
+On Windows, turn it on to give Shiro access. Shiro asks for approval before each computer action.
+The Windows executor supports an allowlist of window, display, mouse, and keyboard commands. It does not run arbitrary shell commands.
+The selection is local to the composer. A new composer uses the platform default. While a request runs, its selection is locked.
 Turn it off before sending messages that must not receive computer-use tools.
 
 Only the current selection grants access, including retries and tool reruns. Historical messages do not grant access.
 The selected request receives `computer_use` and `computer_use_read_image`.
-The first tool accepts AUV arguments, such as `["invoke", "window.list"]`.
+The first tool accepts AUV-style arguments, such as `["invoke", "window.list"]`.
 Use `["invoke", "--help"]` and command-specific help to discover supported operations.
 The image tool returns a screenshot as model image content. It accepts only PNG and JPEG artifacts inside the app's computer-use store.
 Use a model and provider that support tool calls for visual tasks.
 With **Use the vision model for tool images** on, the vision model reads the screenshot first for a chat model whose provider does not report image input.
 The chat model then gets a text description. It has the visible text and layout, but no pixel positions.
-Use AUV commands such as `screen.findText` to get coordinates.
+On Windows, use `window.list`, `display.list`, then `display.capture` before an input command. Add the reported screen origin to screenshot pixel coordinates.
+On macOS, use AUV commands such as `screen.findText` to get coordinates.
 
-Electron starts the matching AUV SDK and CLI 0.0.16 on demand, over a private Unix socket or Windows named pipe.
-It serializes commands across windows, stores artifacts under the app's user-data directory, and stops the daemon during app shutdown.
-The CLI runs without a shell. Model arguments cannot change the device, endpoint, run, or storage root.
-Nonzero exits retain AUV output and failure details as tool errors. A zero exit code does not prove that the intended UI change occurred.
+On macOS and Linux, Electron starts the matching AUV SDK and CLI 0.0.16 on demand, over a private local socket.
+On Windows, Electron runs the packaged PowerShell script through an argument-safe process call.
+The runtime serializes commands across windows, stores artifacts under the app's user-data directory, and stops the daemon during app shutdown.
+Model arguments cannot change the device, endpoint, run, or storage root.
+On macOS and Linux, nonzero AUV exits retain output and failure details as tool errors.
+A zero exit code does not prove that the intended UI change occurred.
+On Windows, PowerShell errors appear as tool errors.
 
 On macOS, grant Accessibility and Screen Recording permissions to the launching app when the OS requests them.
 Some application actions also need Automation permission. If `app.probePermissions` reports missing screen-recording permission, a capture can contain only the desktop background despite exit code zero. Available commands depend on the OS and AUV backend.
@@ -41,7 +47,7 @@ Do not omit optional dependencies when building an installer. Windows ARM64 and 
 Run the focused runtime tests:
 
 ```sh
-pnpm -F @proj-airi/stage-tamagotchi exec vitest run src/main/services/airi/computer-use/runtime.test.ts
+pnpm -F @proj-airi/stage-tamagotchi exec vitest run src/main/services/airi/computer-use/runtime.test.ts src/main/services/airi/computer-use/windows-executor.test.ts
 ```
 
 Set `AIRI_COMPUTER_USE_LIVE=1` to include the bundled CLI/private-daemon test.
