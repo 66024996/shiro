@@ -2,6 +2,7 @@
 import { defineInvoke } from '@moeru/eventa'
 import { useElectronEventaContext, useElectronEventaInvoke, useElectronMouseInElement } from '@proj-airi/electron-vueuse'
 import { IS_DEV } from '@proj-airi/stage-shared'
+import { useAssistantModeStore } from '@proj-airi/stage-ui/stores/assistant-mode'
 import { useSettings, useSettingsAudioDevice } from '@proj-airi/stage-ui/stores/settings'
 import { ScrollableArea, useTheme } from '@proj-airi/ui'
 import { refDebounced, useFocusWithin, useIntervalFn, useMouseInElement, useMousePressed } from '@vueuse/core'
@@ -57,6 +58,8 @@ const settingsStore = useSettings()
 const context = useElectronEventaContext()
 const { enabled } = storeToRefs(settingsAudioDeviceStore)
 const { alwaysOnTop, controlsIslandIconSize } = storeToRefs(settingsStore)
+const assistantModeStore = useAssistantModeStore()
+const { gamingMode } = storeToRefs(assistantModeStore)
 const openSettings = useElectronEventaInvoke(electronOpenSettings)
 const isLinux = useElectronEventaInvoke(electron.app.isLinux)
 const quitApp = useElectronEventaInvoke(electronAppQuit)
@@ -403,6 +406,27 @@ function resetMainWindowPosition() {
                     </ControlButton>
                     <template #tooltip>
                       {{ alwaysOnTop ? t('tamagotchi.stage.controls-island.unpin-from-top') : t('tamagotchi.stage.controls-island.pin-on-top') }}
+                    </template>
+                  </ControlButtonTooltip>
+
+                  <ControlButtonTooltip disable-hoverable-content>
+                    <ControlButton
+                      v-track-button="{ name: 'controls_island_action', action: gamingMode ? 'gaming_mode_off' : 'gaming_mode_on' }"
+                      data-testid="gaming-mode-toggle"
+                      :button-style="adjustStyleClasses.button"
+                      :aria-label="gamingMode ? t('tamagotchi.stage.controls-island.gaming-mode-off') : t('tamagotchi.stage.controls-island.gaming-mode-on')"
+                      :aria-pressed="gamingMode"
+                      @click="assistantModeStore.setGamingMode(!gamingMode)"
+                    >
+                      <div
+                        :class="[
+                          gamingMode ? 'i-solar:gamepad-bold text-primary-500' : 'i-solar:gamepad-linear text-neutral-800 dark:text-neutral-300',
+                          adjustStyleClasses.icon,
+                        ]"
+                      />
+                    </ControlButton>
+                    <template #tooltip>
+                      {{ gamingMode ? t('tamagotchi.stage.controls-island.gaming-mode-off') : t('tamagotchi.stage.controls-island.gaming-mode-on') }}
                     </template>
                   </ControlButtonTooltip>
 

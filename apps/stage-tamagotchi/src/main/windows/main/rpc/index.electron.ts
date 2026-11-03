@@ -21,6 +21,7 @@ import {
   electronCenterMainWindow,
   electronChatButtonStateChanged,
   electronGetChatButtonState,
+  electronMainWindowCompactSet,
   electronOpenChat,
   electronOpenEditor,
   electronOpenMainDevtools,
@@ -35,6 +36,7 @@ import { createWidgetsService } from '../../../services/airi/widgets'
 import { createAutoUpdaterService } from '../../../services/electron'
 import { centerWindowOnDisplay } from '../../shared/display'
 import { setupBaseWindowElectronInvokes } from '../../shared/window'
+import { createMainWindowCompactMode } from '../compact'
 
 export async function setupMainWindowElectronInvokes(params: {
   window: BrowserWindow
@@ -68,6 +70,8 @@ export async function setupMainWindowElectronInvokes(params: {
   params.window.once('closed', stopIOTraceRecording)
 
   defineInvokeHandler(context, electronCenterMainWindow, () => centerWindowOnDisplay(params.window))
+  const compactMode = createMainWindowCompactMode(params.window)
+  defineInvokeHandler(context, electronMainWindowCompactSet, ({ compact }) => compactMode.setCompact(compact))
   defineInvokeHandler(context, electronOpenMainDevtools, () => params.window.webContents.openDevTools({ mode: 'detach' }))
   defineInvokeHandler(context, electronOpenEditor, () => params.editorWindow.openWindow())
   defineInvokeHandler(context, electronOpenSettings, payload => params.settingsWindow.openWindow(payload?.route))

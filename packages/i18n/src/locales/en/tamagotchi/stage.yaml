@@ -25,6 +25,8 @@ docs:
   'switch-to-dark-mode': Switch to dark mode
   'pin-on-top': Pin on top
   'unpin-from-top': Unpin from top
+  'gaming-mode-on': Turn on Gaming Mode
+  'gaming-mode-off': Turn off Gaming Mode
   'switch-profile': Switch Profile
   'close': Close
   'expand': Expand

@@ -38,6 +38,11 @@ export const electronStartDraggingWindow = defineInvokeEventa('eventa:invoke:ele
 export const electronOpenMainDevtools = defineInvokeEventa('eventa:invoke:electron:windows:main:devtools:open')
 export const electronAssistantGetWakeWord = defineInvokeEventa<string>('eventa:invoke:electron:assistant:get-wake-word')
 export const electronCenterMainWindow = defineInvokeEventa<Rectangle>('eventa:invoke:electron:windows:main:center')
+/**
+ * Moves the main window into the bottom-right screen corner, or back to its earlier bounds.
+ * The main stage renderer calls it when Gaming Mode changes. Repeated calls are ignored.
+ */
+export const electronMainWindowCompactSet = defineInvokeEventa<void, { compact: boolean }>('eventa:invoke:electron:windows:main:compact:set')
 export const electronOpenEditor = defineInvokeEventa<void>('eventa:invoke:electron:windows:editor:open')
 export const electronOpenSettings = defineInvokeEventa<void, { route?: string }>('eventa:invoke:electron:windows:settings:open')
 export const electronSettingsNavigate = defineEventa<{ route: string }>('eventa:event:electron:windows:settings:navigate')

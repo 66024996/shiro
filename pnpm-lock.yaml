@@ -2019,6 +2019,9 @@ importers:
       '@proj-airi/stage-ui-spine':
         specifier: workspace:^
         version: link:../../packages/stage-ui-spine
+      '@proj-airi/stage-ui-tachie':
+        specifier: workspace:^
+        version: link:../../packages/stage-ui-tachie
       '@proj-airi/stage-ui-three':
         specifier: workspace:^
         version: link:../../packages/stage-ui-three

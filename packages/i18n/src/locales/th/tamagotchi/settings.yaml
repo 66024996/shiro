@@ -1,4 +1,39 @@
 pages:
+  gaming-avatar:
+    title: Avatar โหมดเกม
+    mode:
+      title: Gaming Mode
+      description: ชิโระจะเปลี่ยนเป็น avatar แบบ PNG และย่อไปอยู่มุมขวาล่างของจอ การตรวจจับเกมอัตโนมัติจะตามมาภายหลัง
+      toggle: เปิด Gaming Mode
+    editor:
+      title: Avatar แบบ PNG
+      description: ใส่ภาพ 1 ภาพต่อ 1 อารมณ์ ต้องมีอย่างน้อยภาพ "ปกติ" ภาพ PNG พื้นหลังโปร่งใสจะดูดีที่สุด
+      empty-slot: 'ใช้ภาพ {fallback} แทน'
+      choose: ลากภาพมาวางหรือคลิกเพื่อเลือก
+      remove-image: ลบภาพ
+      save: บันทึก avatar
+      saving: กำลังบันทึก…
+      saved: บันทึก avatar โหมดเกมแล้ว
+      delete: ลบ avatar
+      opaque-warning: 'ภาพเหล่านี้ไม่มีพื้นหลังโปร่งใส: {emotions}'
+      neutral-required: ใส่ภาพ "ปกติ" ก่อนบันทึก
+      load-error: โหลด avatar โหมดเกมไม่สำเร็จ
+      save-error: บันทึก avatar โหมดเกมไม่สำเร็จ
+    emotions:
+      neutral: ปกติ
+      listening: กำลังฟัง
+      think: กำลังคิด
+      happy: ดีใจ
+      angry: โกรธ
+      concerned: เป็นห่วง
+      sad: เศร้า
+      surprised: ตกใจ
+      gaming: เล่นเกม
+      error: ผิดพลาด
+      permission: ขออนุญาต
+      awkward: เขิน
+      question: สงสัย
+      curious: อยากรู้
   local-ai:
     title: AI ในเครื่อง
     speech:

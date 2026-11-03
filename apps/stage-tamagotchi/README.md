@@ -42,6 +42,19 @@ Use this feature for local native applications. It does not expose a remote-devi
 The desktop package includes the platform CLI as an optional dependency and unpacks its executable from ASAR.
 Do not omit optional dependencies when building an installer. Windows ARM64 and Linux musl do not have a matching CLI in this version.
 
+## Gaming avatar
+
+Gaming Mode replaces the stage model with a PNG avatar and moves the main window into the bottom-right screen corner.
+Turn it on with the gamepad button in the controls island, or in **Settings > Gaming avatar**.
+Automatic game detection is not implemented yet.
+
+- **Settings > Gaming avatar** has one image slot for each emotion. Only Normal is required.
+- On save, the editor fits every image onto the canvas of the Normal image and stores the set as a `.tachie.zip` display model.
+- During Gaming Mode, the main stage window sets a stage model override. The Live2D or VRM scene unmounts, so it stops using the GPU. The saved model selection does not change.
+- The main window returns to its earlier bounds when Gaming Mode ends. A size that the user sets while compact is reused until the app quits.
+
+The override does not replace the Godot stage. When the Godot sidecar runs, Gaming Mode keeps the Godot renderer.
+
 ## Memory
 
 Shiro remembers a fact only when the user asks, for example "ชิโระ จำไว้ว่าฉันใช้ VS Code".
@@ -74,6 +87,13 @@ Run the memory tests. They open a real DuckDB file in a temporary directory:
 
 ```sh
 pnpm -F @proj-airi/stage-tamagotchi exec vitest run src/main/services/airi/memory src/renderer/stores/tools/builtin/memory.test.ts
+```
+
+Run the gaming avatar tests:
+
+```sh
+pnpm -F @proj-airi/stage-tamagotchi exec vitest run src/main/windows/main/compact.test.ts
+pnpm -F @proj-airi/stage-tamagotchi exec vitest run --project browser src/renderer/components/settings/gaming-avatar-editor.browser.test.ts
 ```
 
 Set `AIRI_COMPUTER_USE_LIVE=1` to include the bundled CLI/private-daemon test.
