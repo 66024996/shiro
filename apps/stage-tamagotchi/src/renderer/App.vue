@@ -66,6 +66,7 @@ import { initializeIOTraceRecordingBridge } from './bridges/io-trace-recording'
 import { initializeStageThreeRuntimeTraceBridge } from './bridges/stage-three-runtime-trace'
 import { useAvatarSignals } from './composables/use-avatar-signals'
 import { useGamingAvatarRuntime } from './composables/use-gaming-avatar'
+import { useGamingModeRuntime } from './composables/use-gaming-mode-runtime'
 import { useLanguage } from './composables/use-language'
 import { createShiroDefaultCard } from './configs/shiro-personality'
 import { useServerChannelSettingsStore } from './stores/settings/server-channel'
@@ -97,6 +98,7 @@ const isFloatingChatWindow = initialRoutePath === '/chat-floating'
 const isSettingsWindow = initialRoutePath === '/settings' || initialRoutePath.startsWith('/settings/')
 if (initialRoutePath === '/') {
   useGamingAvatarRuntime()
+  useGamingModeRuntime()
   useAvatarSignals()
 }
 const stopIOTraceRecordingBridge = initialRoutePath === '/'

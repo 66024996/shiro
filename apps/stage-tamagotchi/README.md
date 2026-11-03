@@ -76,8 +76,17 @@ Do not omit optional dependencies when building an installer. Windows ARM64 and 
 ## Gaming avatar
 
 Gaming Mode replaces the stage model with a PNG avatar and moves the main window into the bottom-right screen corner.
-Turn it on with the gamepad button in the controls island, or in **Settings > Gaming avatar**.
-Automatic game detection is not implemented yet.
+Turn it on with the gamepad button in the controls island, in **Settings > Gaming avatar**, or by voice, for example "ชิโระ เข้าโหมดเล่นเกม".
+
+Game detection turns Gaming Mode on while a listed game runs, and off when the game ends.
+
+- The main process checks `tasklist` every 5 seconds. The list has 18 common games, matched by process name.
+  Edit it in **Settings > Gaming avatar**. It is saved in `<userData>/gaming/options.json`.
+- If you turn Gaming Mode off during a game, it stays off until that game ends.
+  If you turn it on yourself, it stays on after a game ends.
+- In Gaming Mode, the app unloads the Ollama models and lowers the CPU priority of the model and speech processes.
+  The next voice command loads the model again, which takes about 8 seconds.
+- The vision capture loop stops, and the background image agent waits. Voice, speech, the avatar, memory, and commands keep working.
 
 - **Settings > Gaming avatar** has one image slot for each avatar state and emotion. Only Normal is required.
 - On save, the editor fits every image onto the canvas of the Normal image and stores the set as a `.tachie.zip` display model.

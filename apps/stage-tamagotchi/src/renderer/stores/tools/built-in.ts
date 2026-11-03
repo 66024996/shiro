@@ -6,6 +6,7 @@ import { defineStore } from 'pinia'
 
 import { computerUseTools } from './builtin/computer-use'
 import { desktopControlToolNames, desktopControlTools } from './builtin/desktop-control'
+import { gamingModeToolName, gamingModeTools } from './builtin/gaming-mode'
 import { memoryTools } from './builtin/memory'
 
 export const computerUseToolReferences = [
@@ -28,7 +29,10 @@ export const memoryToolReferences = [
  */
 export const desktopControlToolReferences = desktopControlToolNames.map(name => ({ name })) satisfies ChatToolReference[]
 
-const alwaysActiveToolNames = new Set([...memoryToolReferences, ...desktopControlToolReferences].map(reference => reference.name))
+/** Gaming Mode can be turned on by voice, so its tool is active in every request. */
+export const gamingModeToolReferences = [{ name: gamingModeToolName }] satisfies ChatToolReference[]
+
+const alwaysActiveToolNames = new Set([...memoryToolReferences, ...desktopControlToolReferences, ...gamingModeToolReferences].map(reference => reference.name))
 
 export const useTamagotchiBuiltinToolsStore = defineStore('tamagotchi-builtin-tools', () => {
   const llmToolsStore = useLlmToolsStore()
@@ -47,6 +51,7 @@ export const useTamagotchiBuiltinToolsStore = defineStore('tamagotchi-builtin-to
       computerUseTools(),
       memoryTools(),
       desktopControlTools(),
+      gamingModeTools(),
     ])).flat()
 
     llmToolsStore.removeToolsByIds(...registeredToolIds())

@@ -4,6 +4,7 @@ import type { FileLoggerHandle } from './app/file-logger'
 
 import process, { env, platform } from 'node:process'
 
+import { constants as osConstants, setPriority } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -33,6 +34,7 @@ import { nullFileLoggerHandle, setupFileLogger } from './app/file-logger'
 import { resolveIsWayland } from './app/ozone'
 import { installSingleInstanceGuard } from './app/single-instance'
 import { createArtistryConfig } from './configs/artistry'
+import { createGamingConfig, DEFAULT_GAMES } from './configs/gaming'
 import { createGlobalAppConfig } from './configs/global'
 import { shiroIdentity } from './configs/identity'
 import { createIOTraceRecordingConfig } from './configs/io-trace-recording'
@@ -45,6 +47,7 @@ import { AssistantActivityEvents } from './services/airi/assistant-activity'
 import { setupServerChannel } from './services/airi/channel-server'
 import { setupComputerUse } from './services/airi/computer-use'
 import { AuditLog, DesktopControlService, FileAccess, setupDesktopControlService, StartAppCatalog } from './services/airi/desktop-control'
+import { GameDetector, GamingResources, listChildProcessIds, listProcessesWithTasklist, setupGamingService } from './services/airi/gaming'
 import { setupGodotStageManager } from './services/airi/godot-stage'
 import { setupBuiltInServer } from './services/airi/http-server'
 import { IOTraceRecordingService } from './services/airi/io-trace-recording'
@@ -318,6 +321,7 @@ app.whenReady().then(async () => {
 
   // The approval dialog and desktop actions report here. The main window forwards the events to the avatar.
   const assistantActivity = new AssistantActivityEvents()
+  const gamingConfig = createGamingConfig()
   const userApproval = createNativeUserApproval(pending => assistantActivity.emit({ type: 'approval', pending }))
   const desktopControl = injeca.provide('services:desktop-control', () => {
     const homeDir = app.getPath('home')
@@ -456,6 +460,26 @@ app.whenReady().then(async () => {
       setupComputerUse(context, userApproval)
       setupMemoryService(context, deps.memoryStore)
       setupDesktopControlService(context, deps.desktopControl)
+      const gamingResources = new GamingResources({
+        ollamaBaseUrl: 'http://127.0.0.1:11434',
+        listProcesses: listProcessesWithTasklist,
+        setPriority: (pid, priority) => setPriority(pid, priority === 'below-normal' ? osConstants.priority.PRIORITY_BELOW_NORMAL : osConstants.priority.PRIORITY_NORMAL),
+        speechPid: () => deps.shiroSpeechRuntime.processId(),
+        childPids: listChildProcessIds,
+      })
+      const gameDetector = new GameDetector({
+        listProcesses: listProcessesWithTasklist,
+        getConfig: () => gamingConfig.get() ?? { autoDetect: true, games: DEFAULT_GAMES },
+        onGameChange: game => assistantActivity.emit({ type: 'game', game }),
+        onProcesses: processes => gamingResources.lowerPriorities(processes),
+      })
+      setupGamingService(context, { config: gamingConfig, detector: gameDetector, resources: gamingResources })
+      if (platform === 'win32')
+        gameDetector.start()
+      onAppBeforeQuit(async () => {
+        gameDetector.stop()
+        await gamingResources.setGaming(false)
+      })
       await setupArtistryBridge({
         widgetsManager: deps.widgetsWindow,
         context,

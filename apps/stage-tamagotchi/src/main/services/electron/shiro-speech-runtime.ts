@@ -200,6 +200,11 @@ class ShiroSpeechRuntime {
     }
   }
 
+  /** The process ID of the running speech server, for example to lower its priority during a game. */
+  processId(): number | undefined {
+    return this.child && this.child.exitCode === null ? this.child.pid : undefined
+  }
+
   async getStatus(): Promise<ShiroSpeechServiceStatus> {
     if (process.platform !== 'win32')
       return { state: 'unsupported', voiceConfigured: false, message: { kind: 'runtime-unsupported' } }

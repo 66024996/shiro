@@ -15,7 +15,7 @@ describe('useTamagotchiBuiltinToolsStore', async () => {
 
     await useTamagotchiBuiltinToolsStore().refresh()
 
-    expect(toolsStore.activeTools.map(tool => tool.function.name)).toEqual(['memory_remember', 'memory_forget', ...desktopControlToolNames])
+    expect(toolsStore.activeTools.map(tool => tool.function.name)).toEqual(['memory_remember', 'memory_forget', ...desktopControlToolNames, 'gaming_mode'])
     expect(toolsStore.tools.map(tool => ({
       id: tool.id,
       defaultActive: tool.defaultActive,
@@ -25,6 +25,7 @@ describe('useTamagotchiBuiltinToolsStore', async () => {
       { id: 'tamagotchi:memory_remember', defaultActive: true },
       { id: 'tamagotchi:memory_forget', defaultActive: true },
       ...desktopControlToolNames.map(name => ({ id: `tamagotchi:${name}`, defaultActive: true })),
+      { id: 'tamagotchi:gaming_mode', defaultActive: true },
     ])
     expect(toolsStore.tools.filter(tool => tool.requiresExplicitSelection).map(tool => tool.function.name)).toEqual(['computer_use', 'computer_use_read_image'])
     expect(toolsStore.getToolsByNames('get_weather', 'stage_widgets', 'image_journal')).toEqual([])

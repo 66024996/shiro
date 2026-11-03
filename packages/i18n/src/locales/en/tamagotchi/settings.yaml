@@ -26,8 +26,23 @@ pages:
     title: Gaming avatar
     mode:
       title: Gaming Mode
-      description: Shiro switches to the PNG avatar and moves into the bottom-right corner. Automatic game detection comes later.
+      description: Shiro switches to the PNG avatar, moves into the bottom-right corner, and frees the GPU for the game. Voice commands still work.
       toggle: Gaming Mode is on
+      auto-detect: Turn on Gaming Mode while a listed game runs
+      auto-detect-description: Shiro checks the running apps every 5 seconds. If you turn Gaming Mode off during a game, it stays off until the game closes.
+      detected: 'Running now: {game}'
+      not-detected: No listed game runs now.
+      games-title: 'Games ({count})'
+      remove: Remove
+      add-title: Add a game
+      running-apps: Running apps
+      load-running-apps: Show running apps
+      game-name: Game name
+      game-name-placeholder: VALORANT
+      process-name: Process name
+      process-name-description: The file name of the running game, for example from Task Manager.
+      add: Add game
+      save-error: Gaming Mode settings could not be saved.
     editor:
       title: PNG avatar
       description: Add one image for each emotion. Only Normal is required. Transparent PNG images look best.

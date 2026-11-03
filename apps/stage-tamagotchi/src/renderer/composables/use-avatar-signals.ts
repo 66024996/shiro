@@ -39,7 +39,7 @@ export function useAvatarSignals() {
     }
 
     // A denied action is the user's choice, not a failure.
-    if (!activity.ok && activity.decision !== 'denied')
+    if (activity.type === 'action-result' && !activity.ok && activity.decision !== 'denied')
       avatarState.flashError()
   })
 

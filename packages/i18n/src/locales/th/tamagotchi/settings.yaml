@@ -3,8 +3,23 @@ pages:
     title: Avatar โหมดเกม
     mode:
       title: Gaming Mode
-      description: ชิโระจะเปลี่ยนเป็น avatar แบบ PNG และย่อไปอยู่มุมขวาล่างของจอ การตรวจจับเกมอัตโนมัติจะตามมาภายหลัง
+      description: ชิโระจะเปลี่ยนเป็น avatar แบบ PNG ย่อไปอยู่มุมขวาล่างของจอ และคืนการ์ดจอให้เกม ยังสั่งงานด้วยเสียงได้
       toggle: เปิด Gaming Mode
+      auto-detect: เปิด Gaming Mode อัตโนมัติเมื่อเกมในรายการทำงาน
+      auto-detect-description: ชิโระตรวจโปรแกรมที่ทำงานทุก 5 วินาที ถ้าปิด Gaming Mode เองระหว่างเล่น จะปิดไว้จนกว่าเกมจะปิด
+      detected: 'กำลังเล่น: {game}'
+      not-detected: ตอนนี้ไม่มีเกมในรายการทำงานอยู่
+      games-title: 'เกม ({count})'
+      remove: ลบ
+      add-title: เพิ่มเกม
+      running-apps: โปรแกรมที่ทำงานอยู่
+      load-running-apps: แสดงโปรแกรมที่ทำงานอยู่
+      game-name: ชื่อเกม
+      game-name-placeholder: VALORANT
+      process-name: ชื่อโปรเซส
+      process-name-description: ชื่อไฟล์ของเกมที่ทำงานอยู่ ดูได้จาก Task Manager
+      add: เพิ่มเกม
+      save-error: บันทึกการตั้งค่า Gaming Mode ไม่ได้
     editor:
       title: Avatar แบบ PNG
       description: ใส่ภาพ 1 ภาพต่อ 1 อารมณ์ ต้องมีอย่างน้อยภาพ "ปกติ" ภาพ PNG พื้นหลังโปร่งใสจะดูดีที่สุด
