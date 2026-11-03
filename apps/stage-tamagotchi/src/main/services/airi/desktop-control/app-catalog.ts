@@ -42,6 +42,11 @@ export function normalizeAppName(name: string) {
   return name.normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}\p{M}]+/gu, ' ').trim()
 }
 
+/** Returns the English app name for a spoken or short name, for example "เครื่องคิดเลข" to "calculator". */
+export function appAliasOf(normalizedName: string): string | undefined {
+  return APP_ALIASES[normalizedName]
+}
+
 function scoreName(name: string, query: string) {
   if (name === query)
     return 100

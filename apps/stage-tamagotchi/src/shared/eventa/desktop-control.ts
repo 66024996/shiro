@@ -70,6 +70,11 @@ export interface ProcessTarget {
   pid: number
   name: string
   windowTitle: string
+  /**
+   * Set for a Microsoft Store app window. ApplicationFrameHost owns the windows of all Store apps,
+   * so Shiro closes only this window, never the host process.
+   */
+  windowHandle?: number
 }
 
 export interface WebOpenRequest {

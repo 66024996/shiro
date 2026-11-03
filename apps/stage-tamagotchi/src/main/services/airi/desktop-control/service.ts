@@ -10,6 +10,7 @@ import type {
   FileSearchResult,
   ProcessListRequest,
   ProcessSummary,
+  ProcessTarget,
   SystemStatus,
   SystemStatusRequest,
   TerminalRunRequest,
@@ -118,9 +119,16 @@ export class DesktopControlService {
     const requested = parsed.pid === undefined ? `"${parsed.name ?? ''}"` : `process ${parsed.pid}`
     return this.perform('app-close', `Close ${requested}${parsed.force ? ' (force)' : ''}`, async () => {
       const targets = findCloseTargets(parsed, await listRunningProcesses(), this.options.ownPids())
-      const names = [...new Set(targets.map(target => target.name))].join(', ')
-      const summary = `Close ${names} (${targets.length} process${targets.length === 1 ? '' : 'es'})${parsed.force ? ' with force' : ''}`
-      const list = targets.slice(0, 10).map(target => `- ${target.name} (PID ${target.pid})${target.windowTitle ? `: ${target.windowTitle}` : ''}`)
+      // A Store app window belongs to the shared ApplicationFrameHost process, so its title names the app.
+      const label = (target: ProcessTarget) => target.windowHandle === undefined ? target.name : target.windowTitle
+      const names = [...new Set(targets.map(label))].join(', ')
+      const count = targets.every(target => target.windowHandle !== undefined)
+        ? `${targets.length} window${targets.length === 1 ? '' : 's'}`
+        : `${targets.length} process${targets.length === 1 ? '' : 'es'}`
+      const summary = `Close ${names} (${count})${parsed.force ? ' with force' : ''}`
+      const list = targets.slice(0, 10).map(target => target.windowHandle === undefined
+        ? `- ${target.name} (PID ${target.pid})${target.windowTitle ? `: ${target.windowTitle}` : ''}`
+        : `- ${target.windowTitle} (Microsoft Store app window)`)
       return {
         summary,
         confirm: {
