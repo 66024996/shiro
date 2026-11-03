@@ -1,10 +1,12 @@
 import type { createContext } from '@moeru/eventa/adapters/electron/main'
 
+import process from 'node:process'
+
 import { join, sep } from 'node:path'
 
 import { binaryPath } from '@auv-js/cli/binary'
 import { defineInvokeHandler } from '@moeru/eventa'
-import { app } from 'electron'
+import { app, BrowserWindow, dialog } from 'electron'
 
 import { computerUseReadImage, computerUseRun } from '../../../../shared/eventa/computer-use'
 import { onAppBeforeQuit } from '../../../libs/bootkit/lifecycle'
@@ -23,6 +25,26 @@ export function setupComputerUse(context: ReturnType<typeof createContext>['cont
         // Native executables cannot run inside Electron's archive.
         binaryPath: app.isPackaged ? executable.replace(`${sep}app.asar${sep}`, `${sep}app.asar.unpacked${sep}`) : executable,
         storeRoot: join(app.getPath('userData'), 'computer-use'),
+        windowsScriptPath: app.isPackaged
+          ? join(process.resourcesPath, 'computer-use', 'windows.ps1')
+          : join(app.getAppPath(), 'resources', 'computer-use', 'windows.ps1'),
+        approveWindowsAction: async (summary) => {
+          const parent = BrowserWindow.getFocusedWindow()
+            ?? BrowserWindow.getAllWindows().find(window => !window.isDestroyed() && window.isVisible())
+          const options = {
+            title: 'Shiro computer use | ชิโระขอควบคุมคอมพิวเตอร์',
+            message: summary,
+            detail: 'Shiro requests this action on your Windows desktop. This approval applies only to this action.\nชิโระขอทำรายการนี้บนหน้าจอ การอนุมัตินี้ใช้กับรายการนี้ครั้งเดียว',
+            buttons: ['Allow once | อนุญาตครั้งนี้', 'Deny | ปฏิเสธ'],
+            defaultId: 1,
+            cancelId: 1,
+            noLink: true,
+          }
+          const result = parent
+            ? await dialog.showMessageBox(parent, options)
+            : await dialog.showMessageBox(options)
+          return result.response === 0
+        },
       })
     }
     return runtime

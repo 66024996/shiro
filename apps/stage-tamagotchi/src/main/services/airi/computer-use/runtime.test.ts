@@ -4,6 +4,7 @@ import { Buffer } from 'node:buffer'
 import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import { binaryPath } from '@auv-js/cli/binary'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
@@ -13,10 +14,22 @@ import { createComputerUseRuntime } from './runtime'
 describe('computer use runtime', () => {
   let directory: string
   let runtime: ReturnType<typeof createComputerUseRuntime>
+  let windowsApprovalGranted: boolean
+  let windowsApprovalSummaries: string[]
   beforeEach(async () => {
     directory = await mkdtemp(join(tmpdir(), 'airi-cu-test-'))
     await mkdir(join(directory, 'store'))
-    runtime = createComputerUseRuntime({ binaryPath: binaryPath(), storeRoot: join(directory, 'store') })
+    windowsApprovalGranted = false
+    windowsApprovalSummaries = []
+    runtime = createComputerUseRuntime({
+      binaryPath: binaryPath(),
+      storeRoot: join(directory, 'store'),
+      windowsScriptPath: fileURLToPath(new URL('../../../../../resources/computer-use/windows.ps1', import.meta.url)),
+      approveWindowsAction: async (summary) => {
+        windowsApprovalSummaries.push(summary)
+        return windowsApprovalGranted
+      },
+    })
   })
   afterEach(async () => {
     await runtime.dispose()
@@ -29,6 +42,31 @@ describe('computer use runtime', () => {
     await expect(runtime.run({ argv: ['invoke', 'window.list', '--store-root', 'elsewhere'] })).rejects.toThrow('managed by AIRI')
     await expect(runtime.run({ argv: ['invoke', 'scan.frame'] })).rejects.toThrow('Use invoke')
     await expect(runtime.run({ argv: ['invoke', 5] })).rejects.toThrow()
+  })
+
+  it.runIf(process.platform === 'win32')('uses the Windows executor and requests approval for each action', async () => {
+    const help = await runtime.run({ argv: ['invoke', '--help'] })
+    expect(help.exitCode).toBe(0)
+    expect(help.output).toContain('window.list')
+    expect(windowsApprovalSummaries).toHaveLength(0)
+
+    const dryRun = await runtime.run({ argv: ['invoke', 'window.list', '--dry-run'] })
+    expect(dryRun.output).toMatchObject({ command: 'window.list', dryRun: true })
+    expect(windowsApprovalSummaries).toHaveLength(0)
+
+    await expect(runtime.run({ argv: ['invoke', 'window.list'] })).rejects.toThrow('denied')
+    expect(windowsApprovalSummaries).toHaveLength(1)
+
+    windowsApprovalGranted = true
+    const windows = await runtime.run({ argv: ['invoke', 'window.list'] })
+    expect(windows.exitCode).toBe(0)
+    expect(windows.output).toEqual(expect.objectContaining({ windows: expect.any(Array) }))
+    expect(windowsApprovalSummaries).toHaveLength(2)
+
+    const displays = await runtime.run({ argv: ['invoke', 'display.list'] })
+    expect(displays.exitCode).toBe(0)
+    expect(displays.output).toEqual(expect.objectContaining({ displays: expect.any(Array) }))
+    expect(windowsApprovalSummaries).toHaveLength(3)
   })
 
   it('reads screenshot bytes and rejects non-images and paths outside the artifact store', async () => {

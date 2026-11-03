@@ -16,16 +16,32 @@ import { startAuv } from '@auv-js/sdk/node'
 
 import * as v from 'valibot'
 
+import { createWindowsComputerUseExecutor } from './windows-executor'
+
 const execFileAsync = promisify(execFile)
 const inputSchema = v.object({ argv: v.pipe(v.array(v.pipe(v.string(), v.maxLength(16384), v.check(value => !value.includes('\0')))), v.minLength(2), v.maxLength(128)) })
 
 /** Owns one private daemon and serializes desktop operations across renderer windows. */
-export function createComputerUseRuntime(options: { binaryPath: string, storeRoot: string }) {
+export function createComputerUseRuntime(options: {
+  binaryPath: string
+  storeRoot: string
+  windowsScriptPath?: string
+  approveWindowsAction?: (summary: string) => Promise<boolean>
+}) {
   let daemon: AuvDaemon | undefined
   let socketDirectory: string | undefined
   let disposed = false
   let queue: Promise<unknown> = Promise.resolve()
   const abort = new AbortController()
+  const windowsExecutor = process.platform === 'win32'
+    ? options.windowsScriptPath && options.approveWindowsAction
+      ? createWindowsComputerUseExecutor({
+          scriptPath: options.windowsScriptPath,
+          storeRoot: options.storeRoot,
+          approveAction: options.approveWindowsAction,
+        })
+      : undefined
+    : undefined
 
   async function connect() {
     if (daemon)
@@ -93,6 +109,12 @@ export function createComputerUseRuntime(options: { binaryPath: string, storeRoo
       throw new Error('Computer use routing and storage are managed by AIRI.')
 
     return enqueue(async () => {
+      if (process.platform === 'win32') {
+        if (!windowsExecutor)
+          throw new Error('The approved Windows computer-use executor is not configured.')
+        return windowsExecutor.run(argv)
+      }
+
       const active = await connect()
       const command = [...argv]
       if (!command.includes('--json') && !command.includes('--help') && !command.includes('-h') && command[1] !== 'help')

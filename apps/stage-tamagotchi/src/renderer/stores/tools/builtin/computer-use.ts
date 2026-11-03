@@ -23,7 +23,7 @@ export async function computerUseTools(): Promise<Tool[]> {
   return [
     rawTool({
       name: 'computer_use',
-      description: 'Control native desktop apps, inspect windows, capture screenshots, and use keyboard or mouse input. On macOS, call app.probePermissions before visual tasks. If screen_recording is missing, ask the user to grant permission; captures can contain only a blank background. Start with argv ["invoke", "--help"], then inspect command help. Pass each CLI argument separately. Use explicit window targets when available. Preserve failure_details and verified metadata: exitCode 0 does not prove the intended UI effect. Use computer_use_read_image to view screenshot artifact paths. This tool acts on the local computer.',
+      description: 'Control native desktop apps through allowlisted commands. On Windows, each command needs a separate user approval, and arbitrary shell commands are not supported. Start with argv ["invoke", "--help"] and command-specific help. Pass each CLI argument separately. Use window.list to find a target, app.activate with its window ID, then capture the display. Screenshot output includes originX and originY. Add those offsets to screenshot pixel coordinates before input.clickPoint. Use computer_use_read_image to inspect screenshot artifacts. On macOS, call app.probePermissions before visual tasks and ask the user to grant missing screen-recording permission. A successful command does not prove the intended UI effect.',
       parameters: {
         type: 'object',
         properties: {

@@ -6,7 +6,9 @@ import { useLlmToolsStore } from '@proj-airi/stage-ui/stores/ai/chat-llm/tools'
 import { useLlmToolsetPromptsStore } from '@proj-airi/stage-ui/stores/ai/chat-llm/toolset-prompts'
 import { rawTool } from '@xsai/tool'
 import { defineStore } from 'pinia'
+import { ref } from 'vue'
 
+import { resolveToolPermission } from '../../../main/configs/assistant-runtime'
 import { electronPluginInvokeTool, electronPluginListXsaiTools } from '../../../shared/eventa/plugin/tools'
 
 export const useTamagotchiPluginToolsStore = defineStore('tamagotchi-plugin-tools', () => {
@@ -15,6 +17,61 @@ export const useTamagotchiPluginToolsStore = defineStore('tamagotchi-plugin-tool
   const listPluginXsaiToolDefinitions = useElectronEventaInvoke(electronPluginListXsaiTools)
   const invokePluginTool = useElectronEventaInvoke(electronPluginInvokeTool)
   const toolIdPrefix = 'plugin:'
+  const permissionState = ref<'idle' | 'permission'>('idle')
+  let nextPermissionRequestId = 1
+  const permissionRequest = ref<{
+    id: number
+    toolName: string
+    reason: string
+    voiceLine: string
+    resolve: (confirmed: boolean) => void
+  } | null>(null)
+
+  function confirmPermissionRequest(confirmed: boolean) {
+    const request = permissionRequest.value
+    permissionRequest.value = null
+    permissionState.value = 'idle'
+
+    if (request)
+      request.resolve(confirmed)
+  }
+
+  function cancelPermissionRequest() {
+    confirmPermissionRequest(false)
+  }
+
+  async function assertConfirmedToolExecution(toolName: string): Promise<void> {
+    const permission = resolveToolPermission(toolName, {
+      localFirst: true,
+      gamingMode: true,
+    })
+
+    if (permission === 'blocked') {
+      throw new Error(`Tool "${toolName}" is blocked by the Shiro safety policy.`)
+    }
+
+    if (permission !== 'confirmation') {
+      return
+    }
+
+    const reason = `Tool นี้อาจเข้าถึงข้อมูลหรือระบบที่ต้องใช้ความระมัดระวัง เช่น browser, file system หรือ network.`
+    const voiceLine = `ชิโระ: ข้าจะใช้ ${toolName} เพื่อช่วยคุณ — อนุญาตไหมคะ?`
+
+    const confirmed = await new Promise<boolean>((resolve) => {
+      permissionState.value = 'permission'
+      permissionRequest.value = {
+        id: nextPermissionRequestId++,
+        toolName,
+        reason,
+        voiceLine,
+        resolve,
+      }
+    })
+
+    if (!confirmed) {
+      throw new Error(`Tool "${toolName}" requires confirmation before Shiro can run it.`)
+    }
+  }
 
   function registeredToolIds() {
     return llmToolsStore.tools
@@ -49,11 +106,14 @@ export const useTamagotchiPluginToolsStore = defineStore('tamagotchi-plugin-tool
         name: definition.name,
         description: definition.description,
         parameters: definition.parameters,
-        execute: async input => invokePluginTool({
-          ownerExtensionId: definition.ownerExtensionId,
-          name: definition.name,
-          input,
-        }),
+        execute: async (input) => {
+          await assertConfirmedToolExecution(definition.name)
+          return await invokePluginTool({
+            ownerExtensionId: definition.ownerExtensionId,
+            name: definition.name,
+            input,
+          })
+        },
       }),
       id: `${toolIdPrefix}${definition.ownerExtensionId}:${definition.name}`,
     }))
@@ -68,7 +128,11 @@ export const useTamagotchiPluginToolsStore = defineStore('tamagotchi-plugin-tool
   }
 
   return {
+    cancelPermissionRequest,
+    confirmPermissionRequest,
     dispose,
+    permissionRequest,
+    permissionState,
     refresh,
   }
 }, {

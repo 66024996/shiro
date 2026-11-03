@@ -5,6 +5,7 @@ import type {
   WidgetSnapshot,
   WidgetsUpdatePayload,
 } from '../../../../shared/eventa'
+import type { AssistantToolPermission } from '../../../configs/assistant-runtime'
 
 /**
  * Stable manifest id used as the runtime identity for one extension.
@@ -76,6 +77,12 @@ export interface SetupExtensionHostOptions {
    * @default undefined, which disables folder import IPC
    */
   getExtensionManagementWebContentsId?: () => number | undefined
+  /**
+   * Returns the effective permission level for a tool invocation.
+   *
+   * @default 'safe', which allows all tool calls unless a stricter policy is configured.
+   */
+  getToolPermission?: (toolName: string) => AssistantToolPermission
 }
 
 /**

@@ -227,6 +227,13 @@ export async function setupExtensionHost(options: SetupExtensionHostOptions): Pr
   })
 
   defineInvokeHandler(context, electronPluginInvokeTool, async (payload) => {
+    const permission = options.getToolPermission?.(payload.name)
+    if (permission === 'blocked') {
+      throw new Error(`Tool "${payload.name}" is blocked by the Shiro safety policy.`)
+    }
+    if (permission === 'confirmation') {
+      throw new Error(`Tool "${payload.name}" requires explicit confirmation before Shiro can run it.`)
+    }
     return await hostService.tools.invoke(payload.ownerExtensionId, payload.name, payload.input)
   })
 
