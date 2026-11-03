@@ -22,7 +22,6 @@ import {
   electronSpotlightShortcutGet,
   electronSpotlightShortcutSet,
 } from '../../../../shared/eventa'
-import { createAuthService } from '../../../services/airi/auth'
 import { createGodotStageService } from '../../../services/airi/godot-stage'
 import { registerIOTraceRecording } from '../../../services/airi/io-trace-recording/register'
 import { createMcpServersService } from '../../../services/airi/mcp-servers'
@@ -58,7 +57,6 @@ export async function setupSettingsWindowInvokes(params: {
   createAutoUpdaterService({ context, window: params.settingsWindow, service: params.autoUpdater })
   createMcpServersService({ context, manager: params.mcpStdioManager })
   createGodotStageService({ context, manager: params.godotStageManager, window: params.settingsWindow })
-  createAuthService({ context, window: params.settingsWindow })
   const stopIOTraceRecording = registerIOTraceRecording(context, params.ioTraceRecording)
   params.settingsWindow.once('closed', stopIOTraceRecording)
 
