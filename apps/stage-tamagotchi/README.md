@@ -23,6 +23,22 @@ Then select `shiro:latest` in **Settings → Local AI** and click **Use model**.
 - Do not use `shiro-gemma` or `shiro-gemma-fs` for chat. Ollama rejects tools for them, so the app sends requests without tools.
 - Do not use a thinking model, such as `qwen3:4b`. It writes English reasoning into the reply and takes about 90 seconds per command.
 
+On a 4 GB GPU, set these user environment variables, then restart Ollama. They cut the model from 4.2 GB to 3.6 GB and keep more of it on the GPU.
+
+```powershell
+[Environment]::SetEnvironmentVariable('OLLAMA_FLASH_ATTENTION', '1', 'User')
+[Environment]::SetEnvironmentVariable('OLLAMA_KV_CACHE_TYPE', 'q8_0', 'User')
+```
+
+The app limits each request for this small model:
+
+- It sends only the last 5 user turns. The model follows recent tool calls better, and the prompt fits in 8192 tokens.
+- It removes emoji from replies, because the speech voice cannot read them.
+- It does not send the MCP, debug, spark-command, image journal, widget, or weather tools.
+- The `th` locale leaves out the ACT emotion tokens. With them, the model often skipped tool calls.
+
+Free RAM matters most for speed. Part of the model runs on the CPU. When Windows swaps memory to disk, a reply slows from about 9 to about 1.5 tokens per second.
+
 ## Computer use
 
 The desktop chat composer starts with **Use computer** on, except on Windows, where it starts off.
@@ -104,6 +120,7 @@ The main process applies the policy in `src/main/services/airi/desktop-control/p
 | Forbidden | Destructive commands, security changes, administrator commands, and Windows system processes |
 
 - `app_open` opens only Start menu apps, through `shell:AppsFolder`, without arguments.
+- `app_close` closes a Microsoft Store app, such as Calculator, by its window. It never ends ApplicationFrameHost, because that process owns the windows of all Store apps.
 - `web_open` opens only `http` and `https` addresses.
 - File tools use the user folder and drives other than the Windows drive. They never use AppData, key folders, or key files.
 - `file_delete` moves an item to the Recycle Bin. It never deletes a drive or a main user folder.

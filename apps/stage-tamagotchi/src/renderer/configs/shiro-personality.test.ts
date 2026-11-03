@@ -54,6 +54,15 @@ ${shiroCard.systemPrompt}`).not.toContain('AIRI')
     expect(SHIRO_PERSONALITY_PROMPT).not.toContain('ให้ตอบสั้น ๆ เช่น "ได้ค่ะ"')
   })
 
+  // ROOT CAUSE:
+  //
+  // The example reply "เปิดให้แล้วค่ะ" taught the model a finished-task answer.
+  // It answered "ปิดเครื่องคิดเลขที" with "ปิดให้แล้วค่ะ" and no tool call (2 of 6 calls in a replay).
+  it('does not give a finished-task reply that the model can copy without a tool call', () => {
+    expect(SHIRO_PERSONALITY_PROMPT).not.toContain('"เปิดให้แล้วค่ะ"')
+    expect(SHIRO_PERSONALITY_PROMPT).toContain('หลังได้ผลจากเครื่องมือ ให้ตอบประโยคเดียวตามผลจริง')
+  })
+
   it('returns the same card when it is already up to date', () => {
     const card = createShiroDefaultCard(createCard())
 

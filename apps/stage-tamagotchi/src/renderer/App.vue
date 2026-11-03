@@ -114,7 +114,13 @@ async function refreshPluginRuntimeTools() {
 const chatContextStore = useChatContextStore()
 // Shiro does not use MCP, debug, or spark-command tools. They add prompt tokens to each local request.
 // The app MCP tools store is also not refreshed, so MCP tools stay out of requests.
-useLLM().disabledFixedToolSources = ['mcp', 'debug', 'spark-command']
+const llmStore = useLLM()
+llmStore.disabledFixedToolSources = ['mcp', 'debug', 'spark-command']
+// The local model follows recent tool calls better than a long history, and the history must fit in 8192 tokens.
+// A replay of a missed command passed 6 of 6 times with the last 4 turns, and 0 of 6 with the full 10-turn history.
+llmStore.maxHistoryUserTurns = 5
+// Shiro speaks every reply, and the speech voice cannot read emoji.
+llmStore.removeEmojiFromReplies = true
 // Only the leader composes chat requests, so only the leader loads memories into the prompt.
 let stopMemoryContextHook: (() => void) | undefined
 const stopLeadershipListener = syncedPinia.onLeadershipChange((isLeader) => {

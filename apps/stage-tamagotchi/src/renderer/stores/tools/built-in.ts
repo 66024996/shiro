@@ -6,10 +6,7 @@ import { defineStore } from 'pinia'
 
 import { computerUseTools } from './builtin/computer-use'
 import { desktopControlToolNames, desktopControlTools } from './builtin/desktop-control'
-import { imageJournalTools } from './builtin/image-journal'
 import { memoryTools } from './builtin/memory'
-import { weatherTools } from './builtin/weather'
-import { widgetsTools } from './builtin/widgets'
 
 export const computerUseToolReferences = [
   { name: 'computer_use' },
@@ -43,11 +40,10 @@ export const useTamagotchiBuiltinToolsStore = defineStore('tamagotchi-builtin-to
       .map(tool => tool.id)
   }
 
+  // Shiro does not register the AIRI image journal, widget, and weather tools.
+  // An old session can still select tools by name, so unregistered tools never reach a request.
   async function refresh() {
     const tools = (await Promise.all([
-      imageJournalTools(),
-      widgetsTools(),
-      weatherTools(),
       computerUseTools(),
       memoryTools(),
       desktopControlTools(),

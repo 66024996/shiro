@@ -1,29 +1,6 @@
-import type { Tool } from '@xsai/shared-chat'
-
 import { useLlmToolsStore } from '@proj-airi/stage-ui/stores/ai/chat-llm/tools'
 import { createPinia, setActivePinia } from 'pinia'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-
-function executableTool(name: string): Tool {
-  return {
-    type: 'function',
-    function: {
-      name,
-      parameters: { type: 'object', properties: {} },
-    },
-    execute: vi.fn(),
-  }
-}
-
-vi.mock('./builtin/image-journal', () => ({
-  imageJournalTools: vi.fn(async () => [executableTool('image_journal')]),
-}))
-vi.mock('./builtin/weather', () => ({
-  weatherTools: vi.fn(async () => [executableTool('get_weather')]),
-}))
-vi.mock('./builtin/widgets', () => ({
-  widgetsTools: vi.fn(async () => [executableTool('stage_widgets')]),
-}))
+import { beforeEach, describe, expect, it } from 'vitest'
 
 describe('useTamagotchiBuiltinToolsStore', async () => {
   const { useTamagotchiBuiltinToolsStore } = await import('./built-in')
@@ -43,9 +20,6 @@ describe('useTamagotchiBuiltinToolsStore', async () => {
       id: tool.id,
       defaultActive: tool.defaultActive,
     }))).toEqual([
-      { id: 'tamagotchi:image_journal', defaultActive: false },
-      { id: 'tamagotchi:stage_widgets', defaultActive: false },
-      { id: 'tamagotchi:get_weather', defaultActive: false },
       { id: 'tamagotchi:computer_use', defaultActive: false },
       { id: 'tamagotchi:computer_use_read_image', defaultActive: false },
       { id: 'tamagotchi:memory_remember', defaultActive: true },
@@ -53,6 +27,6 @@ describe('useTamagotchiBuiltinToolsStore', async () => {
       ...desktopControlToolNames.map(name => ({ id: `tamagotchi:${name}`, defaultActive: true })),
     ])
     expect(toolsStore.tools.filter(tool => tool.requiresExplicitSelection).map(tool => tool.function.name)).toEqual(['computer_use', 'computer_use_read_image'])
-    expect(toolsStore.getToolsByNames('get_weather')[0]?.function.name).toBe('get_weather')
+    expect(toolsStore.getToolsByNames('get_weather', 'stage_widgets', 'image_journal')).toEqual([])
   })
 })
