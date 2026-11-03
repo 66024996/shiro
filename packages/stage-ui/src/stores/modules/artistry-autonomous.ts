@@ -9,6 +9,7 @@ import { ref, toRaw } from 'vue'
 import { toast } from 'vue-sonner'
 
 import { useAnalytics } from '../../composables/use-analytics'
+import { useAssistantModeStore } from '../assistant-mode'
 import { useBackgroundStore } from '../background'
 import { useChatSessionStore } from '../chat/session-store'
 import { useProviderStore } from '../providers/provider'
@@ -66,6 +67,12 @@ export const useAutonomousArtistryStore = defineStore('artistry-autonomous', () 
     })
 
     if (!activeCard || !artistry || !autonomousEnabled) {
+      return
+    }
+
+    // Gaming Mode leaves the GPU to the game, so the background image agent waits.
+    if (useAssistantModeStore().gamingMode) {
+      artistLog('Skipping task: Gaming Mode is on.')
       return
     }
 
