@@ -75,6 +75,29 @@ If the store fails, the chat continues with the previous block.
 The store uses the native `@duckdb/node-api` package. The main build keeps it external, and electron-builder unpacks `duckdb.node` with `duckdb.dll`.
 Do not use DuckDB-wasm with `NODE_FS` for this file. Version 1.29 opens an existing database read-only, so writes fail after a restart.
 
+## Desktop control
+
+Shiro controls Windows through 10 tools, for example "ชิโระ เปิด VS Code" or "ชิโระ เช็ก GPU ให้หน่อย".
+The tools are active in every request. They are separate from `computer_use`, which clicks and types on the screen.
+
+The main process applies the policy in `src/main/services/airi/desktop-control/policy.ts`. The renderer only forwards arguments.
+
+| Level | Tools |
+| --- | --- |
+| Safe, runs at once | `system_status`, `process_list`, `app_open`, `web_open`, `file_search`, `file_read`, `file_open` for documents |
+| Asks first | `app_close`, `file_delete`, `terminal_run`, `file_open` for programs and scripts |
+| Forbidden | Destructive commands, security changes, administrator commands, and Windows system processes |
+
+- `app_open` opens only Start menu apps, through `shell:AppsFolder`, without arguments.
+- `web_open` opens only `http` and `https` addresses.
+- File tools use the user folder and drives other than the Windows drive. They never use AppData, key folders, or key files.
+- `file_delete` moves an item to the Recycle Bin. It never deletes a drive or a main user folder.
+- `terminal_run` shows the full command in the dialog. It runs in the home folder and stops after 60 seconds.
+- The forbidden command list does not make a command safe. Every terminal command still needs approval.
+
+Each action writes one line to `<userData>/desktop-control/audit.jsonl`. The log keeps the command or path, never file text or command output.
+It moves to `audit.jsonl.1` at 1 MiB.
+
 ## Verification
 
 Run the focused runtime tests:
@@ -87,6 +110,12 @@ Run the memory tests. They open a real DuckDB file in a temporary directory:
 
 ```sh
 pnpm -F @proj-airi/stage-tamagotchi exec vitest run src/main/services/airi/memory src/renderer/stores/tools/builtin/memory.test.ts
+```
+
+Run the desktop control tests. On Windows, they also read this computer's hardware and Start menu, and run PowerShell and CMD:
+
+```sh
+pnpm -F @proj-airi/stage-tamagotchi exec vitest run src/main/services/airi/desktop-control src/renderer/stores/tools/built-in.test.ts
 ```
 
 Run the gaming avatar tests:

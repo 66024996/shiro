@@ -27,17 +27,18 @@ vi.mock('./builtin/widgets', () => ({
 
 describe('useTamagotchiBuiltinToolsStore', async () => {
   const { useTamagotchiBuiltinToolsStore } = await import('./built-in')
+  const { desktopControlToolNames } = await import('./builtin/desktop-control')
 
   beforeEach(() => {
     setActivePinia(createPinia())
   })
 
-  it('registers built-in executors and keeps only memory tools always active', async () => {
+  it('registers built-in executors and keeps memory and desktop control tools always active', async () => {
     const toolsStore = useLlmToolsStore()
 
     await useTamagotchiBuiltinToolsStore().refresh()
 
-    expect(toolsStore.activeTools.map(tool => tool.function.name)).toEqual(['memory_remember', 'memory_forget'])
+    expect(toolsStore.activeTools.map(tool => tool.function.name)).toEqual(['memory_remember', 'memory_forget', ...desktopControlToolNames])
     expect(toolsStore.tools.map(tool => ({
       id: tool.id,
       defaultActive: tool.defaultActive,
@@ -49,6 +50,7 @@ describe('useTamagotchiBuiltinToolsStore', async () => {
       { id: 'tamagotchi:computer_use_read_image', defaultActive: false },
       { id: 'tamagotchi:memory_remember', defaultActive: true },
       { id: 'tamagotchi:memory_forget', defaultActive: true },
+      ...desktopControlToolNames.map(name => ({ id: `tamagotchi:${name}`, defaultActive: true })),
     ])
     expect(toolsStore.tools.filter(tool => tool.requiresExplicitSelection).map(tool => tool.function.name)).toEqual(['computer_use', 'computer_use_read_image'])
     expect(toolsStore.getToolsByNames('get_weather')[0]?.function.name).toBe('get_weather')

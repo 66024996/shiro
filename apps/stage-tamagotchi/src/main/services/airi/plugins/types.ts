@@ -1,11 +1,11 @@
 import type { ExtensionHost, ExtensionManifestV2 } from '@proj-airi/plugin-sdk/plugin-host'
 
+import type { AssistantToolPermission } from '../../../../shared/assistant-runtime'
 import type {
   WidgetsAddPayload,
   WidgetSnapshot,
   WidgetsUpdatePayload,
 } from '../../../../shared/eventa'
-import type { AssistantToolPermission } from '../../../configs/assistant-runtime'
 
 /**
  * Stable manifest id used as the runtime identity for one extension.

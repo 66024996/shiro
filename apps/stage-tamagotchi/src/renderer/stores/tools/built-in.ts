@@ -5,6 +5,7 @@ import { useLlmToolsStore } from '@proj-airi/stage-ui/stores/ai/chat-llm/tools'
 import { defineStore } from 'pinia'
 
 import { computerUseTools } from './builtin/computer-use'
+import { desktopControlToolNames, desktopControlTools } from './builtin/desktop-control'
 import { imageJournalTools } from './builtin/image-journal'
 import { memoryTools } from './builtin/memory'
 import { weatherTools } from './builtin/weather'
@@ -29,6 +30,14 @@ export const memoryToolReferences = [
   { name: 'memory_forget' },
 ] satisfies ChatToolReference[]
 
+/**
+ * Computer-control tools are active in every request, so a voice command such as
+ * "open VS Code" works at once. The main process asks the user before risky actions.
+ */
+export const desktopControlToolReferences = desktopControlToolNames.map(name => ({ name })) satisfies ChatToolReference[]
+
+const alwaysActiveToolNames = new Set([...memoryToolReferences, ...desktopControlToolReferences].map(reference => reference.name))
+
 export const artistryToolReferences = [
   { name: 'image_journal' },
   ...widgetToolReferences,
@@ -51,12 +60,13 @@ export const useTamagotchiBuiltinToolsStore = defineStore('tamagotchi-builtin-to
       weatherTools(),
       computerUseTools(),
       memoryTools(),
+      desktopControlTools(),
     ])).flat()
 
     llmToolsStore.removeToolsByIds(...registeredToolIds())
     llmToolsStore.addTools(...tools.map(tool => ({
       ...tool,
-      defaultActive: memoryToolReferences.some(reference => reference.name === tool.function.name),
+      defaultActive: alwaysActiveToolNames.has(tool.function.name),
       requiresExplicitSelection: computerUseToolReferences.some(reference => reference.name === tool.function.name),
       id: `${toolIdPrefix}${tool.function.name}`,
     } satisfies ExecutableTool)))

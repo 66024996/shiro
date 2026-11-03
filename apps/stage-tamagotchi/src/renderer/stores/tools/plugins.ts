@@ -4,16 +4,18 @@ import { errorMessageFrom } from '@moeru/std'
 import { useElectronEventaInvoke } from '@proj-airi/electron-vueuse'
 import { useLlmToolsStore } from '@proj-airi/stage-ui/stores/ai/chat-llm/tools'
 import { useLlmToolsetPromptsStore } from '@proj-airi/stage-ui/stores/ai/chat-llm/toolset-prompts'
+import { useAssistantModeStore } from '@proj-airi/stage-ui/stores/assistant-mode'
 import { rawTool } from '@xsai/tool'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-import { resolveToolPermission } from '../../../main/configs/assistant-runtime'
+import { resolveToolPermission } from '../../../shared/assistant-runtime'
 import { electronPluginInvokeTool, electronPluginListXsaiTools } from '../../../shared/eventa/plugin/tools'
 
 export const useTamagotchiPluginToolsStore = defineStore('tamagotchi-plugin-tools', () => {
   const llmToolsStore = useLlmToolsStore()
   const llmToolsetPromptsStore = useLlmToolsetPromptsStore()
+  const assistantModeStore = useAssistantModeStore()
   const listPluginXsaiToolDefinitions = useElectronEventaInvoke(electronPluginListXsaiTools)
   const invokePluginTool = useElectronEventaInvoke(electronPluginInvokeTool)
   const toolIdPrefix = 'plugin:'
@@ -41,7 +43,7 @@ export const useTamagotchiPluginToolsStore = defineStore('tamagotchi-plugin-tool
   async function assertConfirmedToolExecution(toolName: string): Promise<void> {
     const permission = resolveToolPermission(toolName, {
       localFirst: true,
-      gamingMode: true,
+      gamingMode: assistantModeStore.gamingMode,
     })
 
     if (permission === 'blocked') {

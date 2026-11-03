@@ -1,19 +1,21 @@
 import type { createContext } from '@moeru/eventa/adapters/electron/main'
 
+import type { RequestUserApproval } from '../user-approval'
+
 import process from 'node:process'
 
 import { join, sep } from 'node:path'
 
 import { binaryPath } from '@auv-js/cli/binary'
 import { defineInvokeHandler } from '@moeru/eventa'
-import { app, BrowserWindow, dialog } from 'electron'
+import { app } from 'electron'
 
 import { computerUseReadImage, computerUseRun } from '../../../../shared/eventa/computer-use'
 import { onAppBeforeQuit } from '../../../libs/bootkit/lifecycle'
 import { createComputerUseRuntime } from './runtime'
 
 /** Registers host-owned computer use. The executable is resolved only on the first call. */
-export function setupComputerUse(context: ReturnType<typeof createContext>['context']) {
+export function setupComputerUse(context: ReturnType<typeof createContext>['context'], approve: RequestUserApproval) {
   let runtime: ReturnType<typeof createComputerUseRuntime> | undefined
   let stopped = false
   function getRuntime() {
@@ -28,23 +30,11 @@ export function setupComputerUse(context: ReturnType<typeof createContext>['cont
         windowsScriptPath: app.isPackaged
           ? join(process.resourcesPath, 'computer-use', 'windows.ps1')
           : join(app.getAppPath(), 'resources', 'computer-use', 'windows.ps1'),
-        approveWindowsAction: async (summary) => {
-          const parent = BrowserWindow.getFocusedWindow()
-            ?? BrowserWindow.getAllWindows().find(window => !window.isDestroyed() && window.isVisible())
-          const options = {
-            title: 'Shiro computer use | ชิโระขอควบคุมคอมพิวเตอร์',
-            message: summary,
-            detail: 'Shiro requests this action on your Windows desktop. This approval applies only to this action.\nชิโระขอทำรายการนี้บนหน้าจอ การอนุมัตินี้ใช้กับรายการนี้ครั้งเดียว',
-            buttons: ['Allow once | อนุญาตครั้งนี้', 'Deny | ปฏิเสธ'],
-            defaultId: 1,
-            cancelId: 1,
-            noLink: true,
-          }
-          const result = parent
-            ? await dialog.showMessageBox(parent, options)
-            : await dialog.showMessageBox(options)
-          return result.response === 0
-        },
+        approveWindowsAction: summary => approve({
+          title: 'Shiro computer use | ชิโระขอควบคุมคอมพิวเตอร์',
+          message: summary,
+          detail: 'Shiro requests this action on your Windows desktop. This approval applies only to this action.\nชิโระขอทำรายการนี้บนหน้าจอ การอนุมัตินี้ใช้กับรายการนี้ครั้งเดียว',
+        }),
       })
     }
     return runtime

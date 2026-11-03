@@ -14,13 +14,14 @@ import { Format, LogLevel, setGlobalFormat, setGlobalHookPostLog, setGlobalLogLe
 import { defineInvokeHandler } from '@moeru/eventa'
 import { createContext } from '@moeru/eventa/adapters/electron/main'
 import { hasSelectedScreenCaptureSource, initScreenCaptureForMain } from '@proj-airi/electron-screen-capture/main'
-import { app, dialog, ipcMain, protocol, session } from 'electron'
+import { app, dialog, ipcMain, protocol, session, shell } from 'electron'
 import { noop } from 'es-toolkit'
 import { createLoggLogger, injeca, lifecycle } from 'injeca'
 import { isLinux } from 'std-env'
 
 import devIcon from '../../resources/icon-dev.png?asset'
 
+import { describeAssistantRuntime, resolveAssistantRuntimeProfile, resolveToolPermission } from '../shared/assistant-runtime'
 import {
   electronAssistantGetWakeWord,
   electronOllamaStatusGet,
@@ -32,7 +33,6 @@ import { nullFileLoggerHandle, setupFileLogger } from './app/file-logger'
 import { resolveIsWayland } from './app/ozone'
 import { installSingleInstanceGuard } from './app/single-instance'
 import { createArtistryConfig } from './configs/artistry'
-import { describeAssistantRuntime, resolveAssistantRuntimeProfile, resolveToolPermission } from './configs/assistant-runtime'
 import { createGlobalAppConfig } from './configs/global'
 import { shiroIdentity } from './configs/identity'
 import { createIOTraceRecordingConfig } from './configs/io-trace-recording'
@@ -43,12 +43,14 @@ import { setupAppleSpeechTranscriptionService } from './services/airi/apple-spee
 import { setupAppleVisionService } from './services/airi/apple-vision'
 import { setupServerChannel } from './services/airi/channel-server'
 import { setupComputerUse } from './services/airi/computer-use'
+import { AuditLog, DesktopControlService, FileAccess, setupDesktopControlService, StartAppCatalog } from './services/airi/desktop-control'
 import { setupGodotStageManager } from './services/airi/godot-stage'
 import { setupBuiltInServer } from './services/airi/http-server'
 import { IOTraceRecordingService } from './services/airi/io-trace-recording'
 import { setupMcpStdioManager } from './services/airi/mcp-servers'
 import { MemoryStore, setupMemoryService } from './services/airi/memory'
 import { setupExtensionHost } from './services/airi/plugins'
+import { createNativeUserApproval } from './services/airi/user-approval'
 import { setupArtistryBridge } from './services/airi/widgets/artistry-bridge'
 import { setupAutoUpdater } from './services/electron/auto-updater'
 import { setupGlobalShortcutService } from './services/electron/global-shortcut'
@@ -313,6 +315,35 @@ app.whenReady().then(async () => {
     return store
   })
 
+  const userApproval = createNativeUserApproval()
+  const desktopControl = injeca.provide('services:desktop-control', () => {
+    const homeDir = app.getPath('home')
+    return new DesktopControlService({
+      approve: userApproval,
+      auditLog: new AuditLog({ path: join(app.getPath('userData'), 'desktop-control', 'audit.jsonl') }),
+      files: new FileAccess({
+        homeDir,
+        systemDrive: env.SystemDrive ?? 'C:',
+        userFolders: {
+          desktop: app.getPath('desktop'),
+          documents: app.getPath('documents'),
+          downloads: app.getPath('downloads'),
+          pictures: app.getPath('pictures'),
+          music: app.getPath('music'),
+          videos: app.getPath('videos'),
+        },
+      }),
+      apps: new StartAppCatalog(),
+      shell: {
+        openExternal: url => shell.openExternal(url),
+        openPath: path => shell.openPath(path),
+        trashItem: path => shell.trashItem(path),
+      },
+      ownPids: () => new Set([process.pid, ...app.getAppMetrics().map(metric => metric.pid)]),
+      homeDir,
+    })
+  })
+
   // Beat Sync uses a background renderer because Web Audio processing needs a DOM runtime.
   const beatSync = injeca.provide('windows:beat-sync', () => setupBeatSync())
 
@@ -410,15 +441,16 @@ app.whenReady().then(async () => {
   }
 
   injeca.invoke({
-    dependsOn: { mainWindow, tray, serverChannel, airiHttpServer, godotStageManager, pluginHost, mcpStdioManager, onboardingWindow: onboardingWindowManager, widgetsWindow: widgetsManager, spotlightWindow, artistryConfig, shiroSpeechRuntime, memoryStore },
+    dependsOn: { mainWindow, tray, serverChannel, airiHttpServer, godotStageManager, pluginHost, mcpStdioManager, onboardingWindow: onboardingWindowManager, widgetsWindow: widgetsManager, spotlightWindow, artistryConfig, shiroSpeechRuntime, memoryStore, desktopControl },
     callback: async (deps) => {
       const { context } = createContext(ipcMain)
       defineInvokeHandler(context, electronAssistantGetWakeWord, () => assistantRuntimeProfile.wakeWord)
       defineInvokeHandler(context, electronShiroSpeechStatusGet, () => deps.shiroSpeechRuntime.getStatus())
       defineInvokeHandler(context, electronShiroSpeechVoiceImport, payload => deps.shiroSpeechRuntime.importVoice(payload.transcript))
       defineInvokeHandler(context, electronOllamaStatusGet, () => getOllamaStatus())
-      setupComputerUse(context)
+      setupComputerUse(context, userApproval)
       setupMemoryService(context, deps.memoryStore)
+      setupDesktopControlService(context, deps.desktopControl)
       await setupArtistryBridge({
         widgetsManager: deps.widgetsWindow,
         context,
