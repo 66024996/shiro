@@ -46,6 +46,7 @@ import { getSpeechBusContext, speechOutputGetPlaybackState, speechOutputSpeaking
 import { useLlmStreamingControlStore } from '../../stores/ai/chat-llm/streaming-control'
 import { useAssistantModeStore } from '../../stores/assistant-mode'
 import { useAudioContext, useSpeakingStore } from '../../stores/audio'
+import { AVATAR_STATE_STAGE_EMOTION, resolveAvatarState, useAvatarStateStore } from '../../stores/avatar-state'
 import { useBackgroundStore } from '../../stores/background'
 import { useChatStore } from '../../stores/chat'
 import { useAiriCardStore } from '../../stores/modules'
@@ -53,7 +54,7 @@ import { useSpeechStore } from '../../stores/modules/speech'
 import { useSettingsPresenceBubble } from '../../stores/presence-bubble'
 import { useProviderConfigStore } from '../../stores/providers/config'
 import { useProviderStore } from '../../stores/providers/provider'
-import { useSettings, useSettingsAudioDevice } from '../../stores/settings'
+import { useSettings } from '../../stores/settings'
 import { useSpeechOutputControlStore } from '../../stores/speech-output-control'
 import { useSpeechRuntimeStore } from '../../stores/speech-runtime'
 
@@ -255,7 +256,6 @@ function resetAssistantSpeechSurface(source: string) {
 
 const { sending: chatSending } = storeToRefs(useChatStore())
 const { presenceOverride } = storeToRefs(useSettingsPresenceBubble())
-const { enabled: microphoneEnabled, permissionGranted: microphonePermissionGranted } = storeToRefs(useSettingsAudioDevice())
 
 // `sending` is raised before the request leaves and cleared once the send
 // settles, which is the span the character has nothing to say yet.
@@ -265,25 +265,16 @@ const { enabled: microphoneEnabled, permissionGranted: microphonePermissionGrant
 const chatPresence = computed<PresenceBubbleState>(() => chatSending.value ? presenceBubbleThinking : presenceBubbleIdle)
 const presenceBubble = computed<PresenceBubbleState>(() => presenceOverride.value ?? chatPresence.value)
 const { gamingMode } = storeToRefs(useAssistantModeStore())
-const shiroAvatarState = computed<ShiroAvatarState>(() => {
-  if (nowSpeaking.value)
-    return 'speaking'
-
-  if (chatSending.value)
-    return 'thinking'
-
-  if (microphoneEnabled.value && microphonePermissionGranted.value)
-    return 'listening'
-
-  return gamingMode.value ? 'gaming' : 'idle'
-})
-watch(shiroAvatarState, (state) => {
-  if (stageModelRenderer.value !== 'tachie')
-    return
-
-  const emotion = resolveShiroAvatarEmotion(state)
-  tachieSceneRef.value?.setEmotion(emotion, 1)
-}, { immediate: true })
+const avatarStateStore = useAvatarStateStore()
+const shiroAvatarState = computed<ShiroAvatarState>(() => resolveAvatarState({
+  permissionPending: avatarStateStore.pendingApprovals > 0,
+  error: avatarStateStore.errorActive,
+  listening: avatarStateStore.userSpeaking || avatarStateStore.awaitingCommand,
+  speaking: nowSpeaking.value,
+  thinking: chatSending.value,
+  emotion: avatarStateStore.replyEmotion,
+  gaming: gamingMode.value,
+}))
 const { activeCard } = storeToRefs(useAiriCardStore())
 const speechStore = useSpeechStore()
 const { ssmlEnabled, activeSpeechProvider, activeSpeechModel, activeSpeechVoice, pitch } = storeToRefs(speechStore)
@@ -320,6 +311,21 @@ const emotionsQueue = createQueue<EmotionPayload>({
     },
   ],
 })
+
+// The Tachie scene is created again when the renderer switches to it, so it gets the current state when it appears.
+watch(tachieSceneRef, (scene) => {
+  scene?.setEmotion(resolveShiroAvatarEmotion(shiroAvatarState.value), 1)
+})
+watch(shiroAvatarState, (state, previousState) => {
+  if (stageModelRenderer.value === 'tachie') {
+    tachieSceneRef.value?.setEmotion(resolveShiroAvatarEmotion(state), 1)
+    return
+  }
+
+  // Other renderers show the state as a stage emotion. Skip the first run, so a model keeps its idle motion at startup.
+  if (previousState !== undefined)
+    emotionsQueue.enqueue({ name: AVATAR_STATE_STAGE_EMOTION[state], intensity: 1 })
+}, { immediate: true })
 
 const streamingControl = useLlmStreamingControlStore()
 
