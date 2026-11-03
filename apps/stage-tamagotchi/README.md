@@ -42,12 +42,38 @@ Use this feature for local native applications. It does not expose a remote-devi
 The desktop package includes the platform CLI as an optional dependency and unpacks its executable from ASAR.
 Do not omit optional dependencies when building an installer. Windows ARM64 and Linux musl do not have a matching CLI in this version.
 
+## Memory
+
+Shiro remembers a fact only when the user asks, for example "ชิโระ จำไว้ว่าฉันใช้ VS Code".
+The user removes a fact by asking Shiro to forget it, or in **Settings > Local AI > Memory**.
+
+The main process owns one DuckDB file at `<userData>/memory/shiro-memory.duckdb`.
+Renderer windows read and write it through the eventa contracts in `src/shared/eventa/memory.ts`.
+One owner prevents two windows from opening the same database file.
+
+- A long-term memory stays until the user forgets it.
+- A temporary memory expires after `ttlHours`, 24 by default. The store removes expired memories before each read.
+- The store accepts 200 active memories of at most 500 characters each.
+
+Two tools give the model access: `memory_remember` and `memory_forget`. Both are active in every request.
+Before the leader window composes a message, it loads the current memories into the `system:shiro-memory` context block.
+If the store fails, the chat continues with the previous block.
+
+The store uses the native `@duckdb/node-api` package. The main build keeps it external, and electron-builder unpacks `duckdb.node` with `duckdb.dll`.
+Do not use DuckDB-wasm with `NODE_FS` for this file. Version 1.29 opens an existing database read-only, so writes fail after a restart.
+
 ## Verification
 
 Run the focused runtime tests:
 
 ```sh
 pnpm -F @proj-airi/stage-tamagotchi exec vitest run src/main/services/airi/computer-use/runtime.test.ts src/main/services/airi/computer-use/windows-executor.test.ts
+```
+
+Run the memory tests. They open a real DuckDB file in a temporary directory:
+
+```sh
+pnpm -F @proj-airi/stage-tamagotchi exec vitest run src/main/services/airi/memory src/renderer/stores/tools/builtin/memory.test.ts
 ```
 
 Set `AIRI_COMPUTER_USE_LIVE=1` to include the bundled CLI/private-daemon test.

@@ -112,6 +112,8 @@ export default {
   asarUnpack: [
     '**/*.node',
     '**/node_modules/@auv-js/cli-*/bin/**',
+    // duckdb.node loads duckdb.dll from its own directory, so both files leave app.asar together.
+    '**/node_modules/@duckdb/node-bindings-*/**',
   ],
   extraResources: [
     {

@@ -102,6 +102,7 @@ catalog:
   '@date-fns/utc': ^2.1.1
   '@discordjs/voice': ^0.19.2
   '@dotenvx/dotenvx': ^2.21.0
+  '@duckdb/node-api': 1.5.6-r.2
   '@electric-sql/pglite': ^0.5.6
   '@electric-sql/pglite-pgvector': 0.0.7
   '@electron-toolkit/eslint-config-ts': ^3.1.0

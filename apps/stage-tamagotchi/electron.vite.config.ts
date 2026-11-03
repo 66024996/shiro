@@ -36,6 +36,9 @@ export default defineConfig({
           '@auv-js/sdk',
           '@xsai-apple-speech/transcription-native',
           '@xsai-apple-vision/vision-native',
+          // Shiro memory. The bindings load duckdb.node for the current platform at runtime.
+          '@duckdb/node-api',
+          '@duckdb/node-bindings',
         ],
       },
     },

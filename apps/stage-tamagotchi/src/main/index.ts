@@ -47,6 +47,7 @@ import { setupGodotStageManager } from './services/airi/godot-stage'
 import { setupBuiltInServer } from './services/airi/http-server'
 import { IOTraceRecordingService } from './services/airi/io-trace-recording'
 import { setupMcpStdioManager } from './services/airi/mcp-servers'
+import { MemoryStore, setupMemoryService } from './services/airi/memory'
 import { setupExtensionHost } from './services/airi/plugins'
 import { setupArtistryBridge } from './services/airi/widgets/artistry-bridge'
 import { setupAutoUpdater } from './services/electron/auto-updater'
@@ -304,6 +305,14 @@ app.whenReady().then(async () => {
     return runtime
   })
 
+  const memoryStore = injeca.provide('services:memory', () => {
+    const store = new MemoryStore({
+      databasePath: join(app.getPath('userData'), 'memory', 'shiro-memory.duckdb'),
+    })
+    onAppBeforeQuit(() => store.close())
+    return store
+  })
+
   // Beat Sync uses a background renderer because Web Audio processing needs a DOM runtime.
   const beatSync = injeca.provide('windows:beat-sync', () => setupBeatSync())
 
@@ -401,7 +410,7 @@ app.whenReady().then(async () => {
   }
 
   injeca.invoke({
-    dependsOn: { mainWindow, tray, serverChannel, airiHttpServer, godotStageManager, pluginHost, mcpStdioManager, onboardingWindow: onboardingWindowManager, widgetsWindow: widgetsManager, spotlightWindow, artistryConfig, shiroSpeechRuntime },
+    dependsOn: { mainWindow, tray, serverChannel, airiHttpServer, godotStageManager, pluginHost, mcpStdioManager, onboardingWindow: onboardingWindowManager, widgetsWindow: widgetsManager, spotlightWindow, artistryConfig, shiroSpeechRuntime, memoryStore },
     callback: async (deps) => {
       const { context } = createContext(ipcMain)
       defineInvokeHandler(context, electronAssistantGetWakeWord, () => assistantRuntimeProfile.wakeWord)
@@ -409,6 +418,7 @@ app.whenReady().then(async () => {
       defineInvokeHandler(context, electronShiroSpeechVoiceImport, payload => deps.shiroSpeechRuntime.importVoice(payload.transcript))
       defineInvokeHandler(context, electronOllamaStatusGet, () => getOllamaStatus())
       setupComputerUse(context)
+      setupMemoryService(context, deps.memoryStore)
       await setupArtistryBridge({
         widgetsManager: deps.widgetsWindow,
         context,
