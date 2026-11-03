@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { IntentHandle } from '@proj-airi/pipelines-audio'
 import type { ChatToolCallRendererRegistry } from '@proj-airi/stage-ui/components'
 import type { ChatHistoryReplyPayload, ChatImageAttachment } from '@proj-airi/stage-ui/components/scenarios/chat'
 import type { ChatToolCallRerunEvent } from '@proj-airi/stage-ui/stores/tool-call-rerun'
@@ -11,7 +10,6 @@ import { useChatInterruption } from '@proj-airi/stage-layouts/composables/use-ch
 import { ChatHistory, HearingConfigDialog, JournalPreviewModal } from '@proj-airi/stage-ui/components'
 import { ChatImageAttachmentPreview, ChatReplyPreview, useChatComposer, useChatImages } from '@proj-airi/stage-ui/components/scenarios/chat'
 import { useAnalytics } from '@proj-airi/stage-ui/composables/use-analytics'
-import { getSpeechBusContext, speechOutputSpeakingEvent } from '@proj-airi/stage-ui/services/speech/bus'
 import { useBackgroundStore } from '@proj-airi/stage-ui/stores/background'
 import { useChatStore } from '@proj-airi/stage-ui/stores/chat'
 import { useChatSessionStore } from '@proj-airi/stage-ui/stores/chat/session-store'
@@ -20,23 +18,21 @@ import { useJournalPreviewStore } from '@proj-airi/stage-ui/stores/journal-previ
 import { useAiriCardStore } from '@proj-airi/stage-ui/stores/modules/airi-card'
 import { useHearingStore } from '@proj-airi/stage-ui/stores/modules/hearing'
 import { useSettingsAudioDevice } from '@proj-airi/stage-ui/stores/settings'
-import { useSpeechOutputControlStore } from '@proj-airi/stage-ui/stores/speech-output-control'
-import { useSpeechRuntimeStore } from '@proj-airi/stage-ui/stores/speech-runtime'
 import { BasicButton, BasicTextarea, GhostButton } from '@proj-airi/ui'
 import { until, useLocalStorage } from '@vueuse/core'
 import { nanoid } from 'nanoid/non-secure'
 import { storeToRefs } from 'pinia'
 import { DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuRoot, DropdownMenuTrigger } from 'reka-ui'
-import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, toRaw, useTemplateRef, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, shallowRef, toRaw, useTemplateRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import ShiroAvatar from './branding/shiro-avatar.vue'
 import JournalToolCallBlock from './chat-tool-renderers/journal-tool-call-block.vue'
 import ChatViewportLayout from './chat-viewport-layout.vue'
+import ToolPermissionDialog from './tool-permission-dialog.vue'
 
 import { useHearingInputChannel } from '../composables/use-hearing-input-channel'
 import { artistryToolReferences, computerUseToolReferences, widgetToolReferences } from '../stores/tools'
-import { useTamagotchiPluginToolsStore } from '../stores/tools/plugins'
 
 const props = withDefaults(defineProps<{
   /**
@@ -82,9 +78,6 @@ const chatStream = useChatStreamStore()
 const backgroundStore = useBackgroundStore()
 const journalPreviewStore = useJournalPreviewStore()
 const airiCardStore = useAiriCardStore()
-const tamagotchiPluginToolsStore = useTamagotchiPluginToolsStore()
-const speechRuntimeStore = useSpeechRuntimeStore()
-const speechOutputControlStore = useSpeechOutputControlStore()
 const { autoSendEnabled } = storeToRefs(useHearingStore())
 const { enabled: microphoneEnabled, permissionGranted: microphonePermissionGranted } = storeToRefs(useSettingsAudioDevice())
 
@@ -92,104 +85,6 @@ const { activeSessionId, messages } = storeToRefs(chatSession)
 const { streamingMessage } = storeToRefs(chatStream)
 const { activeSendSessionId, activeStreamingMessage, sending } = storeToRefs(chatStore)
 const { activeCard, activeCardId } = storeToRefs(airiCardStore)
-const permissionVoiceState = ref<'idle' | 'waiting' | 'speaking' | 'finished' | 'muted' | 'unavailable'>('idle')
-const permissionVoiceSpeakingIntentId = ref<string>()
-let permissionVoiceIntent: IntentHandle | undefined
-let permissionVoiceTimeout: ReturnType<typeof setTimeout> | undefined
-const disposePermissionVoiceListener = getSpeechBusContext().on(speechOutputSpeakingEvent, (event) => {
-  const payload = event?.body
-  if (!payload || payload.intentId !== permissionVoiceSpeakingIntentId.value)
-    return
-
-  if (payload.speaking) {
-    clearTimeout(permissionVoiceTimeout)
-    permissionVoiceState.value = 'speaking'
-  }
-  else if (permissionVoiceState.value === 'speaking') {
-    permissionVoiceState.value = 'finished'
-    permissionVoiceIntent?.end()
-    permissionVoiceIntent = undefined
-  }
-  else if (permissionVoiceState.value === 'waiting') {
-    permissionVoiceState.value = 'unavailable'
-    permissionVoiceIntent?.cancel('permission-voice-not-played')
-    permissionVoiceIntent = undefined
-  }
-})
-
-const permissionVoiceStatusLabel = computed(() => {
-  switch (permissionVoiceState.value) {
-    case 'waiting':
-      return 'กำลังเตรียมเสียง'
-    case 'speaking':
-      return 'ชิโระกำลังพูด'
-    case 'finished':
-      return 'เสียงหยุดแล้ว'
-    case 'muted':
-      return 'ปิดเสียงอยู่ · อ่านข้อความได้'
-    case 'unavailable':
-      return 'เสียงไม่พร้อม · อ่านข้อความได้'
-    default:
-      return ''
-  }
-})
-
-watch(() => tamagotchiPluginToolsStore.permissionRequest?.id, (requestId) => {
-  clearTimeout(permissionVoiceTimeout)
-  permissionVoiceIntent?.cancel('permission-request-changed')
-  permissionVoiceIntent = undefined
-  permissionVoiceSpeakingIntentId.value = undefined
-
-  if (!requestId) {
-    permissionVoiceState.value = 'idle'
-    return
-  }
-
-  const request = tamagotchiPluginToolsStore.permissionRequest
-  if (!request)
-    return
-
-  if (speechOutputControlStore.speechMuted) {
-    permissionVoiceState.value = 'muted'
-    return
-  }
-
-  const intentId = `shiro-permission-${request.id}`
-  permissionVoiceSpeakingIntentId.value = intentId
-  permissionVoiceState.value = 'waiting'
-  permissionVoiceTimeout = setTimeout(() => {
-    if (permissionVoiceState.value === 'waiting') {
-      permissionVoiceState.value = 'unavailable'
-      permissionVoiceIntent?.cancel('permission-voice-timeout')
-      permissionVoiceIntent = undefined
-    }
-  }, 10_000)
-
-  try {
-    permissionVoiceIntent = speechRuntimeStore.openIntent({
-      intentId,
-      ownerId: activeCardId.value,
-      priority: 'high',
-      behavior: 'queue',
-    })
-    permissionVoiceIntent.writeLiteral(request.voiceLine)
-    permissionVoiceIntent.writeFlush()
-  }
-  catch (error) {
-    clearTimeout(permissionVoiceTimeout)
-    permissionVoiceIntent?.cancel('permission-voice-error')
-    permissionVoiceIntent = undefined
-    permissionVoiceState.value = 'unavailable'
-    console.warn('[Shiro permission] Failed to synthesize permission prompt', error)
-  }
-}, { immediate: true })
-
-onUnmounted(() => {
-  clearTimeout(permissionVoiceTimeout)
-  permissionVoiceIntent?.cancel('permission-dialog-unmounted')
-  disposePermissionVoiceListener()
-})
-
 const composer = useChatComposer<ChatImageAttachment>({
   activeSessionId,
   send: submission => chatStore.send({
@@ -718,220 +613,11 @@ defineExpose({
     </template>
   </ChatViewportLayout>
 
-  <div
-    v-if="tamagotchiPluginToolsStore.permissionState === 'permission' && tamagotchiPluginToolsStore.permissionRequest"
-    class="shiro-permission-backdrop fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4 backdrop-blur-[2px]"
-  >
-    <div
-      class="shiro-permission-panel max-w-lg w-full overflow-hidden border border-white/10 rounded-[28px] bg-[#fffdf9] p-5 shadow-[0_30px_80px_rgba(81,52,31,0.28)] dark:border-neutral-700 dark:bg-[#161310]"
-      role="alertdialog"
-      aria-modal="true"
-      aria-labelledby="shiro-permission-title"
-      aria-describedby="shiro-permission-reason"
-    >
-      <div class="mb-5 flex items-start justify-between gap-3">
-        <div class="flex items-center gap-3">
-          <div :class="['shiro-permission-orb relative size-12 flex items-center justify-center rounded-full from-amber-300 via-rose-200 to-orange-400 bg-gradient-to-br text-lg shadow-amber-500/20 shadow-lg', permissionVoiceState === 'speaking' ? 'is-speaking' : '']">
-            <span class="shiro-permission-dot absolute size-3 rounded-full bg-emerald-400 ring-2 ring-white -right-1 -top-1" />
-            <span class="i-solar:shield-check-bold-duotone h-6 w-6 text-white" />
-          </div>
-          <div>
-            <p class="text-xs text-amber-700 font-medium tracking-[0.18em] uppercase dark:text-amber-300">
-              permission state
-            </p>
-            <h3 id="shiro-permission-title" class="text-xl text-neutral-900 font-semibold dark:text-neutral-50">
-              ชิโระต้องการยืนยันก่อนใช้งาน
-            </h3>
-          </div>
-        </div>
-      </div>
-
-      <div class="mb-4 border border-amber-200 rounded-2xl from-amber-50 to-orange-50 bg-gradient-to-r px-4 py-3 dark:border-amber-900/40 dark:from-amber-950/40 dark:to-orange-950/40">
-        <div class="mb-2 flex items-center justify-between gap-3">
-          <p class="text-[11px] text-amber-700 font-medium tracking-[0.18em] uppercase dark:text-amber-300">
-            shiro voice
-          </p>
-          <div
-            :class="['shiro-voice-indicator flex items-end gap-1', permissionVoiceState === 'speaking' ? 'is-speaking' : '']"
-            :aria-label="permissionVoiceStatusLabel"
-            aria-live="polite"
-          >
-            <span class="shiro-voice-bar" style="--i: 0" />
-            <span class="shiro-voice-bar" style="--i: 1" />
-            <span class="shiro-voice-bar" style="--i: 2" />
-            <span class="shiro-voice-bar" style="--i: 3" />
-            <span class="shiro-voice-bar" style="--i: 4" />
-          </div>
-        </div>
-        <p class="mb-1 text-xs text-amber-700/80 dark:text-amber-300/80" aria-live="polite">
-          {{ permissionVoiceStatusLabel }}
-        </p>
-        <p class="mt-2 text-base text-neutral-800 font-medium dark:text-neutral-100">
-          {{ tamagotchiPluginToolsStore.permissionRequest.voiceLine }}
-        </p>
-      </div>
-
-      <div class="mb-5 border border-neutral-200 rounded-2xl bg-neutral-50 p-4 dark:border-neutral-700 dark:bg-neutral-900/80">
-        <p class="text-[10px] text-neutral-500 font-medium tracking-[0.18em] uppercase dark:text-neutral-400">
-          tool awaiting approval
-        </p>
-        <div class="mt-3 flex items-center gap-3">
-          <span class="size-10 inline-flex items-center justify-center rounded-xl from-violet-500 to-fuchsia-500 bg-gradient-to-br text-lg text-white shadow-lg shadow-violet-500/20">
-            <span class="i-solar:code-square-bold-duotone h-5 w-5" />
-          </span>
-          <div>
-            <p class="text-sm text-neutral-500 dark:text-neutral-400">
-              Tool name
-            </p>
-            <p class="text-lg text-neutral-900 font-semibold dark:text-neutral-50">
-              {{ tamagotchiPluginToolsStore.permissionRequest.toolName }}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <p id="shiro-permission-reason" class="mb-5 rounded-xl bg-neutral-100 px-3 py-2 text-sm text-neutral-700 leading-relaxed dark:bg-neutral-800 dark:text-neutral-200">
-        {{ tamagotchiPluginToolsStore.permissionRequest.reason }}
-      </p>
-
-      <div class="flex justify-end gap-2">
-        <BasicButton
-          size="sm"
-          :class="['min-w-[120px] border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-100 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700']"
-          @click="tamagotchiPluginToolsStore.cancelPermissionRequest()"
-        >
-          ยกเลิก
-        </BasicButton>
-        <BasicButton
-          size="sm"
-          :class="['min-w-[120px] bg-gradient-to-r from-primary-500 to-violet-500 text-white shadow-lg shadow-primary-500/20 hover:brightness-110']"
-          @click="tamagotchiPluginToolsStore.confirmPermissionRequest(true)"
-        >
-          อนุญาต
-        </BasicButton>
-      </div>
-    </div>
-  </div>
+  <ToolPermissionDialog />
 
   <!-- Shared Preview Modal -->
   <JournalPreviewModal />
 </template>
-
-<style scoped>
-.shiro-permission-backdrop {
-  animation: shiroPermissionFade 180ms ease-out;
-}
-
-.shiro-permission-panel {
-  position: relative;
-  animation: shiroPermissionSlide 220ms ease-out;
-}
-
-.shiro-permission-panel::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(251, 191, 36, 0.12), rgba(168, 85, 247, 0.08), transparent 60%);
-  pointer-events: none;
-}
-
-.shiro-permission-orb {
-  animation: none;
-}
-
-.shiro-permission-orb.is-speaking {
-  animation: shiroOrbFloat 2.4s ease-in-out infinite;
-}
-
-.shiro-permission-dot {
-  animation: none;
-}
-
-.shiro-permission-orb.is-speaking .shiro-permission-dot {
-  animation: shiroDotPulse 2s ease-in-out infinite;
-}
-
-.shiro-voice-indicator {
-  height: 20px;
-  padding: 0 2px;
-}
-
-.shiro-voice-bar {
-  display: block;
-  width: 4px;
-  border-radius: 9999px;
-  background: linear-gradient(180deg, rgba(251, 191, 36, 1), rgba(248, 113, 113, 0.9));
-  animation: none;
-  transform-origin: center bottom;
-  transform: scaleY(0.35);
-  opacity: 0.5;
-}
-
-.shiro-voice-bar:nth-child(1) { height: 6px; }
-.shiro-voice-bar:nth-child(2) { height: 12px; }
-.shiro-voice-bar:nth-child(3) { height: 18px; }
-.shiro-voice-bar:nth-child(4) { height: 12px; }
-.shiro-voice-bar:nth-child(5) { height: 7px; }
-
-.shiro-voice-indicator.is-speaking .shiro-voice-bar {
-  animation: shiroVoiceBar 1s ease-in-out infinite;
-  animation-delay: calc(var(--i) * 120ms);
-}
-
-@keyframes shiroPermissionFade {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes shiroPermissionSlide {
-  from {
-    opacity: 0;
-    transform: translateY(12px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes shiroOrbFloat {
-  0%,
-  100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-4px);
-  }
-}
-
-@keyframes shiroDotPulse {
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.3);
-    opacity: 0.8;
-  }
-}
-
-@keyframes shiroVoiceBar {
-  0%,
-  100% {
-    transform: scaleY(0.35);
-    opacity: 0.7;
-  }
-  50% {
-    transform: scaleY(1);
-    opacity: 1;
-  }
-}
-</style>
 
 <style scoped>
 /*

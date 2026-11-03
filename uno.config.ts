@@ -153,7 +153,7 @@ export function sharedUnoConfig() {
       }),
       presetScrollbar(),
       presetChromatic({
-        baseHue: 220.44,
+        baseHue: 270,
         colors: {
           primary: 0,
           complementary: 180,

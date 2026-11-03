@@ -133,3 +133,20 @@ about:
       title: Update Available
       description: A new version (v{version}) is available.
       no-release-notes-markdown: _No release notes provided._
+
+tool-permission:
+  eyebrow: Approval required
+  title: Shiro asks you to confirm first
+  voice-line: Shiro wants to use {tool} to help you. Do you allow it?
+  voice-label: Shiro's voice
+  tool-label: Tool awaiting approval
+  tool-name: Tool name
+  reason: This tool can reach data or systems that need care, for example the browser, files, or the network.
+  allow: Allow
+  cancel: Cancel
+  voice-status:
+    waiting: Preparing the voice
+    speaking: Shiro is speaking
+    finished: The voice has finished
+    muted: The voice is muted. You can read the message.
+    unavailable: The voice is not available. You can read the message.

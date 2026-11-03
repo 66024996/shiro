@@ -22,8 +22,6 @@ export const useTamagotchiPluginToolsStore = defineStore('tamagotchi-plugin-tool
   const permissionRequest = ref<{
     id: number
     toolName: string
-    reason: string
-    voiceLine: string
     resolve: (confirmed: boolean) => void
   } | null>(null)
 
@@ -54,16 +52,11 @@ export const useTamagotchiPluginToolsStore = defineStore('tamagotchi-plugin-tool
       return
     }
 
-    const reason = `Tool นี้อาจเข้าถึงข้อมูลหรือระบบที่ต้องใช้ความระมัดระวัง เช่น browser, file system หรือ network.`
-    const voiceLine = `ชิโระ: ข้าจะใช้ ${toolName} เพื่อช่วยคุณ — อนุญาตไหมคะ?`
-
     const confirmed = await new Promise<boolean>((resolve) => {
       permissionState.value = 'permission'
       permissionRequest.value = {
         id: nextPermissionRequestId++,
         toolName,
-        reason,
-        voiceLine,
         resolve,
       }
     })
