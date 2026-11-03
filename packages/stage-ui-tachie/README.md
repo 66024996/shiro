@@ -37,8 +37,8 @@ Supported names are `neutral`, `happy`, `sad`, `angry`, `think`, `surprised`,
 `awkward`, `question`, and `curious`. Matching is case-insensitive. Every
 recognized image must use the same pixel dimensions.
 
-Shiro adds five optional assistant-state images: `listening`, `concerned`,
-`gaming`, `error`, and `permission`. If one is missing, the scene uses the
+Shiro adds six optional assistant-state images: `listening`, `speaking`,
+`concerned`, `gaming`, `error`, and `permission`. If one is missing, the scene uses the
 chain in `TACHIE_EMOTION_FALLBACKS`, and then `neutral`.
 
 `SHIRO_AVATAR_STATES` lists the twelve assistant states. The stage maps each

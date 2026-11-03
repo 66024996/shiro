@@ -17,6 +17,7 @@ export const TACHIE_EMOTIONS = [
   // Shiro extensions: optional images for assistant states. Missing ones fall
   // back through TACHIE_EMOTION_FALLBACKS and finally to `neutral`.
   'listening',
+  'speaking',
   'concerned',
   'gaming',
   'error',
@@ -35,6 +36,7 @@ export const DEFAULT_TACHIE_EMOTION: TachieEmotion = 'neutral'
  */
 export const TACHIE_EMOTION_FALLBACKS: Partial<Record<TachieEmotion, readonly TachieEmotion[]>> = {
   listening: ['curious', 'neutral'],
+  speaking: ['neutral'],
   concerned: ['awkward', 'sad', 'neutral'],
   gaming: ['happy', 'neutral'],
   error: ['concerned', 'awkward', 'sad', 'neutral'],

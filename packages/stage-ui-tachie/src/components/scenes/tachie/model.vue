@@ -37,6 +37,8 @@ const props = withDefaults(defineProps<{
   themeColorsHue?: number
   themeColorsHueDynamic?: boolean
   paused?: boolean
+  /** The emotion to show first. The scene keeps it, because this component can mount after the request. */
+  emotion?: string
 }>(), {
   shadowEnabled: true,
   themeColorsHue: 220.44,
@@ -183,6 +185,9 @@ function createMountedModel(assets: TachieLoadedAssets): MountedTachie {
   }
 }
 
+/** The last emotion that the stage asked for. A newly loaded model starts with it. */
+let requestedEmotion: string = props.emotion ?? DEFAULT_TACHIE_EMOTION
+
 async function loadModel() {
   const requestId = ++loadSequence
   loadAbortController?.abort()
@@ -220,6 +225,8 @@ async function loadModel() {
     currentModel.value = nextModel
     disposeMountedModel(previousModel)
     componentState.value = 'mounted'
+    // A state can change while the archive loads, for example when Gaming Mode swaps the model.
+    showEmotion(requestedEmotion)
   }
   catch (error) {
     if (controller.signal.aborted)
@@ -238,8 +245,14 @@ async function loadModel() {
 /**
  * Displays the requested AIRI emotion, falling back to the required neutral
  * image when the archive does not provide that state.
+ * When no model is loaded yet, the model shows the emotion as soon as it loads.
  */
 function setEmotion(emotion: string, _intensity = 1): TachieEmotion | undefined {
+  requestedEmotion = emotion
+  return showEmotion(emotion)
+}
+
+function showEmotion(emotion: string): TachieEmotion | undefined {
   const model = currentModel.value
   if (!model)
     return undefined

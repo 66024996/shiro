@@ -3,11 +3,12 @@ import type { TachieEmotion } from '../../constants/emotions'
 
 import { Screen } from '@proj-airi/ui'
 import { storeToRefs } from 'pinia'
-import { computed, useTemplateRef, watch } from 'vue'
+import { computed, ref, useTemplateRef, watch } from 'vue'
 
 import TachieCanvas from './tachie/canvas.vue'
 import TachieModel from './tachie/model.vue'
 
+import { DEFAULT_TACHIE_EMOTION } from '../../constants/emotions'
 import { useTachie } from '../../stores/tachie'
 
 const props = defineProps<{
@@ -36,6 +37,8 @@ const { renderScale: storedRenderScale, shadowEnabled: storedShadowEnabled } = s
 
 const effectiveRenderScale = computed(() => props.renderScale ?? storedRenderScale.value)
 const effectiveShadowEnabled = computed(() => props.shadowEnabled ?? storedShadowEnabled.value)
+// The model mounts after the canvas starts. It reads this emotion when it mounts, so an early request is not lost.
+const requestedEmotion = ref<TachieEmotion>(DEFAULT_TACHIE_EMOTION)
 
 watch([componentStateModel, componentStateCanvas], () => {
   componentState.value = componentStateModel.value === 'mounted' && componentStateCanvas.value === 'mounted'
@@ -46,7 +49,10 @@ watch([componentStateModel, componentStateCanvas], () => {
 defineExpose({
   canvasElement: () => canvasRef.value?.canvasElement(),
   captureFrame: () => canvasRef.value?.captureFrame(),
-  setEmotion: (emotion: TachieEmotion, intensity?: number) => modelRef.value?.setEmotion(emotion, intensity),
+  setEmotion: (emotion: TachieEmotion, intensity?: number) => {
+    requestedEmotion.value = emotion
+    return modelRef.value?.setEmotion(emotion, intensity)
+  },
 })
 </script>
 
@@ -74,6 +80,7 @@ defineExpose({
         :shadow-enabled="effectiveShadowEnabled"
         :theme-colors-hue="themeColorsHue"
         :theme-colors-hue-dynamic="themeColorsHueDynamic"
+        :emotion="requestedEmotion"
         @error="emit('error', $event)"
       />
     </TachieCanvas>
