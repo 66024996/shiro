@@ -19,9 +19,28 @@ export interface LlmStreamOptions extends StreamOptions {
   describeToolImage?: DescribeToolImage
 }
 
+/** A tool source that the LLM store adds to every request, unless an app disables it. */
+export type FixedToolSource = 'mcp' | 'debug' | 'spark-command'
+
 export const useLLM = defineStore('llm', () => {
   const toolsCompatibility = ref<Map<string, boolean>>(new Map())
   const contentArrayCompatibility = ref<Map<string, boolean>>(new Map())
+  /**
+   * Fixed tool sources that requests leave out.
+   * An app with a small local model disables unused sources, because each tool adds prompt tokens.
+   */
+  const disabledFixedToolSources = ref<FixedToolSource[]>([])
+
+  function resolveRequestTools(customTools: StreamOptions['tools'], describeImage?: DescribeToolImage) {
+    const disabled = new Set(disabledFixedToolSources.value)
+    return resolveLlmTools({
+      customTools,
+      describeImage,
+      ...(disabled.has('mcp') ? { builtInTools: [] } : {}),
+      ...(disabled.has('debug') ? { debugTools: [] } : {}),
+      ...(disabled.has('spark-command') ? { sparkCommandTools: [] } : {}),
+    })
+  }
 
   async function stream(model: string, chatProvider: GenerationProvider, context: Conversation, options?: LlmStreamOptions) {
     const key = modelKey(model, chatProvider.generation(model))
@@ -29,7 +48,7 @@ export const useLLM = defineStore('llm', () => {
     // Becomes true once the person could already have seen output from this attempt.
     let outputStarted = false
     const { tools: customTools, describeToolImage, ...streamOptions } = options ?? {}
-    const builtinToolsResolver = () => resolveLlmTools({ customTools, describeImage: describeToolImage })
+    const builtinToolsResolver = () => resolveRequestTools(customTools, describeToolImage)
 
     const runStream = () => coreStreamFrom({
       model,
@@ -109,6 +128,7 @@ export const useLLM = defineStore('llm', () => {
   }
 
   return {
+    disabledFixedToolSources,
     models,
     stream,
   }

@@ -248,6 +248,19 @@ describe('isToolRelatedError', () => {
 
   const helloTurns = { turns: [{ id: 'user', type: 'user' as const, content: [{ type: 'text' as const, text: 'hello' }] }] }
 
+  it('leaves out the fixed tool sources that the app disables', async () => {
+    const store = useLLM()
+    store.disabledFixedToolSources = ['mcp', 'debug', 'spark-command']
+    streamTextMock.mockImplementationOnce(() => createMockStreamResult())
+
+    await store.stream('model-a', provider, helloTurns, { tools: [customTool] })
+
+    expect(mcpMock).not.toHaveBeenCalled()
+    expect(debugMock).not.toHaveBeenCalled()
+    expect(createSparkCommandToolMock).not.toHaveBeenCalled()
+    expect(streamTextMock.mock.calls[0]?.[0]?.tools?.map(toolNameFrom)).toEqual(['custom-tool'])
+  })
+
   for (const message of [
     'Invalid schema for function \'broken\': \'dict\' is not valid under any of the given schemas',
     'invalid_function_parameters',
