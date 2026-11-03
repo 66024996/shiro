@@ -41,6 +41,18 @@ The first launch downloads the TTS model into `hf_cache`.
 The first transcription request downloads the Whisper `small` model.
 Later requests use the local cache.
 
+## Tests
+
+The API packages are in `.venv`, and the speech models are in `.venv_omnivoice`.
+The portable runtime merges both `site-packages` folders, so the tests use both too.
+
+From `D:\Shiro5_server`, run:
+
+```powershell
+$env:PYTHONPATH = "$PWD;$PWD\.venv\Lib\site-packages"
+.\.venv_omnivoice\Scripts\python.exe -m unittest discover -s tests
+```
+
 ## Speech providers
 
 The service uses the OpenAI-compatible API at `http://127.0.0.1:5052/v1/`.
