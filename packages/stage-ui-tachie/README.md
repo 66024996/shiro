@@ -45,6 +45,17 @@ chain in `TACHIE_EMOTION_FALLBACKS`, and then `neutral`.
 state to one image name through `resolveShiroAvatarEmotion`. A Live2D or VRM
 driver can map the same states to its own expressions.
 
+## Build an archive from images
+
+`createTachieZip` builds an archive from one image per emotion. The `neutral`
+image sets the canvas size. Each other image keeps its aspect ratio and is
+fitted onto that canvas, centered and aligned to the bottom. The result also
+lists images that have no transparent pixels.
+
+`readTachieZipImages` returns the emotion images of an existing archive, so an
+editor can load and replace them. Both functions need a browser runtime with
+`OffscreenCanvas`.
+
 ## How to use
 
 ```vue
