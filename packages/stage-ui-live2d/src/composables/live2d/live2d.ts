@@ -32,7 +32,9 @@ const live2dForceAutoBlinkEnabled = useVersionedLocalStorageManualReset<boolean>
 })
 const live2dExpressionEnabled = useLocalStorageManualReset<boolean>('settings/live2d/expression-enabled', false)
 const live2dShadowEnabled = useLocalStorageManualReset<boolean>('settings/live2d/shadow-enabled', true)
-const live2dMaxFps = useLocalStorageManualReset<number>('settings/live2d/max-fps', 0)
+// Shiro caps Live2D at 30 fps by default. On a laptop at idle, this cut the app from 6.3% CPU and 14% GPU to 1.9% and 3.9%.
+// "Unlimited" stays available in the model settings.
+const live2dMaxFps = useLocalStorageManualReset<number>('settings/live2d/max-fps', 30)
 const live2dRenderScale = useLocalStorageManualReset<number>('settings/live2d/render-scale', 2)
 
 function resetState() {
