@@ -29,11 +29,10 @@ import { useBroadcastChannel } from '@vueuse/core'
 // import embedWorkerURL from '@xsai-transformers/embed/worker?worker&url'
 // import { embed } from '@xsai/embed'
 import { storeToRefs } from 'pinia'
-import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
+import { computed, nextTick, onUnmounted, ref, shallowRef, watch } from 'vue'
 
 import StageRenderError from './stage-render-error.vue'
 
-import { useDuckDb } from '../../composables/use-duck-db'
 import { useIOTraceBridge } from '../../composables/use-io-trace-bridge'
 import { initIOTracer } from '../../composables/use-io-tracer'
 import { Emotion, EMOTION_EmotionMotionName_value, EMOTION_VRMExpressionName_value, EmotionThinkMotionName } from '../../constants/emotions'
@@ -70,7 +69,6 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{ error: [error: Error] }>()
 const componentState = defineModel<'pending' | 'loading' | 'mounted'>('state', { default: 'pending' })
 
-const { getDb } = useDuckDb()
 // const transformersProvider = createTransformers({ embedWorkerURL })
 
 const vrmViewerRef = ref<InstanceType<typeof ThreeScene>>()
@@ -1007,10 +1005,6 @@ if (typeof window !== 'undefined') {
     window.addEventListener(event, resumeAudioContextOnInteraction, { once: true, passive: true })
   })
 }
-
-onMounted(async () => {
-  await getDb() // stub for future update
-})
 
 watch([stageModelRenderer, () => props.paused], ([renderer]) => {
   if (renderer === 'godot') {
