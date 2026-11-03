@@ -8,11 +8,10 @@ import type { StreamEvent, StreamOptions } from '../types/llm'
 import type { ResolvedStep } from './request-context'
 
 import { responses } from '@xsai-ext/responses'
-import { stepCountAtLeast } from '@xsai/shared-chat'
 
 import { renderSegmentText } from '../messages/render-context'
 import { projectInput, projectRound } from '../messages/turns'
-import { createGeneration } from './generation'
+import { createGeneration, shouldStopToolLoop } from './generation'
 import { createContinuationScope, mergeRequestHeaders, replaceProviderConfig, supportsTools } from './request-context'
 import { RequestSwitch } from './request-switch'
 import { toAiriStreamEvent } from './xsai-events'
@@ -245,7 +244,7 @@ export function streamResponses(input: {
     headers: mergeRequestHeaders(input.config.headers, input.options?.headers),
     tools: input.webSearch ? [...(input.tools ?? []), { type: 'web_search' }] : input.tools,
     toolChoice: input.options?.resolveStep ? undefined : toolChoice(input.options?.toolChoice),
-    stopWhen: stepCountAtLeast(10),
+    stopWhen: shouldStopToolLoop,
     onEvent: async (event) => {
       const mapped = toAiriStreamEvent(event)
       if (mapped)

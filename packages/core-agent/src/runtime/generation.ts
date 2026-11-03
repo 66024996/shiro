@@ -1,12 +1,37 @@
-import type { CompletionStep } from '@xsai/shared-chat'
+import type { CompletionStep, StopCondition } from '@xsai/shared-chat'
 
 import type { ProjectionEntry } from '../messages/turns'
 import type { AssistantTurn, GenerationRound, ProviderContinuation } from '../messages/types'
 
 import { errorMessageFrom } from '@moeru/std'
+import { stepCountAtLeast } from '@xsai/shared-chat'
 import { nanoid } from 'nanoid'
 
 import { readRound } from '../messages/turns'
+
+const stopAtStepLimit = stepCountAtLeast(10)
+
+/** Allows a final response after a tool error, but blocks another call to that tool. */
+export const shouldStopToolLoop: StopCondition<unknown> = (context) => {
+  if (stopAtStepLimit(context))
+    return true
+
+  return hasRepeatedFailedToolCall(context.steps)
+}
+
+function hasRepeatedFailedToolCall(steps: readonly CompletionStep[]) {
+  const currentStep = steps.at(-1)
+  if (!currentStep?.toolCalls.length)
+    return false
+
+  const failedToolNames = new Set(steps.slice(0, -1)
+    .flatMap(step => step.toolResults
+      .filter(result => result.isError === true)
+      .map(result => result.toolName),
+    ))
+
+  return currentStep.toolCalls.some(call => failedToolNames.has(call.toolName))
+}
 
 /** A generation is owned by its caller's turn; anonymous callers receive an independent identity. */
 function createAssistantTurn(turnId?: string, runId?: string): AssistantTurn {
@@ -67,16 +92,24 @@ export function createGeneration<Native extends ProviderContinuation>(input: {
   async function complete(items: Promise<Native['data'][number][]>, steps: Promise<CompletionStep[]>) {
     const [final, completedSteps] = await Promise.all([items, steps])
     const turn = createAssistantTurn(input.turnId, input.runId)
-    for (const [index, step] of completedSteps.entries()) {
+    const lastStep = completedSteps.at(-1)
+    const endedWithUnexecutedToolCalls = (lastStep?.finishReason === 'tool-calls' || lastStep?.finishReason === 'tool_calls')
+      && lastStep.toolCalls.length > 0
+      && lastStep.toolResults.length === 0
+    const stoppedAfterToolFailure = endedWithUnexecutedToolCalls && hasRepeatedFailedToolCall(completedSteps)
+    const recordedSteps = stoppedAfterToolFailure ? completedSteps.slice(0, -1) : completedSteps
+
+    for (const [index, step] of recordedSteps.entries()) {
       const start = starts[index]
       if (start === undefined)
         throw new Error('Missing SDK model step boundary')
       const output = final.slice(start, starts[index + 1] ?? final.length)
       recordRound(turn, input.continuation(output, index), step, models[index] ?? input.model, input.roundOffset ?? 0, input.project)
     }
-    const lastStep = completedSteps.at(-1)
-    if ((lastStep?.finishReason === 'tool-calls' || lastStep?.finishReason === 'tool_calls') && lastStep.toolCalls.length > 0 && lastStep.toolResults.length === 0)
+
+    if (endedWithUnexecutedToolCalls && !stoppedAfterToolFailure)
       throw new Error('Generation tool step limit reached')
+
     return turn
   }
 

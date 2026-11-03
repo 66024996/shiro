@@ -5,11 +5,10 @@ import type { Conversation } from '../messages/types'
 import type { StreamEvent, StreamOptions } from '../types/llm'
 import type { ResolvedStep } from './request-context'
 
-import { stepCountAtLeast } from '@xsai/shared-chat'
 import { streamText } from '@xsai/stream-text'
 
 import { chatContentToString, chatMessagesToProjectionEntries, conversationToChatMessages } from '../messages/chat-completions'
-import { createGeneration } from './generation'
+import { createGeneration, shouldStopToolLoop } from './generation'
 import { createContinuationScope, mergeRequestHeaders, replaceProviderConfig, supportsContentArray, supportsTools } from './request-context'
 import { RequestSwitch } from './request-switch'
 import { toAiriStreamEvent } from './xsai-events'
@@ -102,7 +101,7 @@ export function streamChatCompletions(input: {
     messages,
     headers: mergeRequestHeaders(input.config.headers, input.options?.headers),
     streamOptions: { includeUsage: true },
-    stopWhen: stepCountAtLeast(10),
+    stopWhen: shouldStopToolLoop,
     tools: input.tools,
     toolChoice: input.options?.resolveStep ? undefined : input.options?.toolChoice,
     onEvent: async (event) => {
