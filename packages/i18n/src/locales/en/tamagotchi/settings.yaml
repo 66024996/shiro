@@ -22,6 +22,56 @@ spotlight:
     prefix: 'Something went wrong: {message}'
     shortcutRegistrationFailed: 'Something went wrong: failed to register Spotlight shortcut.'
 pages:
+  local-ai:
+    title: Local AI
+    speech:
+      title: Offline Thai speech
+      description: Speech runs on this device. Import a voice clip that you have permission to use.
+      state:
+        starting: Loading speech models…
+        ready: Speech service is ready.
+        error: Speech service is not available.
+        unsupported: Offline speech is available in the Windows build.
+      messages:
+        runtime-unsupported: This speech runtime supports Windows only.
+        runtime-missing: The speech runtime files are missing.
+        service-not-running: The speech service is not running.
+        service-starting: The speech models are loading.
+        service-http-error: The speech service returned HTTP {status}.
+        service-invalid-response: The speech service returned an invalid response.
+        service-failed: The speech service stopped unexpectedly.
+      voice-ready: A voice reference is ready.
+      voice-missing: Import a voice reference to enable speech.
+      transcript-label: Voice transcript
+      transcript-description: Enter the exact words spoken in your audio clip.
+      transcript-placeholder: Paste the transcript
+      prompt-label: Recognition context
+      prompt-description: Add names or technical terms that are likely to appear. A wrong context can reduce accuracy.
+      prompt-placeholder: Names, places, technical terms, or commands
+      prompt-save: Save context
+      prompt-saved: Context saved
+      prompt-too-long: Keep the context within 1,000 characters.
+      prompt-load-error: Failed to load the recognition context.
+      prompt-save-error: Failed to save the recognition context.
+      import: Import voice clip
+      configured: Speech is active
+      activate: Use offline speech
+      status-error: Failed to get speech status.
+      import-error: Failed to import the voice clip.
+      activate-error: Failed to activate offline speech.
+    ollama:
+      title: Ollama chat
+      description: Install Ollama separately and start it before you select a local chat model.
+      state:
+        checking: Checking Ollama…
+        available: Ollama is ready.
+        unavailable: Ollama is not available.
+      model-label: Local chat model
+      model-description: Shiro does not download chat models.
+      refresh: Refresh model list
+      use-model: Use this model
+      status-error: Failed to get Ollama status.
+      activate-error: Failed to activate the Ollama model.
   modules:
     mcp-server:
       description: Connect and manage MCP server and tools

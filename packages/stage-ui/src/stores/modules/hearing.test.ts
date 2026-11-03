@@ -103,6 +103,13 @@ describe('resolveTranscriptionProviderOptions', () => {
   it('prefers the provider language when one is configured explicitly', () => {
     expect(resolveTranscriptionProviderOptions({ language: 'ja' }, 'zh-Hans')).toEqual({ language: 'ja' })
   })
+
+  it('passes a configured recognition context to the transcription request', () => {
+    expect(resolveTranscriptionProviderOptions({ prompt: '  STT, TTS และคำสั่ง  ' }, 'th-TH')).toEqual({
+      language: 'th',
+      prompt: 'STT, TTS และคำสั่ง',
+    })
+  })
 })
 
 describe('normalizeGeneratedTranscriptionText', () => {

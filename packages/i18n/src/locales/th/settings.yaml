@@ -3,7 +3,7 @@ common:
 dialogs:
   onboarding:
     official:
-      title: ผู้ให้บริการทางการของ AIRI
+      title: ผู้ให้บริการทางการของ ชิโระ
     title: ยินดีต้อนรับสู่ชิโระค่ะ
     description: มาตั้งค่าผู้ให้บริการ AI ตัวแรกเพื่อเริ่มต้นกันนะคะ
     selectProvider: เลือกผู้ให้บริการ AI

@@ -48,8 +48,14 @@ export interface SpeechOutputPlaybackState {
   speaking: boolean
 }
 
+export interface SpeechOutputSpeakingPayload {
+  intentId: string
+  speaking: boolean
+}
+
 /** Cross-renderer request for the active speech output host's playback state. */
 export const speechOutputGetPlaybackState = defineInvokeEventa<SpeechOutputPlaybackState>('eventa:audio:speech:output:get-playback-state')
+export const speechOutputSpeakingEvent = defineEventa<SpeechOutputSpeakingPayload>('eventa:audio:speech:output:speaking')
 
 const BUS_CHANNEL_NAME = 'proj-airi:pipelines:outputs:speech'
 

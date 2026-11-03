@@ -3,10 +3,13 @@ import { HearingConfigDialog } from '@proj-airi/stage-ui/components'
 import { useAudioAnalyzer, useAudioContextFromStream } from '@proj-airi/stage-ui/composables'
 import { useHearingStore } from '@proj-airi/stage-ui/stores/modules/hearing'
 import { useSettingsAudioDevice } from '@proj-airi/stage-ui/stores/settings'
+import { FieldCheckbox } from '@proj-airi/ui'
+import { useLocalStorage } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { onMounted, onUnmounted, watch } from 'vue'
 
 const show = defineModel('show', { type: Boolean, default: false })
+const wakeWordRequired = useLocalStorage('settings/hearing/wake-word-required', true)
 
 const hearingStore = useHearingStore()
 const settingsAudioDeviceStore = useSettingsAudioDevice()
@@ -58,5 +61,14 @@ onUnmounted(async () => {
     :volume-level="volumeLevel"
   >
     <slot />
+    <template #extra>
+      <div class="mt-3">
+        <FieldCheckbox
+          v-model="wakeWordRequired"
+          label="Require wake word"
+          description="When disabled, send spoken input directly to chat while the microphone is enabled."
+        />
+      </div>
+    </template>
   </HearingConfigDialog>
 </template>

@@ -1,0 +1,51 @@
+pages:
+  local-ai:
+    title: AI ในเครื่อง
+    speech:
+      title: เสียงภาษาไทยแบบออฟไลน์
+      description: ระบบเสียงทำงานบนอุปกรณ์นี้ โปรดนำเข้าไฟล์เสียงที่คุณได้รับอนุญาตให้ใช้
+      state:
+        starting: กำลังโหลดโมเดลเสียง…
+        ready: ระบบเสียงพร้อมใช้งาน
+        error: ระบบเสียงไม่พร้อมใช้งาน
+        unsupported: ระบบเสียงออฟไลน์ใช้ได้ในรุ่น Windows
+      messages:
+        runtime-unsupported: ระบบเสียงนี้รองรับเฉพาะ Windows
+        runtime-missing: ไม่พบไฟล์ระบบเสียง
+        service-not-running: ระบบเสียงไม่ได้ทำงาน
+        service-starting: กำลังโหลดโมเดลเสียง
+        service-http-error: ระบบเสียงตอบกลับ HTTP {status}
+        service-invalid-response: ระบบเสียงส่งข้อมูลตอบกลับไม่ถูกต้อง
+        service-failed: ระบบเสียงหยุดทำงานโดยไม่คาดคิด
+      voice-ready: พร้อมใช้เสียงอ้างอิงแล้ว
+      voice-missing: นำเข้าเสียงอ้างอิงเพื่อเปิดใช้เสียง
+      transcript-label: ข้อความในคลิปเสียง
+      transcript-description: กรอกข้อความที่พูดในคลิปเสียงให้ตรงตามต้นฉบับ
+      transcript-placeholder: วางข้อความถอดเสียง
+      prompt-label: บริบทการรู้จำเสียง
+      prompt-description: เพิ่มชื่อหรือคำศัพท์เฉพาะที่คาดว่าจะอยู่ในเสียง บริบทที่ไม่ตรงอาจทำให้ความแม่นยำลดลง
+      prompt-placeholder: ชื่อบุคคล สถานที่ คำศัพท์เฉพาะ หรือคำสั่ง
+      prompt-save: บันทึกบริบท
+      prompt-saved: บันทึกบริบทแล้ว
+      prompt-too-long: บริบทต้องมีไม่เกิน 1,000 ตัวอักษร
+      prompt-load-error: โหลดบริบทการรู้จำเสียงไม่สำเร็จ
+      prompt-save-error: บันทึกบริบทการรู้จำเสียงไม่สำเร็จ
+      import: นำเข้าไฟล์เสียง
+      configured: เปิดใช้ระบบเสียงแล้ว
+      activate: ใช้ระบบเสียงออฟไลน์
+      status-error: อ่านสถานะระบบเสียงไม่สำเร็จ
+      import-error: นำเข้าไฟล์เสียงไม่สำเร็จ
+      activate-error: เปิดใช้ระบบเสียงออฟไลน์ไม่สำเร็จ
+    ollama:
+      title: แชตผ่าน Ollama
+      description: ติดตั้ง Ollama แยกต่างหากและเปิดใช้งานก่อนเลือกโมเดลแชตในเครื่อง
+      state:
+        checking: กำลังตรวจสอบ Ollama…
+        available: Ollama พร้อมใช้งาน
+        unavailable: ไม่พบ Ollama
+      model-label: โมเดลแชตในเครื่อง
+      model-description: Shiro จะไม่ดาวน์โหลดโมเดลแชต
+      refresh: รีเฟรชรายการโมเดล
+      use-model: ใช้โมเดลนี้
+      status-error: อ่านสถานะ Ollama ไม่สำเร็จ
+      activate-error: เปิดใช้โมเดล Ollama ไม่สำเร็จ
