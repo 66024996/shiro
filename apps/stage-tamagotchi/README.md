@@ -160,6 +160,17 @@ The main process applies the policy in `src/main/services/airi/desktop-control/p
 Each action writes one line to `<userData>/desktop-control/audit.jsonl`. The log keeps the command or path, never file text or command output.
 It moves to `audit.jsonl.1` at 1 MiB.
 
+## Developer Mode
+
+**Settings > Developer Mode** shows debug data without changing the normal screens:
+
+- The avatar state, Gaming Mode, the microphone, and the running tool.
+- The LLM provider and model, and the last 20 chat rounds: time to the first token, total time, and tokens in and out.
+- CPU, RAM, GPU, and VRAM of the machine and of each Shiro process: Electron, the speech server, Ollama, and the model runner.
+- The last tool calls with their duration and error, the last desktop actions from the audit log, and the newest 300 main-process log lines.
+
+It samples only while the page is open, visible, and turned on. One sample runs one PowerShell process for about 1 second, every 3 seconds.
+
 ## Performance
 
 Measured on 2026-11-04 with a production build (`pnpm -F @proj-airi/stage-tamagotchi build`, then `electron .`),

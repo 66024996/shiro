@@ -50,6 +50,29 @@ pages:
       awkward: เขิน
       question: สงสัย
       curious: อยากรู้
+  developer-mode:
+    title: โหมดนักพัฒนา
+    description: แสดงโมเดล โทเคน ความหน่วง ทรัพยากร เครื่องมือ และ log ระบบเก็บข้อมูลเฉพาะตอนเปิดหน้านี้
+    toggle: เปิดโหมดนักพัฒนา
+    state: สถานะ
+    mode: โหมด
+    microphone: ไมโครโฟน
+    tool: เครื่องมือที่ทำงานอยู่
+    llm-title: โมเดลภาษา
+    last-round: 'รอบล่าสุด: โทเคนแรก {ttfb} รวม {duration} โทเคน {input} เข้า / {output} ออก'
+    time: เวลา
+    duration: ระยะเวลา
+    tokens: โทเคนเข้า / ออก
+    status: ผล
+    resources-title: ทรัพยากร
+    system: 'เครื่อง: CPU {cpu}% RAM {ramUsed} / {ramTotal} GB GPU {gpu}% VRAM {vram} GB'
+    sampling: กำลังวัด...
+    process: โปรเซส
+    total: รวมของชิโระ
+    tools-title: การเรียกเครื่องมือ
+    actions-title: งานบนคอมพิวเตอร์
+    logs-title: Log ของ main process
+    error: อ่านข้อมูลนักพัฒนาไม่ได้
   local-ai:
     title: AI ในเครื่อง
     speech:

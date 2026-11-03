@@ -28,4 +28,17 @@ describe('auditLog', () => {
     expect(rotated.map(entry => entry.action)).toEqual(['app-open', 'terminal-run'])
     expect(current).toEqual([{ time: '2026-11-03T08:00:00.000Z', action: 'file-delete', summary: 'D:\\old.txt', decision: 'denied', ok: false }])
   })
+
+  it('reads the newest entries first and returns an empty list without a file', async () => {
+    directory = await mkdtemp(join(tmpdir(), 'shiro-audit-'))
+    const path = join(directory, 'audit.jsonl')
+    const log = new AuditLog({ path, now: () => new Date('2026-11-03T08:00:00Z') })
+    expect(await log.readRecent(5)).toEqual([])
+
+    await log.write({ action: 'app-open', summary: 'Open Discord', decision: 'allowed', ok: true })
+    await log.write({ action: 'system-status', summary: 'Read system status: gpu', decision: 'allowed', ok: true })
+
+    expect((await log.readRecent(1)).map(entry => entry.action)).toEqual(['system-status'])
+    expect((await log.readRecent(5)).map(entry => entry.action)).toEqual(['system-status', 'app-open'])
+  })
 })

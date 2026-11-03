@@ -48,6 +48,7 @@ import { AssistantActivityEvents } from './services/airi/assistant-activity'
 import { setupServerChannel } from './services/airi/channel-server'
 import { setupComputerUse } from './services/airi/computer-use'
 import { AuditLog, DesktopControlService, FileAccess, setupDesktopControlService, StartAppCatalog } from './services/airi/desktop-control'
+import { LogBuffer, setupDeveloperService } from './services/airi/developer'
 import { GameDetector, GamingResources, listChildProcessIds, listProcessesWithTasklist, setupGamingService } from './services/airi/gaming'
 import { setupGodotStageManager } from './services/airi/godot-stage'
 import { setupBuiltInServer } from './services/airi/http-server'
@@ -186,7 +187,10 @@ app.whenReady().then(async () => {
   fileLogger = await setupFileLogger()
 
   // Register the global hook for file logging
+  // Developer Mode shows the newest main-process log lines.
+  const developerLogs = new LogBuffer()
   setGlobalHookPostLog((_, formatted) => {
+    developerLogs.push(formatted)
     if (skipFileLogging || fileLogger.logFileFd === null)
       return
     void fileLogger.appendLog(formatted)
@@ -324,12 +328,13 @@ app.whenReady().then(async () => {
   const assistantActivity = new AssistantActivityEvents()
   const gamingConfig = createGamingConfig()
   const userApproval = createNativeUserApproval(pending => assistantActivity.emit({ type: 'approval', pending }))
+  const desktopAuditLog = new AuditLog({ path: join(app.getPath('userData'), 'desktop-control', 'audit.jsonl') })
   const desktopControl = injeca.provide('services:desktop-control', () => {
     const homeDir = app.getPath('home')
     return new DesktopControlService({
       approve: userApproval,
       onActionFinished: result => assistantActivity.emit({ type: 'action-result', ...result }),
-      auditLog: new AuditLog({ path: join(app.getPath('userData'), 'desktop-control', 'audit.jsonl') }),
+      auditLog: desktopAuditLog,
       files: new FileAccess({
         homeDir,
         systemDrive: env.SystemDrive ?? 'C:',
@@ -481,6 +486,25 @@ app.whenReady().then(async () => {
         onProcesses: processes => gamingResources.lowerPriorities(processes),
       })
       setupGamingService(context, { config: gamingConfig, detector: gameDetector, resources: gamingResources })
+      setupDeveloperService(context, {
+        logs: developerLogs,
+        auditLog: desktopAuditLog,
+        listProcesses: async () => {
+          const electronProcesses = app.getAppMetrics().map(metric => ({
+            pid: metric.pid,
+            // Electron names the main process `Browser` and renderers `Tab`.
+            kind: metric.type === 'Browser' ? 'electron:main' : metric.type === 'Tab' ? 'electron:renderer' : `electron:${metric.type.toLowerCase()}`,
+          }))
+          const speechPid = deps.shiroSpeechRuntime.processId()
+          const speechProcesses = speechPid
+            ? [speechPid, ...await listChildProcessIds(speechPid).catch(() => [])].map(pid => ({ pid, kind: 'speech' }))
+            : []
+          const modelProcesses = (await listProcessesWithTasklist().catch(() => []))
+            .filter(item => /^(?:llama-server|ollama)/i.test(item.name))
+            .map(item => ({ pid: item.pid, kind: item.name.toLowerCase().startsWith('llama') ? 'llm' : 'ollama' }))
+          return [...electronProcesses, ...speechProcesses, ...modelProcesses]
+        },
+      })
       if (platform === 'win32')
         gameDetector.start()
       onAppBeforeQuit(async () => {

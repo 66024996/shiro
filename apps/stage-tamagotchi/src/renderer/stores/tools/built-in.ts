@@ -4,6 +4,7 @@ import type { ChatToolReference } from '@proj-airi/stage-ui/types/chat'
 import { useLlmToolsStore } from '@proj-airi/stage-ui/stores/ai/chat-llm/tools'
 import { defineStore } from 'pinia'
 
+import { useToolActivityStore, withToolActivity } from '../tool-activity'
 import { computerUseTools } from './builtin/computer-use'
 import { desktopControlToolNames, desktopControlTools } from './builtin/desktop-control'
 import { gamingModeToolName, gamingModeTools } from './builtin/gaming-mode'
@@ -36,6 +37,7 @@ const alwaysActiveToolNames = new Set([...memoryToolReferences, ...desktopContro
 
 export const useTamagotchiBuiltinToolsStore = defineStore('tamagotchi-builtin-tools', () => {
   const llmToolsStore = useLlmToolsStore()
+  const toolActivity = useToolActivityStore()
   const toolIdPrefix = 'tamagotchi:'
 
   function registeredToolIds() {
@@ -55,12 +57,13 @@ export const useTamagotchiBuiltinToolsStore = defineStore('tamagotchi-builtin-to
     ])).flat()
 
     llmToolsStore.removeToolsByIds(...registeredToolIds())
-    llmToolsStore.addTools(...tools.map(tool => ({
+    // Developer Mode shows the running tool and the last calls.
+    llmToolsStore.addTools(...tools.map(tool => withToolActivity({
       ...tool,
       defaultActive: alwaysActiveToolNames.has(tool.function.name),
       requiresExplicitSelection: computerUseToolReferences.some(reference => reference.name === tool.function.name),
       id: `${toolIdPrefix}${tool.function.name}`,
-    } satisfies ExecutableTool)))
+    } satisfies ExecutableTool, toolActivity)))
   }
 
   return { refresh }

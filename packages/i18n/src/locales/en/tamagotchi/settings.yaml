@@ -73,6 +73,29 @@ pages:
       awkward: Awkward
       question: Questioning
       curious: Curious
+  developer-mode:
+    title: Developer Mode
+    description: Shows the model, tokens, latency, resources, tools, and logs. It samples only while this page is open.
+    toggle: Developer Mode is on
+    state: State
+    mode: Mode
+    microphone: Microphone
+    tool: Running tool
+    llm-title: Language model
+    last-round: 'Last round: first token {ttfb}, total {duration}, tokens {input} in / {output} out'
+    time: Time
+    duration: Duration
+    tokens: Tokens in / out
+    status: Status
+    resources-title: Resources
+    system: 'Machine: CPU {cpu}%, RAM {ramUsed} / {ramTotal} GB, GPU {gpu}%, VRAM {vram} GB'
+    sampling: Sampling...
+    process: Process
+    total: Shiro total
+    tools-title: Tool calls
+    actions-title: Desktop actions
+    logs-title: Main process log
+    error: Developer data could not be read.
   local-ai:
     title: Local AI
     speech:
