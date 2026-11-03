@@ -13,6 +13,7 @@ if os.name == "nt":
 import numpy as np
 
 from speech_api import SR, create_app, load_voices, pause_after, split_text
+from transcription import ThaiTranscriber
 
 
 class OmniVoiceEngine:
@@ -21,6 +22,8 @@ class OmniVoiceEngine:
         from huggingface_hub import snapshot_download
         from omnivoice import OmniVoice
 
+        if device == "auto":
+            device = "cuda" if torch.cuda.is_available() else "cpu"
         if device.startswith("cuda") and not torch.cuda.is_available():
             raise RuntimeError("CUDA requested, but it is unavailable in this environment")
 
@@ -112,16 +115,20 @@ class OmniVoiceEngine:
 def main():
     parser = argparse.ArgumentParser(description="OpenAI-compatible OmniVoice Thai server")
     parser.add_argument("--port", type=int, default=5052)
-    parser.add_argument("--voices-dir", default="voices")
+    parser.add_argument(
+        "--voices-dir",
+        default=os.environ.get("SHIRO_SPEECH_VOICE_DIR", "voices"),
+    )
     parser.add_argument("--voice", default="shiro")
     parser.add_argument("--model-id", default="hotdogs/omnivoice-thai")
-    parser.add_argument("--device", default="cuda", help="Use cuda or cpu")
+    parser.add_argument("--device", choices=("auto", "cuda", "cpu"), default="auto")
     parser.add_argument("--steps", type=int, default=32)
     parser.add_argument("--guidance-scale", type=float, default=2.0)
     parser.add_argument("--speed", type=float, default=0.9)
     parser.add_argument("--volume", type=float, default=0.9)
     parser.add_argument("--pause", type=float, default=0.3)
     parser.add_argument("--rhythm", choices=("gentle", "off"), default="gentle")
+    parser.add_argument("--stt-model", default="small")
     args = parser.parse_args()
 
     if args.steps < 1:
@@ -131,10 +138,11 @@ def main():
     if not 0 <= args.pause <= 3:
         parser.error("--pause must be between 0 and 3 seconds")
     os.environ.setdefault("HF_HOME", str(Path(__file__).resolve().parent / "hf_cache"))
-    voices = load_voices(Path(args.voices_dir))
+    voice_directory = Path(args.voices_dir)
+    voices = load_voices(voice_directory)
     if not voices:
-        sys.exit(f"No voice pairs found in {args.voices_dir}: expected matching .wav and .txt files")
-    if args.voice not in voices:
+        print(f"No voice reference is configured in {voice_directory}", flush=True)
+    elif args.voice not in voices:
         parser.error(f"Voice '{args.voice}' not found; available voices: {', '.join(voices)}")
 
     engine = OmniVoiceEngine(
@@ -146,11 +154,17 @@ def main():
         args.pause,
         args.rhythm,
     )
+    transcriber = ThaiTranscriber(
+        args.stt_model,
+        Path(os.environ["HF_HOME"]) / "faster-whisper",
+    )
     app = create_app(
         engine,
         voices,
         args.voice,
         default_speed=args.speed,
+        transcriber=transcriber,
+        voices_dir=voice_directory,
     )
     print("[system]", engine.info(), flush=True)
     print(f"Ready: http://localhost:{args.port}/v1/ voice={args.voice}", flush=True)

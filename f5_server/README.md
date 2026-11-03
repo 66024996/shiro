@@ -1,49 +1,53 @@
-# Shiro Thai TTS (OmniVoice)
+# Shiro Thai Speech Runtime
 
-Local OpenAI-compatible Thai voice-cloning server using the gentle Shiro profile.
+Shiro uses this local service for Thai speech recognition and speech synthesis.
+The Windows portable app includes the Python runtime, offline models, and license notices.
 
-## Start
+## Build the Windows app
 
-From `D:\Shiro\f5_server`:
+Run this command from `D:\Shiro\airi`:
 
 ```powershell
+pnpm -F @proj-airi/stage-tamagotchi build:win
+```
+
+The build requires the speech environments, model caches, .NET 10 SDK, and Godot 4.7.1 .NET export templates.
+Set `GODOT4` to the Godot editor path before you build.
+The build creates `apps\stage-tamagotchi\dist\Shiro-windows-x64-portable.zip`.
+Extract the ZIP file, then run `shiro.exe` from the extracted folder.
+
+The Windows app is unsigned because this computer has no code-signing certificate.
+Windows SmartScreen can warn when you start the app.
+Sign the app with a trusted code-signing certificate before public distribution.
+
+The portable app includes the current Shiro voice reference from `voices/shiro.wav` and its transcript.
+On first launch, Shiro copies these files to app data if no Shiro voice exists.
+An imported voice takes priority and stays in app data.
+Import an audio clip that you have permission to use in **Settings > Local AI**.
+
+Ollama remains a separate install.
+Install Ollama and a chat model before you select it in **Settings > Local AI**.
+
+## Development server
+
+From `D:\Shiro\f5_server`, run:
+
+```powershell
+.\.venv_omnivoice\Scripts\python.exe -m pip install -r requirements-stt.txt
 .\start_omnivoice.bat
 ```
 
-The first launch downloads the inference checkpoint and audio tokenizer into `hf_cache`.
-Subsequent launches use that local cache. The reference voice is `voices\shiro.wav`
-with its matching transcript `voices\shiro.txt`; keep both files together.
+The first launch downloads the TTS model into `hf_cache`.
+The first transcription request downloads the Whisper `small` model.
+Later requests use the local cache.
 
-Connect an OpenAI-compatible speech provider with:
+## Speech providers
 
-- Base URL: `http://localhost:5052/v1/`
-- API key: any non-empty value
-- Model: `omnivoice-thai`
-- Voice: `shiro`
+The service uses the OpenAI-compatible API at `http://127.0.0.1:5052/v1/`.
+It accepts speech synthesis requests with model `omnivoice-thai` and voice `shiro`.
+It accepts Thai transcription requests with model `whisper-small`.
+Send an optional `prompt` field with up to 1,000 characters to guide Whisper with names or technical terms.
+A wrong prompt can change the transcript, so omit it when no useful context exists.
 
-## Gentle profile
-
-By default, the server uses speed `0.9`, volume `0.9`, phrase-level variation in speed
-and loudness, and short pauses at punctuation. Pitch is left to the reference voice.
-Phrase-level synthesis adds latency: a 42-character sample took about 5.8 seconds
-on the RTX 3050, versus 3.8 seconds for a single-pass request.
-
-Adjust the profile when starting the server:
-
-```powershell
-.\start_omnivoice.bat --speed 0.95 --volume 0.85 --pause 0.25
-.\start_omnivoice.bat --rhythm off --speed 0.9 --volume 0.9
-```
-
-Use `--device cpu` if GPU memory is unavailable. `--steps 16` may reduce synthesis
-time but can lower audio quality.
-
-## Runtime files
-
-- `.venv` provides the shared PyTorch/CUDA and audio runtime; keep it.
-- `.venv_omnivoice` provides the OmniVoice package; keep it.
-- `hf_cache` contains the downloaded model weights and tokenizer; keep it for offline starts.
-- `voices\shiro.wav` and `voices\shiro.txt` are the voice-cloning reference; do not remove them.
-
-The OmniVoice Thai checkpoint is licensed CC BY-NC 4.0; use it only in accordance with
-that license.
+The `build-runtime.ps1` script stages the Python runtime, offline model caches, and the current Shiro voice reference.
+The `licenses` folder contains the model license texts and attribution notice.

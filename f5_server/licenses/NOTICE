@@ -1,0 +1,18 @@
+OmniVoice Thai
+Copyright (c) UKA
+Source: https://huggingface.co/hotdogs/omnivoice-thai
+License: Apache License 2.0
+The model files are distributed in this application for offline speech synthesis.
+
+Higgs Audio 2 tokenizer
+Source: https://huggingface.co/eustlb/higgs-audio-v2-tokenizer
+“Boson Higgs Audio 2 is licensed under the Boson Community License, Copyright © Boson AI USA, Inc. All Rights Reserved.”
+
+The tokenizer includes material subject to the Meta Llama 3 Community License.
+The Boson and Meta license texts accompany this application.
+
+Whisper small model in CTranslate2 format
+Source: https://huggingface.co/Systran/faster-whisper-small
+Original model: https://huggingface.co/openai/whisper-small
+License: MIT
+The MIT license text accompanies this application.

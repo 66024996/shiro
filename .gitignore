@@ -163,3 +163,7 @@ packages/i18n/glossary/glossary.tbx
 # Sherpaw models downloaded by the Vite plugin
 apps/*/public/sherpaw/
 apps/*/src/renderer/public/sherpaw/
+
+# Shiro: nested AIRI checkout and local build tools
+/airi/
+/build-tools/
