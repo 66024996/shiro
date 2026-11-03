@@ -41,16 +41,16 @@ describe('generateManifestFixtures', () => {
 
     expect(result.channelDir).toBe(join(root, 'stable'))
     expect(result.latestFilename).toBe('latest-x64.yml')
-    expect(result.artifactFilename).toBe('AIRI-9.9.9-test.1-windows-x64-setup.exe')
+    expect(result.artifactFilename).toBe('Shiro-9.9.9-test.1-windows-x64-setup.exe')
 
     const manifest = yaml.parse(await readFile(result.manifestPath, 'utf8'))
     expect(manifest).toMatchObject({
       version: '9.9.9-test.1',
-      path: 'AIRI-9.9.9-test.1-windows-x64-setup.exe',
+      path: 'Shiro-9.9.9-test.1-windows-x64-setup.exe',
       releaseNotes: 'Mock update for AIRI local updater verification.',
       files: [
         {
-          url: 'AIRI-9.9.9-test.1-windows-x64-setup.exe',
+          url: 'Shiro-9.9.9-test.1-windows-x64-setup.exe',
         },
       ],
     })
