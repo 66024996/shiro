@@ -8,6 +8,7 @@ import { artistrySyncConfig } from '@proj-airi/stage-shared'
 import { ToasterRoot } from '@proj-airi/stage-ui/components'
 import { useInferencePreload } from '@proj-airi/stage-ui/composables'
 import { usePiniaSynced } from '@proj-airi/stage-ui/libs/pinia'
+import { useLLM } from '@proj-airi/stage-ui/stores/ai/chat-llm/llm'
 import { useCharacterOrchestratorStore } from '@proj-airi/stage-ui/stores/character'
 import { useChatStore } from '@proj-airi/stage-ui/stores/chat'
 import { useChatContextStore } from '@proj-airi/stage-ui/stores/chat/context-store'
@@ -70,7 +71,6 @@ import { useServerChannelSettingsStore } from './stores/settings/server-channel'
 import { useStageWindowLifecycleStore } from './stores/stage-window-lifecycle'
 import {
   useTamagotchiBuiltinToolsStore,
-  useTamagotchiMcpToolsStore,
   useTamagotchiPluginToolsStore,
 } from './stores/tools'
 import { syncMemoryContext } from './stores/tools/builtin/memory'
@@ -88,7 +88,6 @@ const windowContext = resolveRendererWindowContext()
 const initialRoutePath = resolveInitialRendererRoutePath(route.path)
 const chatStore = useChatStore()
 const builtinToolsStore = useTamagotchiBuiltinToolsStore()
-const mcpToolsStore = useTamagotchiMcpToolsStore()
 const pluginToolsStore = useTamagotchiPluginToolsStore()
 const syncedPinia = usePiniaSynced()
 const isSpotlightWindow = initialRoutePath === '/spotlight'
@@ -113,6 +112,9 @@ async function refreshPluginRuntimeTools() {
 // Every renderer creates the runtime tool stores for synchronized state. Only
 // the main Stage renderer discovers tools and keeps executors.
 const chatContextStore = useChatContextStore()
+// Shiro does not use MCP, debug, or spark-command tools. They add prompt tokens to each local request.
+// The app MCP tools store is also not refreshed, so MCP tools stay out of requests.
+useLLM().disabledFixedToolSources = ['mcp', 'debug', 'spark-command']
 // Only the leader composes chat requests, so only the leader loads memories into the prompt.
 let stopMemoryContextHook: (() => void) | undefined
 const stopLeadershipListener = syncedPinia.onLeadershipChange((isLeader) => {
@@ -126,9 +128,6 @@ const stopLeadershipListener = syncedPinia.onLeadershipChange((isLeader) => {
 
   void builtinToolsStore.refresh().catch((error) => {
     console.warn('[App] Failed to refresh built-in runtime tools:', error)
-  })
-  void mcpToolsStore.refresh().catch((error) => {
-    console.warn('[App] Failed to refresh MCP runtime tools:', error)
   })
   void refreshPluginRuntimeTools()
 })

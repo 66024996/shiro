@@ -37,7 +37,7 @@ watch(() => status.value?.models, (models) => {
   }
 
   if (!models.includes(selectedModel.value))
-    selectedModel.value = models.find(name => name.startsWith('shiro-gemma')) ?? models[0]
+    selectedModel.value = models.find(name => name === 'shiro:latest') ?? models[0]
 }, { immediate: true })
 
 async function refreshStatus() {

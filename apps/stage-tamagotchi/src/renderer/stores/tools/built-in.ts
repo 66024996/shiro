@@ -16,11 +16,6 @@ export const computerUseToolReferences = [
   { name: 'computer_use_read_image' },
 ] satisfies ChatToolReference[]
 
-export const widgetToolReferences = [
-  { name: 'stage_widgets' },
-  { name: 'get_weather' },
-] satisfies ChatToolReference[]
-
 /**
  * Memory tools are active in every request, because the user can ask Shiro to remember or
  * forget something at any time. The model decides when to call them.
@@ -37,11 +32,6 @@ export const memoryToolReferences = [
 export const desktopControlToolReferences = desktopControlToolNames.map(name => ({ name })) satisfies ChatToolReference[]
 
 const alwaysActiveToolNames = new Set([...memoryToolReferences, ...desktopControlToolReferences].map(reference => reference.name))
-
-export const artistryToolReferences = [
-  { name: 'image_journal' },
-  ...widgetToolReferences,
-] satisfies ChatToolReference[]
 
 export const useTamagotchiBuiltinToolsStore = defineStore('tamagotchi-builtin-tools', () => {
   const llmToolsStore = useLlmToolsStore()

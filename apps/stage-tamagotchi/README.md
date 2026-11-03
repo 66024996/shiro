@@ -8,6 +8,21 @@ Shared character behavior belongs in `packages/stage-ui`. Use `stage-web` for br
 From the repository root, run `pnpm install`, then `pnpm dev:tamagotchi`.
 Run `pnpm -F @proj-airi/stage-tamagotchi build` to build the app.
 
+## Local chat model
+
+Shiro uses the local Ollama model `shiro`. Build it once from the repository root:
+
+```sh
+ollama pull qwen3:4b-instruct-2507-q4_K_M
+ollama create shiro -f apps/stage-tamagotchi/ollama/shiro.Modelfile
+```
+
+Then select `shiro:latest` in **Settings → Local AI** and click **Use model**.
+
+- The model must support tool calls. The memory and desktop tools do not work without them.
+- Do not use `shiro-gemma` or `shiro-gemma-fs` for chat. Ollama rejects tools for them, so the app sends requests without tools.
+- Do not use a thinking model, such as `qwen3:4b`. It writes English reasoning into the reply and takes about 90 seconds per command.
+
 ## Computer use
 
 The desktop chat composer starts with **Use computer** on, except on Windows, where it starts off.

@@ -32,7 +32,7 @@ import ChatViewportLayout from './chat-viewport-layout.vue'
 import ToolPermissionDialog from './tool-permission-dialog.vue'
 
 import { useHearingInputChannel } from '../composables/use-hearing-input-channel'
-import { artistryToolReferences, computerUseToolReferences, widgetToolReferences } from '../stores/tools'
+import { computerUseToolReferences } from '../stores/tools'
 
 const props = withDefaults(defineProps<{
   /**
@@ -96,7 +96,7 @@ const composer = useChatComposer<ChatImageAttachment>({
       data: attachment.data,
       mimeType: attachment.mimeType,
     })),
-    tools: computerUseEnabled.value ? [...artistryToolReferences, ...computerUseToolReferences] : artistryToolReferences,
+    tools: computerUseEnabled.value ? computerUseToolReferences : [],
   }),
 })
 const {
@@ -246,7 +246,7 @@ async function handleRetryMessage(index: number) {
   await chatStore.retry({
     sessionId: chatSession.activeSessionId,
     index,
-    tools: computerUseEnabled.value ? [...widgetToolReferences, ...computerUseToolReferences] : widgetToolReferences,
+    tools: computerUseEnabled.value ? computerUseToolReferences : [],
   })
   trackChatMessageRetried({
     source: 'history',

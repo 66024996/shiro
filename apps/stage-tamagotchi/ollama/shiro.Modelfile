@@ -1,0 +1,11 @@
+# Shiro chat model for local Ollama.
+# Build it with: ollama create shiro -f apps/stage-tamagotchi/ollama/shiro.Modelfile
+#
+# The base model supports tool calls and has no thinking output.
+# Shiro's prompt and tools use about 4000 tokens, so the context is larger than the Ollama default.
+FROM qwen3:4b-instruct-2507-q4_K_M
+
+PARAMETER num_ctx 8192
+PARAMETER temperature 0.7
+PARAMETER top_p 0.8
+PARAMETER top_k 20

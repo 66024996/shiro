@@ -24,7 +24,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 
 import InteractiveArea from './InteractiveArea.vue'
 
-import { artistryToolReferences, computerUseToolReferences } from '../stores/tools'
+import { computerUseToolReferences } from '../stores/tools'
 
 import '@unocss/reset/tailwind.css'
 import 'virtual:uno.css'
@@ -217,7 +217,7 @@ describe('interactive area synchronized state', () => {
 
     await vi.waitFor(() => {
       expect(send).toHaveBeenNthCalledWith(1, expect.objectContaining({
-        tools: artistryToolReferences,
+        tools: [],
       }))
     })
 
@@ -227,7 +227,7 @@ describe('interactive area synchronized state', () => {
 
     await vi.waitFor(() => {
       expect(send).toHaveBeenNthCalledWith(2, expect.objectContaining({
-        tools: [...artistryToolReferences, ...computerUseToolReferences],
+        tools: computerUseToolReferences,
       }))
     })
   })

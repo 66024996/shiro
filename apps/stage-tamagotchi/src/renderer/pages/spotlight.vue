@@ -13,7 +13,6 @@ import {
   electronSpotlightHide,
   electronSpotlightShowResultNotification,
 } from '../../shared/eventa'
-import { artistryToolReferences } from '../stores/tools'
 
 const messageInput = shallowRef('')
 const isComposing = shallowRef(false)
@@ -52,7 +51,6 @@ async function handleSend() {
     const result = await chatStore.send({
       sessionId: chatSession.activeSessionId,
       text,
-      tools: artistryToolReferences,
     })
     const assistant = result.messages.findLast(message => message.role === 'assistant')
     const visibleText = assistant ? extractMessageText(assistant) : ''

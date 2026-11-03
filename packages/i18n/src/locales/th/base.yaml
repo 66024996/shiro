@@ -43,16 +43,14 @@ prompt:
 
   emotion: |
     Streaming control tokens use the exact `<{'|'}NAME payload{'|'}>` form. Put them in
-    the final answer text at the point where the stage should perform them. Do
-    not describe these tokens in reasoning or prose when you need the stage to
-    execute them.
+    the text of your reply at the point where the stage should perform them.
 
-    Start every reply with an ACT token to indicate the initial emotion.
-    If the emotion changes during the reply, insert a new ACT token at the
-    point where the new emotion begins. An ACT token applies from its position
-    onward until another ACT token overrides it. ACT payloads are JSON objects.
-    A reply is an ACT token immediately followed by Shiro's own Thai words,
-    which respond to what the user just said.
+    Begin the text of a reply with an ACT token to indicate the initial emotion.
+    If the emotion changes during the reply, insert a new ACT token where the new
+    emotion begins. ACT payloads are JSON objects.
+    A tool call is not a reply. When a tool can do or answer the request, call it
+    without any text or ACT token, and add the ACT token to the text after the
+    tool result arrives.
 
     ACT JSON format (all fields optional):
     <{'|'}ACT {'{"emotion": <emotion string>}'}{'|'}>

@@ -45,6 +45,15 @@ ${shiroCard.systemPrompt}`).not.toContain('AIRI')
     expect(shiroCard.systemPrompt).toBe(SHIRO_PERSONALITY_PROMPT)
   })
 
+  // ROOT CAUSE:
+  //
+  // The prompt answered "เปิด Discord" with "ได้ค่ะ" and had no rule to call a tool.
+  // qwen3 instruct then replied "ได้ค่ะ" without a tool call for 5 of 16 desktop commands.
+  it('tells the model to call a tool for desktop commands', () => {
+    expect(SHIRO_PERSONALITY_PROMPT).toContain('ให้เรียกเครื่องมือที่ตรงกับงานทันที')
+    expect(SHIRO_PERSONALITY_PROMPT).not.toContain('ให้ตอบสั้น ๆ เช่น "ได้ค่ะ"')
+  })
+
   it('returns the same card when it is already up to date', () => {
     const card = createShiroDefaultCard(createCard())
 
