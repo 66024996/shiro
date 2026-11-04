@@ -5,6 +5,7 @@ import type { ServerChannel } from '../../../services/airi/channel-server'
 import type { GodotStageManager } from '../../../services/airi/godot-stage'
 import type { IOTraceRecordingService } from '../../../services/airi/io-trace-recording'
 import type { McpStdioManager } from '../../../services/airi/mcp-servers'
+import type { VoiceCommandShortcut } from '../../../services/airi/voice-command-shortcut'
 import type { AutoUpdater } from '../../../services/electron/auto-updater'
 import type { GlobalShortcutService } from '../../../services/electron/global-shortcut'
 import type { DevtoolsWindowManager } from '../../devtools'
@@ -21,6 +22,8 @@ import {
   electronOpenSettingsDevtools,
   electronSpotlightShortcutGet,
   electronSpotlightShortcutSet,
+  electronVoiceCommandShortcutGet,
+  electronVoiceCommandShortcutSet,
 } from '../../../../shared/eventa'
 import { createGodotStageService } from '../../../services/airi/godot-stage'
 import { registerIOTraceRecording } from '../../../services/airi/io-trace-recording/register'
@@ -42,6 +45,7 @@ export async function setupSettingsWindowInvokes(params: {
   i18n: I18n
   globalShortcut: GlobalShortcutService
   spotlightWindow: SpotlightWindowManager
+  voiceCommandShortcut: VoiceCommandShortcut
   ioTraceRecording: IOTraceRecordingService
 }) {
   // TODO: once we refactored eventa to support window-namespaced contexts,
@@ -70,6 +74,13 @@ export async function setupSettingsWindowInvokes(params: {
       throw new TypeError('electronSpotlightShortcutSet called with invalid payload')
 
     return params.spotlightWindow.updateShortcutAccelerator(payload.accelerator)
+  })
+  defineInvokeHandler(context, electronVoiceCommandShortcutGet, () => params.voiceCommandShortcut.getShortcutAccelerator())
+  defineInvokeHandler(context, electronVoiceCommandShortcutSet, (payload) => {
+    if (payload?.accelerator === undefined)
+      throw new TypeError('electronVoiceCommandShortcutSet called with invalid payload')
+
+    return params.voiceCommandShortcut.updateShortcutAccelerator(payload.accelerator)
   })
 
   defineInvokeHandler(context, electronOpenSettingsDevtools, async () => params.settingsWindow.webContents.openDevTools({ mode: 'detach' }))

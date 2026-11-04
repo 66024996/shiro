@@ -134,3 +134,5 @@ tool-permission:
     finished: พูดจบแล้ว
     muted: ปิดเสียงอยู่ อ่านข้อความแทนได้ค่ะ
     unavailable: เสียงยังไม่พร้อม อ่านข้อความแทนได้ค่ะ
+voice-command:
+  started: กำลังฟัง พูดคำสั่งได้เลย

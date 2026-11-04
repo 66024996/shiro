@@ -192,6 +192,9 @@ pages:
         window-shortcuts:
           title: Keyboard Shortcuts
     window-shortcuts:
+      voice-command:
+        title: Voice command shortcut
+        description: Press this shortcut, then say your command. You do not need to say the wake word. Click the shortcut, then press a new one. Press Esc to cancel.
       description: Modify the window shortcuts.
       title: Window Shortcuts
       empty: Not set

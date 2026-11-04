@@ -57,6 +57,7 @@ import { setupMcpStdioManager } from './services/airi/mcp-servers'
 import { MemoryStore, setupMemoryService } from './services/airi/memory'
 import { setupExtensionHost } from './services/airi/plugins'
 import { createNativeUserApproval } from './services/airi/user-approval'
+import { setupVoiceCommandShortcut } from './services/airi/voice-command-shortcut'
 import { setupArtistryBridge } from './services/airi/widgets/artistry-bridge'
 import { setupAutoUpdater } from './services/electron/auto-updater'
 import { setupGlobalShortcutService } from './services/electron/global-shortcut'
@@ -392,6 +393,14 @@ app.whenReady().then(async () => {
     }),
   })
 
+  const voiceCommandShortcut = injeca.provide('services:voice-command-shortcut', {
+    dependsOn: { globalShortcut, appConfig },
+    build: ({ dependsOn }) => setupVoiceCommandShortcut({
+      ...dependsOn,
+      onTriggered: () => assistantActivity.emit({ type: 'voice-command' }),
+    }),
+  })
+
   const spotlightWindow = injeca.provide('windows:spotlight', {
     dependsOn: { serverChannel, i18n, chatWindow, globalShortcut, appConfig },
     build: ({ dependsOn }) => setupSpotlightWindowManager(dependsOn),
@@ -403,7 +412,7 @@ app.whenReady().then(async () => {
   })
 
   const settingsWindow = injeca.provide('windows:settings', {
-    dependsOn: { widgetsManager, beatSync, autoUpdater, devtoolsWindow: devtoolsMarkdownStressWindow, serverChannel, godotStageManager, mcpStdioManager, i18n, globalShortcut, spotlightWindow, ioTraceRecording },
+    dependsOn: { widgetsManager, beatSync, autoUpdater, devtoolsWindow: devtoolsMarkdownStressWindow, serverChannel, godotStageManager, mcpStdioManager, i18n, globalShortcut, spotlightWindow, voiceCommandShortcut, ioTraceRecording },
     build: async ({ dependsOn }) =>
       setupSettingsWindowReusableFunc({
         ...dependsOn,

@@ -22,6 +22,7 @@ export const globalAppConfigSchema = object({
   hideAppIcon: optional(boolean()),
   language: optional(string()),
   spotlightShortcutAccelerator: optional(shortcutAcceleratorSchema),
+  voiceCommandShortcutAccelerator: optional(shortcutAcceleratorSchema),
   updateChannel: optional(picklist(['latest', 'stable', 'alpha', 'beta', 'nightly', 'canary'])),
   assistantProfile: optional(assistantProfileSchema),
 })

@@ -5,6 +5,7 @@ import type { ModelSettingsRuntimeSnapshot } from '@proj-airi/stage-ui/component
 import { errorMessageFrom, tryCatch } from '@moeru/std'
 import { electron } from '@proj-airi/electron-eventa'
 import {
+  useElectronEventaContext,
   useElectronEventaInvoke,
   useElectronMouseAroundWindowBorder,
   useElectronMouseInElement,
@@ -41,6 +42,7 @@ import ControlsIsland from '../components/stage-islands/controls-island/index.vu
 import ResourceStatusIsland from '../components/stage-islands/resource-status-island/index.vue'
 
 import { electronAppIsWayland, electronAssistantGetWakeWord, electronOpenOnboarding } from '../../shared/eventa'
+import { electronAssistantActivity } from '../../shared/eventa/assistant-activity'
 import { useModelSettingsRuntimeOwner } from '../composables/model-settings-runtime-owner'
 import { useScreenAmbientLight } from '../composables/use-screen-ambient-light'
 import { useShiroSpeechState } from '../composables/use-shiro-speech-state'
@@ -85,6 +87,13 @@ const hearingIdleHint = computed(() => wakeWordRequired.value && assistantWakeWo
   ? t('stage.status.wake-word-hint', { wakeWord: assistantWakeWord.value })
   : undefined)
 const wakeWordInputState = { commandExpiresAt: 0 }
+/**
+ * When the voice command shortcut opened a command window. Turning the microphone on resets
+ * `wakeWordInputState`, so the shortcut keeps its own deadline and applies it to the next utterance.
+ */
+let voiceCommandShortcutUntil = 0
+/** Extra time when the shortcut also turns the microphone on, because the stream takes a moment to start. */
+const VOICE_COMMAND_MICROPHONE_START_MS = 3000
 
 const { isOutside: isOutsideWindow } = useElectronMouseInWindow()
 // The island already pairs its cursor signal with a DOM one and owns that decision, so
@@ -628,8 +637,14 @@ let wakeWordAvatarTimer: ReturnType<typeof setTimeout> | undefined
 
 /** Applies the wake word policy, and shows the listening avatar while the command window is open. */
 function resolveWakeWordForAvatar(text: string) {
-  const result = resolveWakeWordInput(text, assistantWakeWord.value, wakeWordInputState, Date.now())
-  voiceLog.add('heard', text, `wake word: ${result.status}`)
+  const now = Date.now()
+  const fromShortcut = now < voiceCommandShortcutUntil
+  if (fromShortcut) {
+    wakeWordInputState.commandExpiresAt = Math.max(wakeWordInputState.commandExpiresAt, voiceCommandShortcutUntil)
+    voiceCommandShortcutUntil = 0
+  }
+  const result = resolveWakeWordInput(text, assistantWakeWord.value, wakeWordInputState, now)
+  voiceLog.add('heard', text, fromShortcut ? `shortcut: ${result.status}` : `wake word: ${result.status}`)
   if (wakeWordAvatarTimer)
     clearTimeout(wakeWordAvatarTimer)
   wakeWordAvatarTimer = undefined
@@ -642,6 +657,32 @@ function resolveWakeWordForAvatar(text: string) {
   }
   return result
 }
+
+/**
+ * Starts a voice command from the global shortcut, without the wake word.
+ * The next utterance inside the command window becomes the command, and the avatar listens until then.
+ */
+function startVoiceCommandFromShortcut() {
+  const microphoneWasOff = !enabled.value
+  if (microphoneWasOff)
+    enabled.value = true
+  voiceCommandShortcutUntil = Date.now() + WAKE_WORD_COMMAND_WINDOW_MS + (microphoneWasOff ? VOICE_COMMAND_MICROPHONE_START_MS : 0)
+  voiceLog.add('heard', '', 'shortcut: waiting for a command')
+  if (wakeWordAvatarTimer)
+    clearTimeout(wakeWordAvatarTimer)
+  avatarState.awaitingCommand = true
+  wakeWordAvatarTimer = setTimeout(() => {
+    avatarState.awaitingCommand = false
+    wakeWordAvatarTimer = undefined
+  }, voiceCommandShortcutUntil - Date.now())
+  toast(t('tamagotchi.stage.voice-command.started'))
+}
+
+const stopVoiceCommandShortcut = useElectronEventaContext().value.on(electronAssistantActivity, (event) => {
+  if (event?.body?.type === 'voice-command')
+    startVoiceCommandFromShortcut()
+})
+onScopeDispose(stopVoiceCommandShortcut)
 
 /** Sends completed streaming-ASR sentences to captions and chat. */
 function handleStreamingSentenceEnd(delta: string) {

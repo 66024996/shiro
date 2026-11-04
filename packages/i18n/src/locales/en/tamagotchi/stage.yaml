@@ -155,3 +155,5 @@ tool-permission:
     finished: The voice has finished
     muted: The voice is muted. You can read the message.
     unavailable: The voice is not available. You can read the message.
+voice-command:
+  started: Listening. Say your command.
