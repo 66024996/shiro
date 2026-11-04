@@ -135,6 +135,7 @@ tool-permission:
     muted: ปิดเสียงอยู่ อ่านข้อความแทนได้ค่ะ
     unavailable: เสียงยังไม่พร้อม อ่านข้อความแทนได้ค่ะ
 voice-command:
+  heard: 'ได้ยินว่า: {text}'
   started: กำลังฟัง พูดคำสั่งได้เลย
 onboarding:
   actions:

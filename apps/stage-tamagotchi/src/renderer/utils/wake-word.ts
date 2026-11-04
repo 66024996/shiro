@@ -17,6 +17,18 @@ const WAKE_WORD_SEPARATORS
 const WAKE_WORD_BOUNDARY = /[\s,，.!?。！？:：-]/u
 // A combining mark or sara a after a match still belongs to the name, for example the tone mark in "ชิโร่".
 const WAKE_WORD_NAME_MARK = /[\p{M}ะ]/u
+/**
+ * Short words that people say before the wake word, as in "โอเคชิโระ". One of them may come first.
+ * The list is short on purpose: any longer opening means the user talks about Shiro, not to Shiro.
+ */
+const WAKE_WORD_LEADING_FILLERS = ['โอเค', 'เอ่อ', 'อ่า', 'เอ้อ', 'นี่', 'เฮ้', 'ฮัลโหล', 'okay', 'ok', 'hey', 'hi', 'hello']
+
+/** Returns the text after one leading filler word, or undefined when the text has no filler. */
+function stripLeadingFiller(text: string) {
+  const lower = text.toLowerCase()
+  const filler = WAKE_WORD_LEADING_FILLERS.find(word => lower.startsWith(word))
+  return filler ? text.slice(filler.length).replace(WAKE_WORD_SEPARATORS, '') : undefined
+}
 
 /**
  * Returns the length of the wake word at the start of the text, or 0 when it is not there.
@@ -65,9 +77,13 @@ export function resolveWakeWordInput(
   if (!text || !phrase)
     return { status: 'ignored' }
 
-  const wakeWordLength = matchWakeWordPrefix(text, phrase)
-  if (wakeWordLength > 0) {
-    const command = text.slice(wakeWordLength).replace(WAKE_WORD_SEPARATORS, '').trim()
+  const afterFiller = stripLeadingFiller(text)
+  const addressed = [text, afterFiller]
+    .filter((candidate): candidate is string => !!candidate)
+    .map(candidate => ({ candidate, length: matchWakeWordPrefix(candidate, phrase) }))
+    .find(match => match.length > 0)
+  if (addressed) {
+    const command = addressed.candidate.slice(addressed.length).replace(WAKE_WORD_SEPARATORS, '').trim()
     if (command) {
       state.commandExpiresAt = 0
       return { status: 'command', text: command }

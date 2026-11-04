@@ -156,6 +156,7 @@ tool-permission:
     muted: The voice is muted. You can read the message.
     unavailable: The voice is not available. You can read the message.
 voice-command:
+  heard: 'Heard: {text}'
   started: Listening. Say your command.
 onboarding:
   actions:

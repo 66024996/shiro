@@ -757,7 +757,7 @@ const voiceInputSession = useVoiceInputSession(stream, {
       return
 
     postSpeakerCaption(command.text)
-    toast(`Voice input transcribed: ${command.text}`)
+    toast(t('tamagotchi.stage.voice-command.heard', { text: command.text }))
     voiceTranscriptBuffer.push(command.text)
   },
   onTranscriptionEmpty: () => {
@@ -766,7 +766,7 @@ const voiceInputSession = useVoiceInputSession(stream, {
       return
     }
 
-    toast('Voice input transcribed no text.')
+    // Noise and breath give empty text often. A toast for each one hid useful messages, so only the voice log keeps it.
     voiceLog.add('heard', '', 'no text')
   },
   onTranscriptionError: ({ error }) => {

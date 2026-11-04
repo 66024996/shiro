@@ -75,3 +75,22 @@ describe('matchWakeWordPrefix', () => {
     expect(resolveWakeWordInput('ชิโล แรมเหลือเท่าไหร่', 'ชิโระ', { commandExpiresAt: 0 }, 0)).toEqual({ status: 'command', text: 'แรมเหลือเท่าไหร่' })
   })
 })
+
+describe('resolveWakeWordInput with a leading filler', () => {
+  // ROOT CAUSE:
+  //
+  // The user said "โอเคชิโร" and Shiro ignored it, because the wake word had to start the utterance.
+  it.each([
+    ['โอเคชิโร', { status: 'activated' }],
+    ['โอเค ชิโระ เปิดเครื่องคิดเลข', { status: 'command', text: 'เปิดเครื่องคิดเลข' }],
+    ['เฮ้ชิโระแรมเหลือเท่าไหร่', { status: 'command', text: 'แรมเหลือเท่าไหร่' }],
+    ['OK ชิโระ เปิดเพลง', { status: 'command', text: 'เปิดเพลง' }],
+  ])('accepts %s', (heard, result) => {
+    expect(resolveWakeWordInput(heard, 'ชิโระ', { commandExpiresAt: 0 }, 0)).toEqual(result)
+  })
+
+  it('ignores the name later in an ordinary sentence', () => {
+    for (const heard of ['แล้วชิโระว่าไง', 'โอเคเจอกัน', 'วันนี้ชิโระน่ารัก'])
+      expect(resolveWakeWordInput(heard, 'ชิโระ', { commandExpiresAt: 0 }, 0)).toEqual({ status: 'ignored' })
+  })
+})
