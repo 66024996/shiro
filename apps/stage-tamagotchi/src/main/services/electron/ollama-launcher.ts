@@ -63,8 +63,14 @@ async function isOllamaRunning() {
   }
 }
 
+/**
+ * Starts the app through Explorer, as a click in Explorer does.
+ * A direct child process inherited Electron's open handles, such as the remote debugging socket, and kept them
+ * after Shiro quit. Explorer starts Ollama as its own child, so Ollama owns only its own handles.
+ */
 function launchDetached(path: string) {
-  const child = spawn(path, [], { detached: true, stdio: 'ignore', windowsHide: true })
+  const systemRoot = process.env.SystemRoot ?? 'C:\\Windows'
+  const child = spawn(join(systemRoot, 'explorer.exe'), [path], { detached: true, stdio: 'ignore', windowsHide: true })
   child.once('error', error => console.warn('[ollama-launcher] Failed to start Ollama:', error))
   child.unref()
 }
