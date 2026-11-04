@@ -157,3 +157,31 @@ tool-permission:
     unavailable: The voice is not available. You can read the message.
 voice-command:
   started: Listening. Say your command.
+onboarding:
+  actions:
+    skip: Skip setup
+    back: Back
+    next: Next
+    finish: Start using Shiro
+  steps:
+    welcome:
+      title: Hello, I am Shiro
+      description: Shiro runs on this computer and keeps your data here. Three short steps set up the chat model, the voice, and your first voice command.
+    brain:
+      title: Shiro's brain
+      description: Shiro thinks with Ollama. Install and open Ollama, choose the shiro model, then select Use this model.
+    voice:
+      title: Shiro's voice
+      description: Wait until the speech service is ready, then select Activate speech. It loads in about 30 seconds.
+    talk:
+      title: Try a voice command
+      description: Turn on the microphone in the controls, then talk to Shiro.
+      wake-word: 'Say "Shiro", then your command. For example: "Shiro, how much RAM is left?"'
+      shortcut: You can also press Ctrl+Alt+Space, then say your command without the wake word. Change this shortcut in Settings, System, Window shortcuts.
+      heard-title: What Shiro heard
+      heard-empty: Nothing yet. Speak into the microphone.
+      accepted: Shiro took this as a command.
+      ignored: Shiro did not hear the wake word. Try again, or use the shortcut.
+    done:
+      title: All set!
+      description: You can change these settings at any time in Settings, Local AI.
