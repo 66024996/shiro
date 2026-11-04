@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { Collapsible } from '@proj-airi/ui'
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 /** Properties for the shared collapsible frame around a chat tool call. */
 interface Props {
@@ -7,13 +9,19 @@ interface Props {
   state?: 'executing' | 'done' | 'error'
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
 
 defineSlots<{
   actions: (props: Record<string, never>) => unknown
   default: (props: Record<string, never>) => unknown
   labelSuffix: (props: Record<string, never>) => unknown
 }>()
+const { t, te } = useI18n()
+/** A readable name for a known tool. Other tools show their function name. */
+const toolLabel = computed(() => {
+  const key = `stage.chat.tool-names.${props.toolName}`
+  return te(key) ? t(key) : undefined
+})
 </script>
 
 <template>
@@ -53,7 +61,8 @@ defineSlots<{
             v-else
             class="i-solar:sledgehammer-bold-duotone mr-1 inline-block translate-y-1 op-50"
           />
-          <code class="truncate text-xs">{{ toolName }}</code>
+          <span v-if="toolLabel" class="truncate text-xs" :title="toolName">{{ toolLabel }}</span>
+          <code v-else class="truncate text-xs">{{ toolName }}</code>
           <slot name="labelSuffix" />
         </button>
         <slot name="actions" />

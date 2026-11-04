@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ContainerError } from '@proj-airi/ui'
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import ChatToolCallShell from './tool-call-shell.vue'
 
@@ -18,6 +19,7 @@ const emit = defineEmits<{
   (e: 'toolCallRerun', payload: { toolCallId: string, toolName: string, args: string }): void
 }>()
 
+const { t } = useI18n()
 const resultError = computed(() => props.state === 'error' ? createToolResultError(props.result) : undefined)
 
 const formattedArgs = computed(() => {
@@ -46,7 +48,7 @@ function emitToolCallRerun() {
   >
     <template #actions>
       <button
-        aria-label="Re-run tool call"
+        :aria-label="t('stage.chat.tool-rerun')"
         :class="[
           'h-6 w-6 shrink-0 rounded-md',
           'inline-flex items-center justify-center',

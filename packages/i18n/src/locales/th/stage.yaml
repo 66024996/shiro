@@ -20,6 +20,26 @@ mobile-tools:
   close-view: บันทึกและปิดตัวควบคุมมุมมอง
   hearing: การฟัง
 chat:
+  tool-rerun: เรียกเครื่องมือนี้อีกครั้ง
+  tool-names:
+    system_status: ตรวจสถานะเครื่อง
+    process_list: ดูโปรแกรมที่ทำงานอยู่
+    app_open: เปิดโปรแกรม
+    app_close: ปิดโปรแกรม
+    web_open: เปิดเว็บไซต์
+    file_search: ค้นหาไฟล์
+    file_read: อ่านไฟล์
+    file_open: เปิดไฟล์
+    file_delete: ลบไฟล์
+    terminal_run: รันคำสั่ง
+    gaming_mode: โหมดเล่นเกม
+    memory_remember: จำไว้
+    memory_forget: ลืม
+    get_weather: ดูสภาพอากาศ
+    computer_use: ใช้งานคอมพิวเตอร์
+    computer_use_read_image: ดูภาพหน้าจอ
+    image_journal: บันทึกภาพ
+    stage_widgets: วิดเจ็ตบนหน้าจอ
   provider-configuration:
     title: ชิโระยังไม่มีโมเดลสำหรับคุยค่ะ
     description: ไปที่การตั้งค่า เลือกผู้ให้บริการและตรวจสอบการตั้งค่าให้เรียบร้อยก่อนส่งข้อความนะคะ

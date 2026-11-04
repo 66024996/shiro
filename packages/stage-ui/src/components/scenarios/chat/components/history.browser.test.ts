@@ -160,7 +160,7 @@ describe('chat history', () => {
     await vi.waitFor(() => {
       const messageBubbles = Array.from(screen.container.querySelectorAll<HTMLElement>('.chat-message-item-container'))
       const replyBubble = messageBubbles.find(element => element.textContent?.includes('My follow-up'))
-      expect(replyBubble?.textContent).toContain('Replying to AIRI')
+      expect(replyBubble?.textContent).toContain('Replying to Shiro')
       expect(replyBubble?.textContent).toContain('Earlier answer')
     })
   })
@@ -651,7 +651,7 @@ describe('chat history', () => {
         }],
         [{
           message: messages[1],
-          label: 'AIRI',
+          label: 'Shiro',
         }],
       ])
     })
@@ -1696,7 +1696,7 @@ describe('chat history', () => {
       props: { messages: [message], style: 'height: 480px; width: 480px; overflow-y: auto;' },
       global: { plugins: [createEnglishI18n()] },
     })
-    await screen.getByLabelText('Re-run tool call').nth(1).click()
+    await screen.getByLabelText('Run this tool again').nth(1).click()
     expect(screen.emitted('toolCallRerun')).toEqual([[expect.objectContaining({ invocationId: 'invocation-1', toolCallId: 'same' })]])
   })
 
@@ -1734,7 +1734,7 @@ describe('chat history', () => {
       },
     })
 
-    await screen.getByLabelText('Re-run tool call').click()
+    await screen.getByLabelText('Run this tool again').click()
 
     expect(screen.emitted('toolCallRerun')).toEqual([[
       {

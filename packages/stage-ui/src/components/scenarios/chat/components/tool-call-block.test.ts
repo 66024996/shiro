@@ -9,7 +9,7 @@ describe('chat tool call block rerun action', () => {
   it('wires the rerun button click to the expected toolCallRerun payload', () => {
     expect(source).toContain('toolCallId: string')
     expect(source).toContain('(e: \'toolCallRerun\', payload: { toolCallId: string, toolName: string, args: string })')
-    expect(source).toContain('aria-label="Re-run tool call"')
+    expect(source).toContain(':aria-label="t(\'stage.chat.tool-rerun\')"')
     expect(source).toContain('@click.stop="emitToolCallRerun"')
     expect(source).toContain('i-solar:refresh-bold')
     expect(source).toContain('emit(\'toolCallRerun\', {')

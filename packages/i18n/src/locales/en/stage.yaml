@@ -20,6 +20,26 @@ mobile-tools:
   close-view: Save and close view controls
   hearing: Hearing
 chat:
+  tool-rerun: Run this tool again
+  tool-names:
+    system_status: Check computer status
+    process_list: List running apps
+    app_open: Open an app
+    app_close: Close an app
+    web_open: Open a website
+    file_search: Search files
+    file_read: Read a file
+    file_open: Open a file
+    file_delete: Delete a file
+    terminal_run: Run a command
+    gaming_mode: Gaming Mode
+    memory_remember: Remember
+    memory_forget: Forget
+    get_weather: Check the weather
+    computer_use: Use the computer
+    computer_use_read_image: View a screenshot
+    image_journal: Image journal
+    stage_widgets: Stage widgets
   voice-input: Voice input
   error-details:
     show: Show details
