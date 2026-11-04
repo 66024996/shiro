@@ -24,7 +24,7 @@ import { defineInvokeHandler } from '@moeru/eventa'
 import { createContext } from '@moeru/eventa/adapters/electron/main'
 import { initScreenCaptureForWindow } from '@proj-airi/electron-screen-capture/main'
 import { defu } from 'defu'
-import { BrowserWindow, ipcMain } from 'electron'
+import { BrowserWindow, ipcMain, screen } from 'electron'
 import { isLinux, isMacOS } from 'std-env'
 import { array, number, object, optional, string } from 'valibot'
 
@@ -35,6 +35,7 @@ import { onAppBeforeQuit } from '../../libs/bootkit/lifecycle'
 import { baseUrl, getElectronMainDirname, load, withHashRoute } from '../../libs/electron/location'
 import { createConfig } from '../../libs/electron/persistence'
 import { protectPrivilegedWindowNavigation, setWindowAlwaysOnTop, transparentWindowConfig } from '../shared'
+import { clampBoundsToWorkArea, safeWorkArea } from '../shared/display'
 import { setupMainWindowElectronInvokes } from './rpc/index.electron'
 
 const appConfigSchema = object({
@@ -79,13 +80,20 @@ export async function setupMainWindow(params: {
   setupConfig()
 
   const mainWindowConfig = getConfig().windows?.find(w => w.tag === 'main')
-
-  const window = new BrowserWindow({
-    title: 'Shiro',
+  const savedBounds = {
     width: mainWindowConfig?.width ?? 450.0,
     height: mainWindowConfig?.height ?? 600.0,
     x: mainWindowConfig?.x,
     y: mainWindowConfig?.y,
+  }
+  // A saved position can leave the controls below the taskbar, for example after a display or scaling change.
+  const initialBounds = savedBounds.x === undefined || savedBounds.y === undefined
+    ? savedBounds
+    : clampBoundsToWorkArea({ ...savedBounds, x: savedBounds.x, y: savedBounds.y }, safeWorkArea(screen.getDisplayMatching({ ...savedBounds, x: savedBounds.x, y: savedBounds.y })))
+
+  const window = new BrowserWindow({
+    title: 'Shiro',
+    ...initialBounds,
     show: false,
     icon,
     webPreferences: {
@@ -153,6 +161,17 @@ export async function setupMainWindow(params: {
 
   window.on('resize', () => handleNewBounds(window.getBounds()))
   window.on('move', () => handleNewBounds(window.getBounds()))
+  // When a drag or resize ends outside the work area, move the window back, so the controls stay reachable.
+  function keepInsideWorkArea() {
+    const bounds = window.getBounds()
+    const clamped = clampBoundsToWorkArea(bounds, safeWorkArea(screen.getDisplayMatching(bounds)))
+    if (clamped.x !== bounds.x || clamped.y !== bounds.y || clamped.width !== bounds.width || clamped.height !== bounds.height)
+      window.setBounds(clamped)
+  }
+  window.on('moved', keepInsideWorkArea)
+  window.on('resized', keepInsideWorkArea)
+  // The page can change the window size while it loads, so check again when the window appears.
+  window.on('show', keepInsideWorkArea)
   window.on('close', (event) => {
     if (allowClose) {
       return

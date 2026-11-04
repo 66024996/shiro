@@ -13,6 +13,36 @@ export function currentDisplayBounds(window: BrowserWindow) {
   return nearbyDisplay.bounds
 }
 
+/** Space for a taskbar that hides itself. It appears over a window edge when the mouse reaches the screen edge. */
+const AUTO_HIDE_TASKBAR_MARGIN = 48
+
+/**
+ * Returns the display area that a window can use without a taskbar covering it.
+ *
+ * Windows reports the full screen as the work area when the taskbar hides itself, but the taskbar still
+ * appears over the bottom edge when the mouse reaches it. So the area keeps a bottom margin in that case.
+ */
+export function safeWorkArea(display: { bounds: Rectangle, workArea: Rectangle }): Rectangle {
+  const { bounds, workArea } = display
+  if (workArea.y + workArea.height < bounds.y + bounds.height)
+    return workArea
+  return { ...workArea, height: Math.max(1, workArea.height - AUTO_HIDE_TASKBAR_MARGIN) }
+}
+
+/**
+ * Moves and shrinks window bounds so the whole window stays inside a display work area.
+ *
+ * The size shrinks only when the window is larger than the work area. Otherwise only the position changes.
+ * Returns the same bounds when they already fit.
+ */
+export function clampBoundsToWorkArea(bounds: Rectangle, workArea: Rectangle): Rectangle {
+  const width = Math.min(bounds.width, workArea.width)
+  const height = Math.min(bounds.height, workArea.height)
+  const x = Math.min(Math.max(bounds.x, workArea.x), workArea.x + workArea.width - width)
+  const y = Math.min(Math.max(bounds.y, workArea.y), workArea.y + workArea.height - height)
+  return { x, y, width, height }
+}
+
 /**
  * Computes bounds that center a window inside an Electron display work area.
  *

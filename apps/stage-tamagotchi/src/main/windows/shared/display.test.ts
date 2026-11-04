@@ -5,10 +5,12 @@ import { describe, expect, it, vi } from 'vitest'
 
 import {
   centerWindowOnDisplay,
+  clampBoundsToWorkArea,
   computeCenteredWindowBounds,
   computeResizedBoundsAnchoredToDominantDisplay,
   heightFrom,
   mapForBreakpoints,
+  safeWorkArea,
   widthFrom,
 } from './display'
 
@@ -22,6 +24,35 @@ vi.mock('electron', () => ({
     getDisplayMatching: vi.fn(),
   },
 }))
+
+describe('clampBoundsToWorkArea', () => {
+  const workArea = { x: 0, y: 0, width: 1536, height: 824 }
+
+  it('moves a window that ends below the taskbar up into the work area', () => {
+    expect(clampBoundsToWorkArea({ x: 1284, y: 522, width: 256, height: 462 }, workArea)).toEqual({ x: 1280, y: 362, width: 256, height: 462 })
+  })
+
+  it('shrinks a window that is taller than the work area', () => {
+    expect(clampBoundsToWorkArea({ x: 100, y: -50, width: 315, height: 1040 }, workArea)).toEqual({ x: 100, y: 0, width: 315, height: 824 })
+  })
+
+  it('keeps bounds that already fit', () => {
+    expect(clampBoundsToWorkArea({ x: 10, y: 20, width: 300, height: 400 }, workArea)).toEqual({ x: 10, y: 20, width: 300, height: 400 })
+  })
+})
+
+describe('safeWorkArea', () => {
+  const bounds = { x: 0, y: 0, width: 1536, height: 864 }
+
+  it('keeps a bottom margin when the taskbar hides itself', () => {
+    expect(safeWorkArea({ bounds, workArea: bounds })).toEqual({ x: 0, y: 0, width: 1536, height: 816 })
+  })
+
+  it('uses the work area as it is when the taskbar reserves space', () => {
+    const workArea = { x: 0, y: 0, width: 1536, height: 824 }
+    expect(safeWorkArea({ bounds, workArea })).toEqual(workArea)
+  })
+})
 
 describe('mapForBreakpoints', () => {
   it('should return the correct size based on breakpoints', () => {
