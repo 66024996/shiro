@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { resolveWakeWordInput } from './wake-word'
+import { matchWakeWordPrefix, resolveWakeWordInput } from './wake-word'
 
 describe('resolveWakeWordInput', () => {
   it('passes a command that follows the wake word in the same utterance', () => {
@@ -45,5 +45,21 @@ describe('resolveWakeWordInput', () => {
       status: 'command',
       text: 'ไปเปิดหน้าต่าง',
     })
+  })
+})
+
+describe('matchWakeWordPrefix', () => {
+  it('accepts the variants that Whisper small heard for ชิโระ, when a space follows', () => {
+    for (const heard of ['ชิโล แรมเหลือเท่าไหร่', 'ชีโล เรามเหลือ', 'ชิวโร เปิดเครื่องคิดเล็ก', 'ชิโร เปิดเครื่องคิดเลข', 'ชิโร่'])
+      expect(matchWakeWordPrefix(heard, 'ชิโระ'), heard).toBeGreaterThan(0)
+  })
+
+  it('rejects other words and variants without a boundary', () => {
+    for (const heard of ['เชี่ยว', 'ชีวิตดีจัง', 'ชิงช้า สวรรค์', 'ชิโลเปิดไฟ', 'วันนี้เหนื่อย'])
+      expect(matchWakeWordPrefix(heard, 'ชิโระ'), heard).toBe(0)
+  })
+
+  it('passes the command after a recognized variant', () => {
+    expect(resolveWakeWordInput('ชิโล แรมเหลือเท่าไหร่', 'ชิโระ', { commandExpiresAt: 0 }, 0)).toEqual({ status: 'command', text: 'แรมเหลือเท่าไหร่' })
   })
 })
