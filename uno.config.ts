@@ -156,7 +156,8 @@ export function sharedUnoConfig() {
         baseHue: 270,
         colors: {
           primary: 0,
-          complementary: 180,
+          // Shiro pairs violet with blue: the default hue 270 plus 310 is 220.
+          complementary: 310,
         },
       }) as Preset,
     ],

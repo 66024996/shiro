@@ -27,7 +27,9 @@ API details belong in the [component reference](./docs/ai/context/ui-components.
 - [Theme settings](./packages/stage-ui/src/stores/settings/theme.ts) store the selected hue. The default is `270`, a violet that matches the Shiro theme.
 - [The UI stylesheet entry](./packages/ui/src/main.css) includes fallback variables, lamp animation, and component styles.
 
-`primary` follows the theme hue. The theme configuration also provides `complementary`. Use these palettes instead of copying fixed brand colors into pages.
+`primary` follows the theme hue. `complementary` is the theme hue plus 310 degrees, so the default violet pairs with blue (220). Use these palettes instead of copying fixed brand colors into pages.
+
+Shiro starts in dark mode. The user's saved light or dark choice wins.
 
 `neutral` supplies standard surfaces and text. Light and dark modes define separate backgrounds, foregrounds, borders, and opacity values.
 
