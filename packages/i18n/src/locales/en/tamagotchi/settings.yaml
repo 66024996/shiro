@@ -94,6 +94,7 @@ pages:
     total: Shiro total
     tools-title: Tool calls
     actions-title: Desktop actions
+    voice-title: Voice
     logs-title: Main process log
     error: Developer data could not be read.
   local-ai:

@@ -16,6 +16,7 @@ import { useI18n } from 'vue-i18n'
 
 import { developerActionsGet, developerLogsGet, developerMetricsGet } from '../../../shared/eventa/developer'
 import { useToolActivityStore } from '../../stores/tool-activity'
+import { useVoiceLogStore } from '../../stores/voice-log'
 
 const { t } = useI18n()
 const enabled = useLocalStorage('settings/shiro/developer-mode', false)
@@ -28,6 +29,7 @@ const getActions = useElectronEventaInvoke(developerActionsGet)
 const { activeProvider, activeModel } = storeToRefs(useConsciousnessStore())
 const { rounds } = storeToRefs(useChatMetricsStore())
 const { calls } = storeToRefs(useToolActivityStore())
+const { entries: voiceEntries } = storeToRefs(useVoiceLogStore())
 const { currentState } = storeToRefs(useAvatarStateStore())
 const { gamingMode } = storeToRefs(useAssistantModeStore())
 const { enabled: microphoneEnabled, permissionGranted: microphoneGranted } = storeToRefs(useSettingsAudioDevice())
@@ -239,6 +241,20 @@ function formatTime(time: number | string) {
           <li v-for="action in actions.slice(0, 10)" :key="action.time + action.summary">
             {{ formatTime(action.time) }} · {{ action.decision }} · {{ action.summary }}
             <span v-if="action.error" :class="['text-red-600 dark:text-red-400']">· {{ action.error }}</span>
+          </li>
+        </ul>
+      </section>
+
+      <section :class="['flex flex-col gap-2 rounded-2xl bg-neutral-100/80 p-4 dark:bg-neutral-800/70']">
+        <h2 :class="['text-base font-semibold']">
+          {{ t('tamagotchi.settings.pages.developer-mode.voice-title') }}
+        </h2>
+        <p v-if="!voiceEntries.length" :class="['text-sm text-neutral-500']">
+          -
+        </p>
+        <ul :class="['flex flex-col gap-1 font-mono text-xs']">
+          <li v-for="entry in voiceEntries.slice(0, 15)" :key="entry.id" :class="[entry.kind === 'error' && 'text-red-600 dark:text-red-400']">
+            {{ formatTime(entry.time) }} · {{ entry.kind }} · "{{ entry.text }}"<span v-if="entry.detail"> · {{ entry.detail }}</span>
           </li>
         </ul>
       </section>

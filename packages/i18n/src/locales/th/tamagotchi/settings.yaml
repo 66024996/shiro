@@ -71,6 +71,7 @@ pages:
     total: รวมของชิโระ
     tools-title: การเรียกเครื่องมือ
     actions-title: งานบนคอมพิวเตอร์
+    voice-title: เสียง
     logs-title: Log ของ main process
     error: อ่านข้อมูลนักพัฒนาไม่ได้
   local-ai:

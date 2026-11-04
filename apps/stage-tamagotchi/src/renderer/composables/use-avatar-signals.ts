@@ -7,6 +7,7 @@ import { storeToRefs } from 'pinia'
 import { onScopeDispose, watch } from 'vue'
 
 import { electronAssistantActivity } from '../../shared/eventa/assistant-activity'
+import { useVoiceLogStore } from '../stores/voice-log'
 import { inferReplyEmotion } from '../utils/reply-emotion'
 
 /** How long the reply emotion stays after Shiro stops speaking. */
@@ -22,6 +23,7 @@ const EMOTION_LINGER_MS = 4000
  */
 export function useAvatarSignals() {
   const avatarState = useAvatarStateStore()
+  const voiceLog = useVoiceLogStore()
   const chatStore = useChatStore()
   const { sending } = storeToRefs(chatStore)
   const { messages } = storeToRefs(useChatSessionStore())
@@ -61,6 +63,7 @@ export function useAvatarSignals() {
         avatarState.replyEmotion = emotion
     }),
     chatStore.onAssistantResponseEnd(async (message) => {
+      voiceLog.add('reply', message)
       avatarState.replyEmotion = inferReplyEmotion(message) ?? avatarState.replyEmotion
     }),
   ]

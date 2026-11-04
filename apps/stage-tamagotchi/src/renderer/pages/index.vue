@@ -45,6 +45,7 @@ import { useScreenAmbientLight } from '../composables/use-screen-ambient-light'
 import { stageOpaqueAttribute } from '../composables/use-stage-painted-mask'
 import { useControlsIslandStore } from '../stores/controls-island'
 import { useStageWindowLifecycleStore } from '../stores/stage-window-lifecycle'
+import { useVoiceLogStore } from '../stores/voice-log'
 import { resolveFadeOnHoverInteraction } from '../utils/fade-on-hover'
 import { shouldSampleStageTransparency } from '../utils/stage-three-transparency'
 import { createVoiceInputInteractionLifecycle } from '../utils/voice-input-lifecycle'
@@ -382,6 +383,7 @@ const { removeStreamingTranscriptionConsumer, transcribeForMediaStream, stopStre
 const { error: transcriptionError, supportsStreamInput } = storeToRefs(hearingPipeline)
 const transcriptionConsumerId = 'stage-tamagotchi:voice-input'
 const chatStore = useChatStore()
+const voiceLog = useVoiceLogStore()
 const chatSession = useChatSessionStore()
 const streamingTranscriptionUnavailable = ref(false)
 const shouldUseStreamInput = computed(() => supportsStreamInput.value && !!stream.value && !streamingTranscriptionUnavailable.value)
@@ -461,6 +463,7 @@ function reportVoiceInputFailure(action: string, error: unknown) {
     : `Voice input failed to ${action}.`
   console.error(`[Main Page] ${message}`, error)
   toast.error(message)
+  voiceLog.add('error', message)
 }
 
 /**
@@ -598,6 +601,7 @@ function postSpeakerCaption(text: string, operation: NonNullable<CaptionChannelE
  * Sends buffered voice input text to the active chat session.
  */
 async function sendVoiceInputTextToChat(text: string) {
+  voiceLog.add('command', text)
   try {
     await chatStore.send({
       sessionId: chatSession.activeSessionId,
@@ -615,6 +619,7 @@ let wakeWordAvatarTimer: ReturnType<typeof setTimeout> | undefined
 /** Applies the wake word policy, and shows the listening avatar while the command window is open. */
 function resolveWakeWordForAvatar(text: string) {
   const result = resolveWakeWordInput(text, assistantWakeWord.value, wakeWordInputState, Date.now())
+  voiceLog.add('heard', text, `wake word: ${result.status}`)
   if (wakeWordAvatarTimer)
     clearTimeout(wakeWordAvatarTimer)
   wakeWordAvatarTimer = undefined
@@ -711,6 +716,7 @@ const voiceInputSession = useVoiceInputSession(stream, {
     }
 
     toast('Voice input transcribed no text.')
+    voiceLog.add('heard', '', 'no text')
   },
   onTranscriptionError: ({ error }) => {
     reportVoiceInputFailure('transcribe speech', error)
