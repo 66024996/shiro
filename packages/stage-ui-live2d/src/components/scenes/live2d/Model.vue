@@ -33,6 +33,7 @@ import {
   useMotionUpdatePluginAutoEyeBlink,
   useMotionUpdatePluginBeatSync,
   useMotionUpdatePluginBreathControl,
+  useMotionUpdatePluginEmotionFace,
   useMotionUpdatePluginExpression,
   useMotionUpdatePluginIdleDisable,
   useMotionUpdatePluginIdleFocus,
@@ -223,6 +224,7 @@ const {
   availableMotions,
   motionMap,
   modelParameters,
+  faceEmotion,
 } = storeToRefs(live2dStore)
 
 const themeColorsHue = toRef(() => props.themeColorsHue)
@@ -446,6 +448,8 @@ async function performModelLoad() {
     // Blink second: reads post-expression eye values, Multiply-modulates on top.
     // This ensures blink respects expression state (0 × blinkFactor = 0).
     motionManagerUpdate.register(useMotionUpdatePluginExpression(expressionController), 'final')
+    // After expression files, so a model without them still shows the emotion on its face.
+    motionManagerUpdate.register(useMotionUpdatePluginEmotionFace(() => faceEmotion.value), 'final')
     motionManagerUpdate.register(useMotionUpdatePluginAutoEyeBlink(live2dExpressionEnabled), 'final')
     // After the blink plugin, so that it only narrows the value a blink returns
     // to. The signal is the light behind the character, not the screen level:

@@ -62,6 +62,8 @@ export const useLive2dParams = defineStore('live2d', () => {
   const currentMotion = useLocalStorageManualReset<{ group: string, index?: number }>('settings/live2d/current-motion', () => ({ group: 'Idle', index: 0 }))
   const availableMotions = useLocalStorageManualReset<{ motionName: string, motionIndex: number, fileName: string }[]>('settings/live2d/available-motions', () => [])
   const motionMap = useLocalStorageManualReset<Record<string, string>>('settings/live2d/motion-map', {})
+  /** The emotion that the face shows now, for example "happy". It is not saved, so a new start shows a neutral face. */
+  const faceEmotion = ref<string>('neutral')
   const { position, scale, set: setViewControl } = useL2dViewControl()
 
   // Live2D model parameters
@@ -81,6 +83,7 @@ export const useLive2dParams = defineStore('live2d', () => {
     currentMotion,
     availableMotions,
     motionMap,
+    faceEmotion,
     scale,
     modelParameters,
 
