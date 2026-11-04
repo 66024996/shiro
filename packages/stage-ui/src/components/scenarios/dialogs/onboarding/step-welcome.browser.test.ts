@@ -23,10 +23,11 @@ function createTestI18n() {
 }
 
 /** Renders the welcome step with real Pinia and i18n plugins. */
-async function renderWelcomeStep(customProviderSetupEnabled: boolean) {
+async function renderWelcomeStep(customProviderSetupEnabled: boolean, signInEnabled = true) {
   return render(StepWelcome, {
     props: {
       customProviderSetupEnabled,
+      signInEnabled,
       onNext: vi.fn(),
     },
     global: {
@@ -71,6 +72,15 @@ describe('steam onboarding provider restrictions', () => {
   })
 })
 
+describe('builds without AIRI cloud features', () => {
+  it('hides AIRI sign-in and keeps custom provider setup', async () => {
+    await renderWelcomeStep(true, false)
+
+    expect(document.body.textContent).not.toContain('Sign in')
+    expect(document.body.textContent).toContain('Setup with your provider')
+  })
+})
+
 describe('desktop onboarding sign-in', () => {
   it('requests login through the auth store', async () => {
     vi.stubEnv('RUNTIME_ENVIRONMENT', 'electron')
@@ -78,6 +88,7 @@ describe('desktop onboarding sign-in', () => {
     const screen = await render(StepWelcome, {
       props: {
         customProviderSetupEnabled: true,
+        signInEnabled: true,
         onNext: vi.fn(),
       },
       global: {

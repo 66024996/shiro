@@ -22,6 +22,8 @@ import { useSettingsGeneral } from '../../../../stores/settings'
 
 interface Props {
   customProviderSetupEnabled: boolean
+  /** Shows the AIRI sign-in button. A build without AIRI cloud features hides it. */
+  signInEnabled: boolean
   onNext: OnboardingStepNextHandler
 }
 
@@ -129,6 +131,7 @@ function handleLocalSetup() {
     </div>
     <div :class="['flex', 'flex-col', 'gap-3', 'md:flex-row', 'm-2']">
       <Button
+        v-if="props.signInEnabled"
         v-motion="{
           initial: { opacity: 0 },
           enter: { opacity: 1 },

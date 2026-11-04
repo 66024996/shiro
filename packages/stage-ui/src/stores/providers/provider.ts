@@ -6,7 +6,7 @@ import type { ChatRequestOptions, ModelInfo, ProviderDefinition, ProviderInstanc
 
 import { errorMessageFrom } from '@moeru/std'
 import { getGenerationProvider } from '@proj-airi/provider-inference'
-import { isCustomProvidersDisabled } from '@proj-airi/stage-shared'
+import { isAiriCloudDisabled, isCustomProvidersDisabled } from '@proj-airi/stage-shared'
 import { computedAsync, useAsyncState, useIntervalFn } from '@vueuse/core'
 import { listModels } from '@xsai/model'
 import { uniqBy } from 'es-toolkit'
@@ -23,6 +23,7 @@ import {
   validateProvider as runProviderValidation,
 } from '../../libs/providers'
 import { selectProviderMetadata, selectProvidersMetadata } from '../../libs/providers/metadata'
+import { OFFICIAL_PROVIDER_IDS } from '../../libs/providers/providers/official/constants'
 import { getSchemaDefault } from '../../libs/zod'
 import { useAuthStore } from '../auth'
 import { useProviderConfigStore } from './config'
@@ -978,6 +979,8 @@ export const useProviderStore = defineStore('provider', () => {
 
     for (const provider of allProvidersMetadata.value) {
       if (overrides[provider.id] === false)
+        continue
+      if (isAiriCloudDisabled() && OFFICIAL_PROVIDER_IDS.has(provider.id))
         continue
 
       const definition = getProviderDefinition(provider.id)

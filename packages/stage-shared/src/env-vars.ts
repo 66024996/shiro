@@ -16,3 +16,11 @@ export function isFluxPurchaseDisabled(): boolean {
 export function isCustomProvidersDisabled(): boolean {
   return isEnvTruthy(import.meta.env.VITE_DISABLE_CUSTOM_PROVIDERS)
 }
+
+/**
+ * Returns true when the build has no AIRI cloud features: no AIRI sign-in and no official AIRI providers.
+ * An app that runs only local and self-configured services sets `VITE_DISABLE_AIRI_CLOUD`.
+ */
+export function isAiriCloudDisabled(): boolean {
+  return isEnvTruthy(import.meta.env.VITE_DISABLE_AIRI_CLOUD)
+}

@@ -200,6 +200,8 @@ export default defineConfig({
         config(ctx) {
           const define: Record<string, any> = {
             'import.meta.env.RUNTIME_ENVIRONMENT': '\'electron\'',
+            // Shiro runs only local and self-configured services, so it hides AIRI sign-in and the official AIRI providers.
+            'import.meta.env.VITE_DISABLE_AIRI_CLOUD': '\'true\'',
           }
           if (ctx.mode === 'development') {
             define['import.meta.env.URL_MODE'] = '\'server\''

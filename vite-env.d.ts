@@ -4,6 +4,7 @@ interface ImportMetaEnv {
   readonly VITE_DISTRIBUTION?: 'direct' | 'steam'
   readonly VITE_DISABLE_FLUX_PURCHASE?: string
   readonly VITE_DISABLE_CUSTOM_PROVIDERS?: string
+  readonly VITE_DISABLE_AIRI_CLOUD?: string
   readonly VITE_ENABLE_ANALYTICS?: string
 }
 

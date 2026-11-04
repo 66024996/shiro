@@ -249,6 +249,27 @@ describe('provider store synchronization boundary', () => {
     expect(store.moduleVisionProvidersMetadata.map(provider => provider.id)).toContain('vision-official-provider')
   })
 
+  it('hides official providers in a build without AIRI cloud features, even after sign-in', async () => {
+    vi.stubEnv('VITE_DISABLE_AIRI_CLOUD', 'true')
+    try {
+      const store = useProviderStore()
+      useAuthStore().$patch(createAuthenticatedState())
+      await store.initializeProvider('official-provider')
+      await store.forceProviderConfigured('official-provider')
+
+      await vi.waitFor(() => {
+        expect(store.availableProvidersMetadata.map(provider => provider.id)).toContain('speech-noop')
+      })
+      const available = store.availableProvidersMetadata.map(provider => provider.id)
+      for (const id of ['official-provider', OFFICIAL_SPEECH_PROVIDER_ID, OFFICIAL_SPEECH_STREAMING_PROVIDER_ID, OFFICIAL_TRANSCRIPTION_PROVIDER_ID, 'vision-official-provider'])
+        expect(available).not.toContain(id)
+      expect(store.moduleChatProvidersMetadata.map(provider => provider.id)).not.toContain('official-provider')
+    }
+    finally {
+      vi.unstubAllEnvs()
+    }
+  })
+
   // ROOT CAUSE:
   //
   // getModelsForProvider created a new empty array for every cache miss.

@@ -9,7 +9,7 @@ import type {
   ProviderConfigData,
 } from './types'
 
-import { isCustomProvidersDisabled } from '@proj-airi/stage-shared'
+import { isAiriCloudDisabled, isCustomProvidersDisabled } from '@proj-airi/stage-shared'
 import { storeToRefs } from 'pinia'
 import { computed, onMounted, ref } from 'vue'
 
@@ -127,6 +127,7 @@ const allSteps = computed<OnboardingStep[]>(() => {
       component: StepWelcome,
       props: () => ({
         customProviderSetupEnabled: !isCustomProvidersDisabled(),
+        signInEnabled: !isAiriCloudDisabled(),
       }),
     },
     {
