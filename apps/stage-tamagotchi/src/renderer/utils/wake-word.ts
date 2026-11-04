@@ -15,21 +15,32 @@ export const WAKE_WORD_COMMAND_WINDOW_MS = 8000
 const WAKE_WORD_SEPARATORS
   = /^[\s,，.!?。！？:：-]+/u
 const WAKE_WORD_BOUNDARY = /[\s,，.!?。！？:：-]/u
+// A combining mark or sara a after a match still belongs to the name, for example the tone mark in "ชิโร่".
+const WAKE_WORD_NAME_MARK = /[\p{M}ะ]/u
 
 /**
  * Returns the length of the wake word at the start of the text, or 0 when it is not there.
  *
- * An exact prefix always counts. A recognition variant counts only when a separator or the text end follows it,
- * and its canonical form differs from the wake word by at most one character. That limits false activations.
+ * An exact prefix always counts. A recognition variant counts when a separator or the text end follows it,
+ * and its canonical form differs from the wake word by at most one character.
+ * Typhoon ASR often writes the command right after the name, as in "ชิโลปิดไฟ". So a variant with the same
+ * canonical form also counts without a separator, when no Thai mark that belongs to the name follows it.
  */
 export function matchWakeWordPrefix(text: string, wakeWord: string): number {
   if (text.startsWith(wakeWord))
     return wakeWord.length
 
   const target = canonicalThaiForm(wakeWord)
-  for (let length = Math.max(1, wakeWord.length - 2); length <= Math.min(text.length, wakeWord.length + 2); length++) {
+  const minLength = Math.max(1, wakeWord.length - 2)
+  const maxLength = Math.min(text.length, wakeWord.length + 2)
+  for (let length = minLength; length <= maxLength; length++) {
     const atBoundary = length === text.length || WAKE_WORD_BOUNDARY.test(text[length]!)
     if (atBoundary && editDistance(canonicalThaiForm(text.slice(0, length)), target) <= 1)
+      return length
+  }
+  for (let length = minLength; length < maxLength; length++) {
+    const next = text[length]!
+    if (!WAKE_WORD_NAME_MARK.test(next) && canonicalThaiForm(text.slice(0, length)) === target)
       return length
   }
   return 0

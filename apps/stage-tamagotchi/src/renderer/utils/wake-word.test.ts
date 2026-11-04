@@ -54,9 +54,21 @@ describe('matchWakeWordPrefix', () => {
       expect(matchWakeWordPrefix(heard, 'ชิโระ'), heard).toBeGreaterThan(0)
   })
 
-  it('rejects other words and variants without a boundary', () => {
-    for (const heard of ['เชี่ยว', 'ชีวิตดีจัง', 'ชิงช้า สวรรค์', 'ชิโลเปิดไฟ', 'วันนี้เหนื่อย'])
+  it('rejects other words and close variants without a boundary', () => {
+    for (const heard of ['เชี่ยว', 'ชีวิตดีจัง', 'ชิงช้า สวรรค์', 'ชิวโรเปิดไฟ', 'วันนี้เหนื่อย'])
       expect(matchWakeWordPrefix(heard, 'ชิโระ'), heard).toBe(0)
+  })
+
+  // ROOT CAUSE:
+  //
+  // Typhoon ASR writes the command right after the name, as in "ชิโรปิดเครื่องคิดเลข". A variant needed a
+  // separator after it, so most voice commands were ignored, and Shiro gave no spoken reply.
+  it.each([
+    ['ชิโรปิดเครื่องคิดเลขให้หน่อย', 'ปิดเครื่องคิดเลขให้หน่อย'],
+    ['ชิโลปิดไฟ', 'ปิดไฟ'],
+    ['ชิโร่ เปิดเพลง', 'เปิดเพลง'],
+  ])('passes the command when %s has no separator after the name', (heard, command) => {
+    expect(resolveWakeWordInput(heard, 'ชิโระ', { commandExpiresAt: 0 }, 0)).toEqual({ status: 'command', text: command })
   })
 
   it('passes the command after a recognized variant', () => {
