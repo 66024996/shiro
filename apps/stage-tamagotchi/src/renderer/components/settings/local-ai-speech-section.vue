@@ -29,6 +29,8 @@ const speechProviderId = 'openai-compatible-audio-speech'
 const transcriptionProviderId = 'openai-compatible-audio-transcription'
 const speechModel = 'omnivoice-thai'
 const speechVoice = 'shiro'
+// The offline speech service transcribes with Typhoon ASR Realtime. It rejects any other model name.
+const transcriptionModel = 'typhoon-asr-realtime'
 
 const status = ref<ShiroSpeechServiceStatus>({
   state: 'starting',
@@ -42,7 +44,8 @@ const transcriptionPromptError = shallowRef('')
 const error = ref('')
 const busy = ref(false)
 const speechConfigured = computed(() => speech.activeSpeechProvider === 'openai-compatible-audio-speech'
-  && hearing.activeTranscriptionProvider === 'openai-compatible-audio-transcription')
+  && hearing.activeTranscriptionProvider === 'openai-compatible-audio-transcription'
+  && hearing.activeTranscriptionModel === transcriptionModel)
 const transcriptionPromptDirty = computed(() => transcriptionPrompt.value.trim() !== savedTranscriptionPrompt.value)
 const transcriptionPromptTooLong = computed(() => transcriptionPrompt.value.length > 1000)
 const statusMessage = computed(() => {
@@ -159,7 +162,7 @@ async function activateSpeech() {
     if (!speechSaved)
       throw new Error('The active character card could not be updated')
     hearing.activeTranscriptionProvider = transcriptionProviderId
-    hearing.activeTranscriptionModel = 'whisper-small'
+    hearing.activeTranscriptionModel = transcriptionModel
     savedTranscriptionPrompt.value = prompt
     transcriptionPrompt.value = prompt
   }
