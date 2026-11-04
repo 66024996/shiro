@@ -80,7 +80,7 @@ Set-Content -Path (Join-Path $pythonSitePackages 'shiro-runtime.pth') -Value @(
 Copy-Tree (Join-Path $serverRoot '.venv\Lib\site-packages') (Join-Path $sitePackagesRoot 'core')
 Copy-Tree (Join-Path $serverRoot '.venv_omnivoice\Lib\site-packages') (Join-Path $sitePackagesRoot 'omnivoice')
 
-foreach ($fileName in @('omnivoice_server.py', 'speech_api.py', 'transcription.py', 'thai_text.py')) {
+foreach ($fileName in @('omnivoice_server.py', 'speech_api.py', 'transcription.py', 'thai_text.py', 'typhoon_onnx.py')) {
   $source = Join-Path $serverRoot $fileName
   if (!(Test-Path $source)) {
     throw "Required speech source file is missing: $source"
@@ -106,8 +106,9 @@ $modelDirectories = @(
     Destination = Join-Path $cacheOutput 'hub\models--eustlb--higgs-audio-v2-tokenizer'
   },
   @{
-    Source = Join-Path $serverRoot 'hf_cache\faster-whisper\models--Systran--faster-whisper-small'
-    Destination = Join-Path $cacheOutput 'faster-whisper\models--Systran--faster-whisper-small'
+    # export_typhoon_onnx.py writes this folder. The server reads it next to omnivoice_server.py.
+    Source = Join-Path $serverRoot 'models\typhoon-asr-realtime'
+    Destination = Join-Path $serverOutput 'models\typhoon-asr-realtime'
   }
 )
 
@@ -126,7 +127,7 @@ $env:PYTHONNOUSERSITE = '1'
 $env:PYTHONDONTWRITEBYTECODE = '1'
 
 $python = Join-Path $pythonRoot 'python.exe'
-& $python '-c' 'import fastapi, faster_whisper, multipart, omnivoice, soundfile, torch, uvicorn; print(torch.__version__, torch.cuda.is_available())'
+& $python '-c' 'import fastapi, faster_whisper, multipart, omnivoice, onnxruntime, soundfile, soxr, torch, uvicorn; print(torch.__version__, torch.cuda.is_available())'
 if ($LASTEXITCODE -ne 0) {
   throw 'The packaged Python runtime failed its import test.'
 }

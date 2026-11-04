@@ -3,3 +3,5 @@
 hf_cache/
 __pycache__/
 *.py[cod]
+.venv_typhoon/
+models/

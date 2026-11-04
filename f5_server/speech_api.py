@@ -158,20 +158,20 @@ def create_app(engine, voices, default_voice, transcriber, default_speed=0.9, vo
             "object": "list",
             "data": [
                 {"id": "omnivoice-thai", "object": "model"},
-                {"id": f"whisper-{transcriber.model_name}", "object": "model"},
+                {"id": transcriber.model_id, "object": "model"},
             ],
         }
 
     @app.post("/v1/audio/transcriptions")
     def transcribe(
         file: UploadFile = File(...),
-        model: str = Form(default="whisper-base"),
+        model: str = Form(default=""),
         language: str = Form(default="th"),
         response_format: str = Form(default="json"),
         prompt: str = Form(default=""),
     ):
-        if model != f"whisper-{transcriber.model_name}":
-            raise HTTPException(400, f"Use model whisper-{transcriber.model_name}")
+        if model != transcriber.model_id:
+            raise HTTPException(400, f"Use model {transcriber.model_id}")
         if language.lower() not in ("th", "thai"):
             raise HTTPException(400, "Only Thai transcription is supported")
         if response_format not in ("json", "verbose_json", "text"):

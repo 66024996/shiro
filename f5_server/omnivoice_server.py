@@ -3,6 +3,7 @@
 import argparse
 import os
 import sys
+import threading
 from pathlib import Path
 
 if os.name == "nt":
@@ -14,6 +15,7 @@ import numpy as np
 
 from speech_api import SR, create_app, load_voices, pause_after, shorten_pauses, split_text
 from transcription import ThaiTranscriber
+from typhoon_onnx import TyphoonTranscriber
 
 
 class OmniVoiceEngine:
@@ -135,7 +137,18 @@ def main():
         default=0.5,
         help="Length factor for silent runs of 0.2 s or more. 1 keeps them unchanged.",
     )
-    parser.add_argument("--stt-model", default="small")
+    parser.add_argument(
+        "--stt-engine",
+        choices=("typhoon", "whisper"),
+        default="typhoon",
+        help="typhoon: Typhoon ASR Realtime on ONNX Runtime. whisper: Faster-Whisper.",
+    )
+    parser.add_argument(
+        "--stt-model-dir",
+        default=os.environ.get("SHIRO_STT_MODEL_DIR", str(Path(__file__).resolve().parent / "models" / "typhoon-asr-realtime")),
+        help="The folder that export_typhoon_onnx.py wrote.",
+    )
+    parser.add_argument("--stt-model", default="small", help="The Faster-Whisper model, for --stt-engine whisper.")
     args = parser.parse_args()
 
     if args.steps < 1:
@@ -164,10 +177,12 @@ def main():
         args.rhythm,
         args.pause_scale,
     )
-    transcriber = ThaiTranscriber(
-        args.stt_model,
-        Path(os.environ["HF_HOME"]) / "faster-whisper",
-    )
+    if args.stt_engine == "typhoon":
+        transcriber = TyphoonTranscriber(args.stt_model_dir)
+        # The model loads in about 5 seconds. Loading it now keeps the first voice command fast.
+        threading.Thread(target=transcriber.load, name="stt-preload", daemon=True).start()
+    else:
+        transcriber = ThaiTranscriber(args.stt_model, Path(os.environ["HF_HOME"]) / "faster-whisper")
     app = create_app(
         engine,
         voices,

@@ -38,15 +38,27 @@ From `D:\Shiro\f5_server`, run:
 ```
 
 The first launch downloads the TTS model into `hf_cache`.
-The first transcription request downloads the Whisper `small` model.
-Later requests use the local cache.
+
+Speech recognition uses Typhoon ASR Realtime on ONNX Runtime.
+Before the first launch, export the model once into `models\typhoon-asr-realtime`.
+The export needs NeMo, so it uses its own environment, `.venv_typhoon`:
+
+```powershell
+py -3.11 -m venv .venv_typhoon
+.\.venv_typhoon\Scripts\python.exe -m pip install typhoon-asr
+$env:HF_HOME = "$PWD\hf_cache"
+.\.venv_typhoon\Scripts\python.exe export_typhoon_onnx.py --out models\typhoon-asr-realtime
+```
+
+The server needs only onnxruntime and numpy to read the exported files.
+To use Faster-Whisper instead, start the server with `--stt-engine whisper`.
 
 ## Tests
 
 The API packages are in `.venv`, and the speech models are in `.venv_omnivoice`.
 The portable runtime merges both `site-packages` folders, so the tests use both too.
 
-From `D:\Shiro5_server`, run:
+From `D:\Shiro\f5_server`, run:
 
 ```powershell
 $env:PYTHONPATH = "$PWD;$PWD\.venv\Lib\site-packages"
@@ -57,9 +69,9 @@ $env:PYTHONPATH = "$PWD;$PWD\.venv\Lib\site-packages"
 
 The service uses the OpenAI-compatible API at `http://127.0.0.1:5052/v1/`.
 It accepts speech synthesis requests with model `omnivoice-thai` and voice `shiro`.
-It accepts Thai transcription requests with model `whisper-small`.
-Send an optional `prompt` field with up to 1,000 characters to guide Whisper with names or technical terms.
-A wrong prompt can change the transcript, so omit it when no useful context exists.
+It accepts Thai transcription requests with model `typhoon-asr-realtime`.
+Typhoon ignores the optional `prompt` field.
+With `--stt-engine whisper`, the model is `whisper-small`, and a `prompt` of up to 1,000 characters guides Whisper with names or technical terms.
 
 The `build-runtime.ps1` script stages the Python runtime, offline model caches, and the current Shiro voice reference.
 The `licenses` folder contains the model license texts and attribution notice.

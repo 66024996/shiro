@@ -18,6 +18,7 @@ class FakeEngine:
 
 class FakeTranscriber:
     model_name = "base"
+    model_id = "whisper-base"
     loaded = True
 
     def __init__(self):

@@ -13,6 +13,11 @@ class ThaiTranscriber:
         self._lock = threading.Lock()
 
     @property
+    def model_id(self) -> str:
+        """The model name that API requests use."""
+        return f"whisper-{self.model_name}"
+
+    @property
     def loaded(self) -> bool:
         return self._model is not None
 

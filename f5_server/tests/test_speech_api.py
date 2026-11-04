@@ -20,6 +20,7 @@ class FakeEngine:
 
 class FakeTranscriber:
     model_name = "small"
+    model_id = "whisper-small"
     loaded = False
 
 
