@@ -23,6 +23,9 @@ const removeBeforeEach = router.beforeEach(async (_, __, next) => {
   next()
 })
 
+/** Pages for setup and troubleshooting. They are listed after everyday pages, under their own heading. */
+const advancedPaths = new Set(['/settings/scene', '/settings/models', '/settings/providers', '/settings/connection', '/settings/developer-mode'])
+
 const settings = computed(() => {
   return router
     .getRoutes()
@@ -35,27 +38,37 @@ const settings = computed(() => {
       to: route.path,
     }))
 })
+
+const settingGroups = computed(() => [
+  { key: 'general', items: settings.value.filter(setting => !advancedPaths.has(setting.to)) },
+  { key: 'advanced', items: settings.value.filter(setting => advancedPaths.has(setting.to)) },
+].filter(group => group.items.length > 0))
 </script>
 
 <template>
   <div flex="~ col gap-4" font-normal>
     <div />
     <div flex="~ col gap-4" pb-12>
-      <IconItem
-        v-for="(setting, index) in settings"
-        :key="setting.to"
-        v-motion
-        :initial="{ opacity: 0, y: 10 }"
-        :enter="{ opacity: 1, y: 0 }"
-        :duration="250"
-        :style="{
-          transitionDelay: `${index * 50}ms`, // delay between each item, unocss doesn't support dynamic generation of classes now
-        }"
-        :title="setting.title"
-        :description="setting.description"
-        :icon="setting.icon"
-        :to="setting.to"
-      />
+      <template v-for="group in settingGroups" :key="group.key">
+        <h2 :class="['px-1 pt-2 text-sm font-medium text-neutral-500 dark:text-neutral-400']">
+          {{ t(`tamagotchi.settings.pages.index.groups.${group.key}`) }}
+        </h2>
+        <IconItem
+          v-for="setting in group.items"
+          :key="setting.to"
+          v-motion
+          :initial="{ opacity: 0, y: 10 }"
+          :enter="{ opacity: 1, y: 0 }"
+          :duration="250"
+          :style="{
+            transitionDelay: `${settings.indexOf(setting) * 50}ms`, // delay between each item, unocss doesn't support dynamic generation of classes now
+          }"
+          :title="setting.title"
+          :description="setting.description"
+          :icon="setting.icon"
+          :to="setting.to"
+        />
+      </template>
     </div>
     <div
       v-motion

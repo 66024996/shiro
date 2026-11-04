@@ -22,6 +22,10 @@ spotlight:
     prefix: 'Something went wrong: {message}'
     shortcutRegistrationFailed: 'Something went wrong: failed to register Spotlight shortcut.'
 pages:
+  index:
+    groups:
+      general: General
+      advanced: Advanced
   gaming-avatar:
     title: Gaming avatar
     menu-description: Make Shiro small while you play, and choose your games

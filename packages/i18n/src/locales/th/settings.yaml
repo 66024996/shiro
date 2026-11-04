@@ -27,15 +27,10 @@ dialogs:
     next: ถัดไป
     retry: ลองใหม่
     credentialsSafeLabel: เก็บ API Key และข้อมูลรับรองของคุณให้ปลอดภัยนะคะ
-    credentialsSafeLocal: >-
-      ระบบนี้ทำงานในเครื่องของคุณเอง และจะไม่ขโมยข้อมูลรับรองของผู้ให้บริการ AI / LLM
-      แต่ API Key เป็นข้อมูลสำคัญ โปรดเก็บให้ปลอดภัยและอย่าแชร์ให้ใครค่ะ
-    credentialsSafeOpenSource: >-
-      โปรเจกต์นี้เป็นโอเพนซอร์สที่ {github} ถ้าอยากตรวจดูว่าจัดการข้อมูลรับรองอย่างไร
-      เปิดดูโค้ดได้เลยค่ะ
-    enableChatCheck: >-
-      อนุญาตให้ส่งข้อความ "ping" ไปยังโมเดลแชตตัวแรกที่ใช้ได้ เพื่อตรวจสอบว่าพร้อมใช้งาน
-    start: เริ่มกันเลย!
+    credentialsSafeLocal: ระบบนี้ทำงานในเครื่องของคุณเอง และจะไม่ขโมยข้อมูลรับรองของผู้ให้บริการ AI / LLM แต่ API Key เป็นข้อมูลสำคัญ โปรดเก็บให้ปลอดภัยและอย่าแชร์ให้ใครค่ะ
+    credentialsSafeOpenSource: 'โปรเจกต์นี้เป็นโอเพนซอร์สที่ {github} ถ้าอยากตรวจดูว่าจัดการข้อมูลรับรองอย่างไร เปิดดูโค้ดได้เลยค่ะ'
+    enableChatCheck: 'อนุญาตให้ส่งข้อความ "ping" ไปยังโมเดลแชตตัวแรกที่ใช้ได้ เพื่อตรวจสอบว่าพร้อมใช้งาน'
+    start: 'เริ่มกันเลย!'
     loginPrompt: เข้าสู่ระบบเพื่อใช้ผู้ให้บริการทางการสำหรับประสบการณ์ที่ดีที่สุด
     loginAction: เข้าสู่ระบบ
     setupWithoutSigningIn: ตั้งค่าด้วยผู้ให้บริการของคุณเอง
@@ -43,8 +38,7 @@ dialogs:
     buyFlux: เติม Flux
     select-model: เลือกโมเดล
     no-models: ไม่มีโมเดลที่ใช้ได้
-    no-models-help: >-
-      กรุณากลับไปขั้นตอนก่อนหน้าแล้วตรวจสอบ API Key หรือการเชื่อมต่ออินเทอร์เน็ตค่ะ
+    no-models-help: กรุณากลับไปขั้นตอนก่อนหน้าแล้วตรวจสอบ API Key หรือการเชื่อมต่ออินเทอร์เน็ตค่ะ
     permissions:
       title: จัดการสิทธิ์
       description: ให้สิทธิ์ที่จำเป็นตอนนี้ หรือข้ามไปตั้งค่าภายหลังก็ได้ค่ะ
@@ -58,30 +52,277 @@ dialogs:
       stateNotGranted: ยังไม่ได้รับสิทธิ์
 language:
   title: ภาษา
-  description: |
-    ภาษาของหน้าจอ สามารถตั้งภาษาของตัวละครได้ภายหลัง
+  description: 'ภาษาของหน้าจอ สามารถตั้งภาษาของตัวละครได้ภายหลัง
+
+    '
 pages:
   card:
     title: การ์ดตัวละคร
     description: บุคลิก ชื่อ และเสียงของตัวละคร
+    activate: ใช้การ์ดนี้
+    active: ใช้งานอยู่
+    active_badge: กำลังใช้งาน
+    activation_notice: 'เปลี่ยนเป็น {name} แล้ว บทสนทนาตอนนี้ใช้ตัวละครนี้'
+    cancel: ยกเลิก
+    save: บันทึก
+    save_and_activate: บันทึกและใช้การ์ดนี้
+    card_not_found: ไม่พบการ์ด
+    back: กลับ
+    character: ตัวละคร
+    close: ปิด
+    chat:
+      provider: แชต / ผู้ให้บริการ
+    consciousness:
+      model: การคิด / โมเดล
+    vision:
+      provider: การมองเห็น / ผู้ให้บริการ
+      model: การมองเห็น / โมเดล
+    created_by: สร้างโดย
+    creator_notes: บันทึกของผู้สร้าง
+    delete: ลบ
+    delete_card: ลบการ์ด
+    delete_confirmation: ลบการ์ดนี้ใช่ไหม
+    description_label: คำอธิบาย
+    drop_here: วางไฟล์เพื่ออัปโหลด
+    create_card: สร้างการ์ดใหม่
+    edit_card: แก้ไขการ์ด
+    saved: บันทึกการ์ดแล้ว
+    unsaved:
+      badge: ยังไม่บันทึก
+      title: ทิ้งการแก้ไขไหม
+      message: การแก้ไขยังไม่ได้บันทึก ถ้าออกจากหน้านี้ การแก้ไขจะหายไป
+      keep_editing: แก้ไขต่อ
+      discard: ทิ้งการแก้ไข
+    creation:
+      identity: ตัวตน
+      name: ชื่อ
+      nickname: ชื่อเล่น
+      description: คำอธิบาย
+      behavior: นิสัยและการตอบ
+      greetings: คำทักทาย (บรรทัดละหนึ่งแบบ)
+      settings: ตั้งค่า
+      version: เวอร์ชัน
+      create: สร้าง
+      defaults:
+        name: ชื่อ
+        personality: คุณเป็นคนธรรมดาที่อยากรู้อยากเห็นทุกเรื่อง
+        scenario: คุณเพิ่งตื่นขึ้นมาและจำเรื่องในอดีตไม่ได้เลย
+        systemprompt: คุณจะได้รับข้อความ ให้ตอบเหมือนคนจริง ๆ
+        posthistoryinstructions: อย่าลืมตอบเหมือนคนจริง ๆ
+      modules_info: ตั้งค่าความสามารถของการ์ดตัวละครนี้ ช่องที่เว้นว่างจะใช้ค่าตั้งค่ารวม
+      sections:
+        chat: แชต
+        vision: การมองเห็น
+        speech: การพูด
+        body: ร่างกาย
+      use_default: ใช้ค่าเริ่มต้น
+      use_default_not_configured: ใช้ค่าเริ่มต้น (ยังไม่ได้ตั้งค่า)
+      inherit_global_settings: ใช้ค่าตั้งค่ารวม
+      fields_info:
+        subtitle: ใส่รายละเอียดของตัวละคร เช่น ประวัติ บริบท และวิธีที่ตัวละครควรตอบ
+        name: ชื่อทางการของตัวละคร
+        nickname: ชื่อเล่น ระบบจะใช้ชื่อนี้ก่อน
+        description: คำอธิบายตัวละคร
+        notes: บันทึกส่วนตัว ถ้าต้องการ
+        personality: อธิบายบุคลิกของตัวละคร เช่น ขี้อาย อยากรู้อยากเห็น หรืออื่น ๆ
+        scenario: สภาพแวดล้อมและสถานการณ์ตอนนี้เป็นอย่างไร
+        greetings_field: คำทักทาย
+        greetings: ตัวละครทักทายอย่างไร
+        systemprompt: บอก AI ว่าควรตอบอย่างไร
+        posthistoryinstructions: ข้อความที่ AI จะอ่านหลังประวัติแชต
+        version: เวอร์ชันของการ์ด เพิ่มเลขนี้เมื่อแก้ไขจากการ์ดเดิม
+        consciousness_model: เลือกโมเดล AI ที่ตัวละครนี้ใช้คิด
+        speech_model: เลือกโมเดลเสียงพูดและเสียงของตัวละครนี้
+      errors:
+        model_required: เลือกโมเดลของผู้ให้บริการที่ระบุทุกตัว โมเดลใช้ข้ามผู้ให้บริการไม่ได้
+        name: ต้องใส่ชื่อที่ถูกต้อง
+        version: เลขเวอร์ชันไม่ถูกต้อง
+        description: ต้องใส่คำอธิบายของการ์ด
+        personality: ต้องใส่บุคลิกของตัวละคร
+        scenario: ต้องใส่สถานการณ์
+        systemprompt: ต้องใส่ system prompt
+        posthistoryinstructions: ต้องใส่ข้อความหลังประวัติแชต
+        invalid_artistry_json: ตัวเลือกของผู้ให้บริการงานภาพมี JSON ไม่ถูกต้อง
+      none: ไม่มี
+      none_disabled: ไม่มี (ปิดไว้)
+    modules: ความสามารถ
+    name_asc: ชื่อ (ก-ฮ)
+    name_desc: ชื่อ (ฮ-ก)
+    no_cards: ยังไม่มีการ์ด กดปุ่มด้านบนเพื่ออัปโหลด
+    no_results: ไม่พบการ์ดที่ตรงกัน
+    personality: บุคลิก
+    posthistoryinstructions: ข้อความหลังประวัติแชต
+    recent: เพิ่มล่าสุด
+    scenario: สถานการณ์
+    search: ค้นหาการ์ด...
+    sort_by: เรียงตาม
+    body-model: ร่างกาย / โมเดลที่แสดง
+    speech:
+      provider: การพูด / ผู้ให้บริการ
+      model: การพูด / โมเดล
+      voice: การพูด / เสียง
+    systemprompt: System Prompt
+    try_different_search: ลองค้นด้วยคำอื่น
+    export: ส่งออก
+    exported: ส่งออกการ์ดแล้ว
+    export_failed: ส่งออกการ์ดไม่สำเร็จ
+    imported: นำเข้าการ์ดแล้ว
+    import_missing_file: ไฟล์การ์ดขาดไฟล์ที่จำเป็น
+    import_invalid_file: ไฟล์การ์ดไม่ถูกต้อง
+    upload: อัปโหลด
+    upload_desc: คลิกหรือลากไฟล์การ์ดตัวละครมาวางเพื่อนำเข้า
   modules:
     title: ความสามารถ
     description: การคิด การมองเห็น การพูด การฟัง และอื่น ๆ
     consciousness:
       title: การคิด
       description: บุคลิกและโมเดลที่ใช้คิด
+      sections:
+        section:
+          provider-model-selection:
+            collapse: ย่อ
+            custom_model_placeholder: ใส่ชื่อโมเดลเอง...
+            current_model_label: 'โมเดลตอนนี้:'
+            description: เลือกผู้ให้บริการโมเดลภาษาที่ใช้คิด
+            error: โหลดรายการโมเดลไม่สำเร็จ
+            health_check_failed: ตรวจการเชื่อมต่อไม่ผ่าน
+            no_providers_configured_title: ยังไม่ได้ตั้งค่าผู้ให้บริการ
+            no_providers_configured_description: คลิกที่นี่เพื่อตั้งค่าผู้ให้บริการโมเดลภาษา
+            expand: ขยาย
+            loading: กำลังโหลดรายการโมเดล...
+            manual_model_name: ชื่อโมเดล
+            manual_model_placeholder: ใส่ชื่อโมเดลที่จะใช้กับผู้ให้บริการนี้
+            no_models: ไม่มีโมเดล
+            no_models_description: ไม่พบโมเดลของผู้ให้บริการนี้
+            no_search_results: ไม่พบโมเดลที่ตรงกัน
+            no_search_results_description: 'ไม่มีโมเดลที่ตรงกับ ''{query}'' ลองค้นด้วยคำอื่น'
+            not_supported: ดูรายการโมเดลไม่ได้
+            not_supported_description: ผู้ให้บริการนี้ไม่รองรับการดูรายการโมเดล
+            search_placeholder: ค้นหาโมเดล...
+            search_results: 'พบ {count} จาก {total} โมเดล'
+            show_less: แสดงน้อยลง
+            show_more: แสดงเพิ่ม
+            temperature_label: Temperature
+            temperature_enabled: กำหนด Temperature เอง
+            top_p_enabled: กำหนด Top P เอง
+            sampling_override_description: ปิดไว้เป็นค่าเริ่มต้น เปิดเมื่อโมเดลรองรับค่านี้เท่านั้น บางโมเดลรับค่าการสุ่มได้ทีละค่า
+            temperature_description: ควบคุมความสุ่มของคำตอบ ค่าต่ำ (เช่น 0.2) ตอบแม่นยำและคงที่ ค่าสูง (เช่น 1.0) ตอบหลากหลายและสร้างสรรค์กว่า
+            top_p_label: Top P
+            top_p_description: ควบคุมความหลากหลายของคำตอบ ค่าต่ำ (เช่น 0.2) เลือกเฉพาะคำที่น่าจะเป็นที่สุด ค่าสูง (เช่น 1.0) เปิดให้คำอื่นได้มากขึ้น
+            subtitle: เลือกโมเดลเริ่มต้นจากผู้ให้บริการ
+            title: โมเดล
+          model-options:
+            title: ตัวเลือกของโมเดล
+            thinking:
+              label: คิดก่อนตอบ
     speech:
       title: การพูด
       description: เสียงพูดของตัวละคร
+      sections:
+        section:
+          playground:
+            buttons:
+              stop:
+                label: หยุด
+            select-voice:
+              loading: กำลังโหลดโมเดล...
+              required: เลือกเสียงก่อน
+          voice-pack:
+            description: เลือกชุดเสียงสำหรับตัวละครที่ใช้อยู่
+            empty: ไม่มีชุดเสียง
+            error: โหลดชุดเสียงไม่สำเร็จ
+            loading: กำลังโหลดชุดเสียง...
+            title: ชุดเสียง
+          provider-voice-selection:
+            custom_model_placeholder: ใส่ชื่อโมเดลเอง...
+            custom_voice_placeholder: ใส่รหัสเสียงเอง...
+            description: เลือกผู้ให้บริการเสียงพูด
+            no_models: ไม่มีโมเดล
+            no_models_description: ไม่พบโมเดลของผู้ให้บริการนี้
+            no_voices: ไม่มีเสียง
+            no_voices_description: ไม่พบเสียงของผู้ให้บริการนี้
+            no_voices_hint: ใส่ชื่อเสียงเองได้ด้านล่าง
+            pause: หยุดชั่วคราว
+            play_sample: ฟังตัวอย่าง
+            search_models_placeholder: ค้นหาโมเดล...
+            search_models_results: 'พบ {count} จาก {total} โมเดล'
+            search_voices_placeholder: ค้นหาเสียง...
+            search_voices_results: 'พบ {count} จาก {total} เสียง'
+            unsupported_voice_warning_title: ไม่มีเสียงที่รองรับ
+            unsupported_voice_warning_content: ลองเปลี่ยนโมเดลหรือผู้ให้บริการ
+            show_less: แสดงน้อยลง
+            show_more: แสดงเพิ่ม
+            title: ผู้ให้บริการ
+          voice-settings:
+            input-ssml:
+              placeholder: ใส่ข้อความ SSML...
+            use-ssml:
+              description: เปิดเพื่อใส่ SSML เองแทนข้อความธรรมดา
+              label: ใช้ SSML เอง
     hearing:
       title: การฟัง
       description: การแปลงเสียงพูดเป็นข้อความ
+      sections:
+        section:
+          provider-selection:
+            description: เลือกผู้ให้บริการแปลงเสียงเป็นข้อความ
+          playground:
+            current: ข้อความที่ได้ยินตอนนี้
+            description: ฟังผ่านระบบการฟังที่ใช้อยู่ และแสดงแต่ละช่วงที่พูดจบด้านล่าง
+            empty: กดเริ่มฟัง แล้วพูดใส่ไมโครโฟนที่เลือกไว้
+            error-title: แปลงเสียงไม่สำเร็จ
+            listening: กำลังฟัง…
+            no-transcription: ไม่ได้ยินคำพูดในเสียงนี้
+            segment: 'ช่วงที่ {number}'
+            start: เริ่มฟัง
+            stop: หยุดฟัง
+            title: ทดลองการฟัง
+            transcribing: กำลังแปลงเสียง…
+            transcription-failed: แปลงเสียงไม่สำเร็จ
+          confidence-threshold:
+            title: เกณฑ์ความมั่นใจ
+            description: ตัดข้อความที่ระบบไม่มั่นใจออก เพื่อลดคำที่ Whisper แต่งขึ้นเอง ค่าใกล้ 0 จะเข้มงวดกว่า ลากไปซ้ายสุดเพื่อปิด ใช้ได้เฉพาะผู้ให้บริการที่รองรับ Whisper API เช่น OpenAI และ Groq
+            disabled: ปิด
+            verbose-json-note: ถ้าผู้ให้บริการไม่รองรับ verbose_json การตั้งค่านี้จะไม่มีผล
+            verbose-json-unsupported: ผู้ให้บริการไม่ได้ส่ง verbose_json กลับมา การกรองตามความมั่นใจจึงไม่มีผลกับครั้งล่าสุด
     vision:
       title: การมองเห็น
       description: ให้ตัวละครดูภาพหน้าจอได้
+      tool-images:
+        label: ใช้โมเดลการมองเห็นอ่านภาพจากเครื่องมือ
+        description: โมเดลการมองเห็นจะอ่านภาพที่เครื่องมือส่งกลับมา เช่น ภาพหน้าจอ ก่อนที่โมเดลแชตจะตอบ ถ้าผู้ให้บริการของโมเดลแชตรับภาพได้ โมเดลแชตจะได้ภาพโดยตรง คำอธิบายภาพไม่มีตำแหน่งพิกเซล
+      capture:
+        title: ความถี่ในการจับภาพ
+        description: ปรับว่าจะจับภาพหน้าจอบ่อยแค่ไหน
+        interval:
+          label: ช่วงเวลาจับภาพ
+          description: ค่าน้อยจะจับภาพบ่อยขึ้น และใช้ทรัพยากรมากขึ้น
+      stats:
+        captures: จับภาพแล้ว
+        context-updates: อัปเดตบริบท
+        inferences: จำนวนครั้งที่อ่านภาพ
+        inferences-description: ทุกครั้งที่เรียกโมเดลการมองเห็น รวมภาพในแชต
+        failed-inferences: ครั้งที่ไม่สำเร็จ
+        last-inference: ครั้งล่าสุด
+        error: 'ข้อผิดพลาด:'
+        last-update: 'อัปเดตล่าสุด {time}'
+        since-start: ตั้งแต่เปิดแอป
+        never: ยังไม่เคย
+      ollama:
+        title: ตัวเลือกคำขอของผู้ให้บริการ
+        description: ตั้งค่าตัวเลือกเฉพาะของผู้ให้บริการสำหรับการมองเห็น
+        thinking:
+          label: คิดก่อนตอบ (Ollama)
+          description: 'เมื่อเปิด คำขอการมองเห็นผ่าน Ollama จะส่ง `think: true` เมื่อปิดจะส่ง `think: false`'
     web-search:
       title: ค้นหาเว็บ
       description: ให้ชิโระค้นข้อมูลล่าสุดจากเว็บ
+      enable: เปิดการค้นหาเว็บ
+      enable-description: ให้ชิโระค้นหาเว็บระหว่างแชต
+      api-key: Tavily API Key
+      api-key-description: การค้นหาเว็บใช้บริการ Tavily รับ API key ฟรีได้ที่ tavily.com
+      api-key-placeholder: ใส่ Tavily API key
+      configured: พร้อมค้นหาเว็บแล้ว
     artistry:
       title: งานภาพ
       description: สร้างภาพ ฉากหลัง และวาดรูป
@@ -115,13 +356,158 @@ pages:
   data:
     title: ข้อมูล
     description: จัดการข้อมูลของชิโระ ส่งออก และรีเซ็ต
+    sections:
+      chats:
+        title: ประวัติแชต
+        description: ส่งออกหรือนำเข้าประวัติแชตที่บันทึกไว้
+        export: ส่งออกแชต
+        import: นำเข้าแชต
+        delete: ลบประวัติแชตทั้งหมด
+      models:
+        title: โมเดลตัวละคร
+        description: ลบโมเดล Live2D, VRM, Spine และ MMD ที่นำเข้าไว้
+        delete: ลบโมเดลทั้งหมด
+      modules:
+        title: ความสามารถ
+        description: รีเซ็ตการตั้งค่าและรหัสของความสามารถต่าง ๆ
+        reset: รีเซ็ตการตั้งค่าความสามารถ
+      providers:
+        title: ผู้ให้บริการ AI
+        description: รีเซ็ตการตั้งค่าและรหัสของผู้ให้บริการทั้งหมด
+        reset: รีเซ็ตการตั้งค่าผู้ให้บริการ
+      danger:
+        title: พื้นที่อันตราย
+        description: การกระทำในส่วนนี้ย้อนกลับไม่ได้ ส่งออกข้อมูลที่ต้องการก่อน
+      all:
+        title: ลบข้อมูลทั้งหมด
+        description: ลบการตั้งค่า ผู้ให้บริการ และโมเดลทั้งหมดในเครื่อง
+        delete: ลบข้อมูลทั้งหมด
+      desktop-folder:
+        title: เปิดโฟลเดอร์ข้อมูลแอป
+        description: เปิดโฟลเดอร์ข้อมูลของชิโระใน File Explorer
+        open: เปิดโฟลเดอร์
+      desktop:
+        title: รีเซ็ตการตั้งค่าและสถานะของแอป
+        description: ล้างการตั้งค่าและสถานะการทำงานของแอปชิโระ
+        center: ย้ายหน้าต่างไปกลางจอ
+        reset: รีเซ็ตข้อมูลแอป
+    confirmations:
+      tooltip: แน่ใจไหม
+      'yes': ใช่
+    status:
+      exported: ส่งออกประวัติแชตแล้ว
+      imported: นำเข้าประวัติแชตแล้ว
+      import_error: นำเข้าประวัติแชตไม่สำเร็จ ตรวจรูปแบบไฟล์อีกครั้ง
+      chats_deleted: ลบประวัติแชตแล้ว
+      models_deleted: ลบโมเดลแล้ว
+      modules_reset: รีเซ็ตการตั้งค่าความสามารถแล้ว
+      providers_reset: รีเซ็ตการตั้งค่าผู้ให้บริการแล้ว
+      all_deleted: ลบข้อมูลทั้งหมดในเครื่องแล้ว
+      desktop_window_centered: ย้ายหน้าต่างไปกลางจอแล้ว
+      desktop_reset: รีเซ็ตข้อมูลแอปแล้ว
   connection:
     title: การเชื่อมต่อ
     description: ตั้งค่าเซิร์ฟเวอร์ WebSocket
   system:
     title: ระบบ
     description: ธีม ภาษา และการทำงานของแอป
+    color-scheme:
+      description: เปลี่ยนชุดสีของหน้าจอ
+      title: ชุดสี
+    developer:
+      description: ตัวเลือกสำหรับนักพัฒนา
+      title: นักพัฒนา
+    general:
+      description: ธีมมืด ภาษา และอื่น ๆ
+      title: ทั่วไป
+    permissions:
+      description: ดูสถานะสิทธิ์การใช้งานตอนนี้
+      title: สิทธิ์การใช้งาน
+    sections:
+      section:
+        custom-color:
+          fields:
+            field:
+              primary-color:
+                label: สีหลัก
+                rgb-on:
+                  title: ให้สีเปลี่ยนไปเรื่อย ๆ
+          title: ชุดสี
+        developer:
+          title: นักพัฒนา
+        theme-presets:
+          presets:
+            default:
+              colors:
+                color-1: ค่าเริ่มต้น
+              description: สีธีมเริ่มต้น
+              title: สีเริ่มต้น
+            morandi:
+              colors:
+                color-1: น้ำตาลเทา
+                color-2: เบจ
+                color-3: เทาเถ้า
+                color-4: น้ำตาลเทาอ่อน
+                color-5: งาช้าง
+                color-6: เทามะกอก
+                color-7: สีทราย
+                color-8: เทาอุ่น
+              description: โทนสีนุ่มหม่น จากภาพวาดของ Giorgio Morandi
+              title: สี Morandi
+            monet:
+              colors:
+                color-1: ฟ้า
+                color-2: หมอก
+                color-3: สีทราย
+                color-4: เขียวมอส
+                color-5: บัวสาย
+                color-6: สีข้าวสาลี
+                color-7: น้ำเงินหินชนวน
+                color-8: เขียวเสจ
+              description: ชุดสีอิมเพรสชันนิสม์ จากผลงานของ Claude Monet
+              title: สี Monet
+            japanese:
+              colors:
+                color-1: น้ำตาลอ่อน
+                color-2: น้ำตาลเทาอุ่น
+                color-3: น้ำตาลดิน
+                color-4: กาแฟ
+                color-5: บรอนซ์
+                color-6: ทอง
+                color-7: มัสตาร์ด
+                color-8: อำพัน
+              description: ชุดสีญี่ปุ่นแบบดั้งเดิม
+              title: สีญี่ปุ่น
+            nordic:
+              colors:
+                color-1: น้ำเงินนอร์ดิก
+                color-2: น้ำแข็ง
+                color-3: ฟยอร์ด
+                color-4: เหล็ก
+                color-5: ธารน้ำแข็ง
+                color-6: หินชนวน
+                color-7: เมฆ
+                color-8: หิน
+              description: ชุดสีเรียบง่ายแบบสแกนดิเนเวีย
+              title: สีนอร์ดิก
+            chinese:
+              colors:
+                color-1: ชมพูอรุณ
+                color-2: แดงจีน
+                color-3: น้ำตาลควัน
+                color-4: เขียวไผ่
+                color-5: ม่วงเข้ม
+                color-6: เหลืองทอง
+                color-7: ฟ้าคราม
+                color-8: สีดินเหลือง
+              description: สีจีนดั้งเดิม จากผ้า เครื่องเคลือบ และภาพวาดโบราณ
+              title: สีจีนดั้งเดิม
+          title: ชุดสีสำเร็จรูป
 title: ตั้งค่า
 wip:
   title: กำลังพัฒนา
   description: ฟีเจอร์นี้ยังไม่พร้อมใช้งาน
+theme:
+  title: ธีม
+  description: เลือกธีมสว่างหรือมืดของชิโระ
+voices: เสียง

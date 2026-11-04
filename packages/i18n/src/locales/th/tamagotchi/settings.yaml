@@ -1,4 +1,8 @@
 pages:
+  index:
+    groups:
+      general: ทั่วไป
+      advanced: ขั้นสูง
   gaming-avatar:
     title: โหมดเล่นเกม
     menu-description: ย่อชิโระตอนเล่นเกม และเลือกเกมที่ใช้
@@ -23,7 +27,7 @@ pages:
       save-error: บันทึกการตั้งค่าโหมดเล่นเกมไม่ได้
     editor:
       title: รูปตัวละครในโหมดเล่นเกม
-      description: ใส่ภาพ 1 ภาพต่อ 1 อารมณ์ ต้องมีอย่างน้อยภาพ "ปกติ" ภาพ PNG พื้นหลังโปร่งใสจะดูดีที่สุด
+      description: 'ใส่ภาพ 1 ภาพต่อ 1 อารมณ์ ต้องมีอย่างน้อยภาพ "ปกติ" ภาพ PNG พื้นหลังโปร่งใสจะดูดีที่สุด'
       empty-slot: 'ใช้ภาพ {fallback} แทน'
       choose: ลากภาพมาวางหรือคลิกเพื่อเลือก
       remove-image: ลบภาพ
@@ -32,7 +36,7 @@ pages:
       saved: บันทึกรูปตัวละครแล้ว
       delete: ลบรูปตัวละคร
       opaque-warning: 'ภาพเหล่านี้ไม่มีพื้นหลังโปร่งใส: {emotions}'
-      neutral-required: ใส่ภาพ "ปกติ" ก่อนบันทึก
+      neutral-required: 'ใส่ภาพ "ปกติ" ก่อนบันทึก'
       load-error: โหลดรูปตัวละครไม่สำเร็จ
       save-error: บันทึกรูปตัวละครไม่สำเร็จ
     emotions:
@@ -63,8 +67,8 @@ pages:
     values:
       normal: ปกติ
       gaming: เล่นเกม
-      on: เปิด
-      off: ปิด
+      true: เปิด
+      false: ปิด
     avatar-states:
       idle: ว่าง
       listening: กำลังฟัง
@@ -110,7 +114,7 @@ pages:
         runtime-missing: ไม่พบไฟล์ระบบเสียง
         service-not-running: ระบบเสียงไม่ได้ทำงาน
         service-starting: กำลังโหลดโมเดลเสียง
-        service-http-error: ระบบเสียงตอบกลับ HTTP {status}
+        service-http-error: 'ระบบเสียงตอบกลับ HTTP {status}'
         service-invalid-response: ระบบเสียงส่งข้อมูลตอบกลับไม่ถูกต้อง
         service-failed: ระบบเสียงหยุดทำงานโดยไม่คาดคิด
       voice-ready: พร้อมใช้เสียงอ้างอิงแล้ว
@@ -149,3 +153,73 @@ pages:
       forget: ลืม
       load-error: โหลดความจำไม่สำเร็จ
       forget-error: ลบความจำไม่สำเร็จ
+  system:
+    window-shortcuts:
+      description: แก้ไขปุ่มลัดของหน้าต่าง
+      title: ปุ่มลัดของหน้าต่าง
+      empty: ยังไม่ได้ตั้ง
+      spotlight:
+        title: ปุ่มลัด Spotlight
+        description: คลิกปุ่มลัด แล้วกดปุ่มลัดใหม่ กด Esc เพื่อยกเลิก
+      actions:
+        recording: กดปุ่ม
+        reset: รีเซ็ต
+      errors:
+        load: โหลดปุ่มลัดไม่สำเร็จ
+        conflict: ปุ่มลัดนี้ถูกใช้อยู่แล้ว
+        failed: เปลี่ยนปุ่มลัดไม่สำเร็จ
+        requiresModifier: ต้องมีปุ่ม Cmd, Ctrl, Alt หรือ Super อย่างน้อยหนึ่งปุ่ม
+      toggle-move:
+        label: เปิด/ปิดการย้ายหน้าต่าง
+      toggle-resize:
+        label: เปิด/ปิดการปรับขนาด
+      toggle-ignore-mouse-event:
+        label: เปิด/ปิดการคลิกทะลุหน้าต่าง
+      press-keys: กดปุ่ม...
+    general:
+      hide-app-icon:
+        title: ซ่อนไอคอนบนแถบงาน
+        description: ให้ชิโระอยู่แค่ในถาดระบบ ใช้เมนูในถาดเพื่อเปิดหน้าต่างหรือออกจากแอป มีผลทันที
+        load-error: โหลดการตั้งค่าไอคอนแอปไม่สำเร็จ
+        save-error: เปลี่ยนการตั้งค่าไอคอนแอปไม่สำเร็จ
+    sections:
+      section:
+        window-shortcuts:
+          title: ปุ่มลัดคีย์บอร์ด
+  modules:
+    mcp-server:
+      description: เชื่อมต่อและจัดการเซิร์ฟเวอร์ MCP และเครื่องมือ
+      title: เซิร์ฟเวอร์ MCP
+microphone-permission:
+  prompt:
+    title: อนุญาตให้ใช้ไมโครโฟนไหม
+    description: ชิโระใช้ไมโครโฟนเพื่อรับคำสั่งเสียง การเลือกนี้จะใช้ต่อไปจนกว่าคุณจะรีเซ็ตในหน้าตั้งค่า
+    allow: อนุญาต
+    deny: ไม่อนุญาต
+  states:
+    not-determined: ยังไม่ได้เลือก
+    granted: อนุญาตแล้ว
+    denied: ไม่อนุญาต
+  settings:
+    title: ไมโครโฟน
+    description: เลือกว่าชิโระใช้ไมโครโฟนได้หรือไม่ ถ้ารีเซ็ต ระบบจะหยุดใช้ไมโครโฟนตอนนี้ และจะถามอีกครั้งในครั้งถัดไป
+    revoke: ยกเลิกสิทธิ์
+    reset: รีเซ็ตการเลือก
+screen-capture:
+  permissions-prompt:
+    title: จับภาพหน้าจอ
+    description: ต้องอนุญาตการบันทึกหน้าจอและเสียงระบบก่อน จึงจะจับภาพหน้าจอหรือหน้าต่างได้
+    open-preferences: เปิด System Preferences
+    dismiss: ปิด
+    instructions:
+      step-1: 'เปิด "System Preferences" แล้วเลือก "Privacy & Security" ที่แถบด้านข้าง'
+      step-2: 'ในส่วน "Screen & System Audio Recording" และ "System Audio Recording Only" ให้เปิดสวิตช์ของ Shiro'
+      step-2-note: 'ถ้าไม่เห็น Shiro ในรายการ ให้กดปุ่ม "+" แล้วเลือก Shiro จากโฟลเดอร์ Applications'
+spotlight:
+  errors:
+    unknown: เกิดข้อผิดพลาดที่ไม่รู้สาเหตุ
+    prefix: 'เกิดข้อผิดพลาด: {message}'
+    shortcutRegistrationFailed: 'เกิดข้อผิดพลาด: ตั้งปุ่มลัด Spotlight ไม่สำเร็จ'
+allow-visible-on-all-workspaces:
+  title: แสดงในทุกพื้นที่ทำงาน
+  description: ให้หน้าต่างแสดงในทุกพื้นที่ทำงาน ใช้ได้เฉพาะ macOS

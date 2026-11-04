@@ -248,6 +248,11 @@ export default defineConfig({
               '**/settings/modules/memory-long-term.vue',
               '**/settings/providers/speech/app-local-audio-speech.vue',
               '**/settings/providers/transcription/app-local-audio-transcription.vue',
+              // Shiro does not run the separate AIRI bots and game agents these modules need.
+              '**/settings/modules/messaging-discord.vue',
+              '**/settings/modules/x.vue',
+              '**/settings/modules/gaming-minecraft.vue',
+              '**/settings/modules/gaming-factorio.vue',
               '**/devtools/index.vue',
               '**/settings/index.vue',
             ],
