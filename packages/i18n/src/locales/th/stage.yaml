@@ -171,6 +171,9 @@ computer-use:
   approval-required-windows: Windows จะแสดงคำขออนุมัติก่อนทำแต่ละคำสั่ง
 
 status:
+  microphone-off: ไมค์ปิดอยู่
+  microphone-off-hint: เปิดไมค์ที่แถบควบคุม เพื่อสั่งงานด้วยเสียง
+  wake-word-hint: 'พูดว่า "{wakeWord}" แล้วตามด้วยคำสั่ง เช่น "{wakeWord} แรมเหลือเท่าไหร่"'
   assistant:
     permission: รอให้คุณอนุญาต
     error: มีบางอย่างผิดพลาด

@@ -80,6 +80,10 @@ const openOnboarding = useElectronEventaInvoke(electronOpenOnboarding)
 const getAssistantWakeWord = useElectronEventaInvoke(electronAssistantGetWakeWord)
 const assistantWakeWord = shallowRef('')
 const wakeWordRequired = useLocalStorage('settings/hearing/wake-word-required', true)
+// Tells a new user how to start a voice command while nothing was heard yet.
+const hearingIdleHint = computed(() => wakeWordRequired.value && assistantWakeWord.value
+  ? t('stage.status.wake-word-hint', { wakeWord: assistantWakeWord.value })
+  : undefined)
 const wakeWordInputState = { commandExpiresAt: 0 }
 
 const { isOutside: isOutsideWindow } = useElectronMouseInWindow()
@@ -922,7 +926,7 @@ const cursorPosition = computed(() => ({
     <!-- Shiro's activity and the microphone status stay visible at the bottom of the stage. -->
     <div v-show="!settingsStore.streamerMode" ref="hearingStatusElement" :class="['absolute bottom-3 left-1/2 z-30 w-fit -translate-x-1/2', 'flex items-end gap-1']">
       <AssistantStatus align="center" />
-      <HearingStatus align="center" />
+      <HearingStatus align="center" show-when-off :idle-hint="hearingIdleHint" />
     </div>
     <!-- Stage is always in DOM so TresCanvas can measure dimensions -->
     <div

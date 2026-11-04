@@ -213,6 +213,9 @@ computer-use:
   approval-required-windows: Windows asks you to approve each computer action.
 
 status:
+  microphone-off: Microphone is off
+  microphone-off-hint: Turn on the microphone in the controls to talk by voice.
+  wake-word-hint: 'Say "{wakeWord}", then your command. For example: "{wakeWord}, how much RAM is left?"'
   assistant:
     permission: Waiting for your approval
     error: Something went wrong

@@ -10,7 +10,13 @@ import { useSpeakingStore } from '../../../stores/audio'
 import { useHearingSpeechInputPipeline, useHearingStore } from '../../../stores/modules/hearing'
 import { useSettingsAudioDevice } from '../../../stores/settings/audio-device'
 
-defineProps<{ align?: 'start' | 'center' }>()
+const props = defineProps<{
+  align?: 'start' | 'center'
+  /** Shows how to talk to the assistant while nothing was heard yet, for example "Say \"Shiro\", then your command". */
+  idleHint?: string
+  /** Shows a capsule while the microphone is off, so a new user sees that voice input exists. */
+  showWhenOff?: boolean
+}>()
 
 const { t } = useI18n()
 const { enabled, stream, error: microphoneError } = storeToRefs(useSettingsAudioDevice())
@@ -38,7 +44,10 @@ const state = computed(() => {
   return 'idle'
 })
 const amplitude = computed(() => state.value === 'listening' && stream.value ? Math.min(1, Math.max(0, volumeLevel.value / 100)) : 0)
+const microphoneOff = computed(() => props.showWhenOff && !enabled.value && !issue.value && !isTranscribing.value)
 const label = computed(() => {
+  if (microphoneOff.value)
+    return t('stage.status.microphone-off')
   if (issue.value)
     return t('stage.status.hearing-error')
   if (isTranscribing.value)
@@ -53,15 +62,16 @@ const label = computed(() => {
 
 <template>
   <StatusCapsule
-    v-if="enabled || issue || isTranscribing"
+    v-if="enabled || issue || isTranscribing || microphoneOff"
     :align="align"
-    :data-status="state"
+    :data-status="microphoneOff ? 'off' : state"
     :tone="issue ? 'error' : 'neutral'"
     :label="label"
-    :details="issue || transcript || t('stage.status.no-transcript')"
+    :details="microphoneOff ? t('stage.status.microphone-off-hint') : issue || transcript || idleHint || t('stage.status.no-transcript')"
   >
     <template #indicator>
-      <span aria-hidden="true" :class="['h-5 flex items-center justify-center gap-1']">
+      <span v-if="microphoneOff" aria-hidden="true" :class="['i-ph:microphone-slash size-4']" />
+      <span v-else aria-hidden="true" :class="['h-5 flex items-center justify-center gap-1']">
         <span
           v-for="(weight, index) in [0.4, 0.75, 1, 0.7, 0.45]"
           :key="index"
