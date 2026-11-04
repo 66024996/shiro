@@ -11,6 +11,7 @@ export const TTS_SPECIAL_TOKEN = '\u2063'
 
 const regexpAnySingleDigit = /\d/
 const regexpEmojiCluster = /\p{Extended_Pictographic}|\p{Regional_Indicator}/u
+const regexpThai = /\p{Script=Thai}/u
 
 const keptPunctuations = new Set('?？!！')
 const hardPunctuations = new Set('.。?？!！…⋯～~\n\t\r')
@@ -98,7 +99,10 @@ export async function* chunkTtsInput(
     const flush = value === TTS_FLUSH_INSTRUCTION
     const special = value === TTS_SPECIAL_TOKEN
     const hard = hardPunctuations.has(value)
-    const soft = softPunctuations.has(value)
+    // Thai separates phrases and sentences with a space instead of punctuation. Without this, a whole
+    // Thai reply became one chunk, so speech started only after the model wrote the last word.
+    const thaiPhraseBreak = value === ' ' && previousValue !== undefined && regexpThai.test(previousValue)
+    const soft = softPunctuations.has(value) || thaiPhraseBreak
     const kept = keptPunctuations.has(value)
     let next: IteratorResult<string, void> | undefined
     let afterNext: IteratorResult<string, void> | undefined

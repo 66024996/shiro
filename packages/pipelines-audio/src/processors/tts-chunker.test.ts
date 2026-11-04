@@ -54,6 +54,27 @@ describe('chunkTtsInput grapheme clusters', () => {
   })
 })
 
+describe('chunkTtsInput Thai phrase breaks', () => {
+  // ROOT CAUSE:
+  //
+  // Thai replies use spaces between phrases instead of punctuation, so a whole reply became one chunk.
+  // Speech then started only after the model finished the reply, about 47 seconds for a short story.
+  it('ends an opening Thai chunk at a space once it is long enough', async () => {
+    const reply = 'สวัสดีค่ะ วันนี้คุณดูเหนื่อยมากเลยนะคะ อย่าลืมพักผ่อนบ้าง ชิโระเป็นห่วงคุณจริง ๆ นะคะ'
+    const chunks = await collectChunks(reply)
+
+    expect(chunks.length).toBeGreaterThan(1)
+    expect(chunks[0]?.reason).toBe('boost')
+    expect(chunks.map(chunk => chunk.text).join(' ')).toBe(reply)
+  })
+
+  it('keeps English words together', async () => {
+    const chunks = await collectChunks('I really want to tell you something and then I will say more')
+
+    expect(chunks).toHaveLength(1)
+  })
+})
+
 describe('tTS Chunker Logic Cleanup', () => {
   describe('isProbablyAngleTag Heuristics', () => {
     it('should identify narrative tags', () => {
