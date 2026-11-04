@@ -104,7 +104,8 @@ async function activateSpeech() {
     await providers.forceProviderConfigured(speechProviderId)
     await providers.initializeProvider(transcriptionProviderId)
     // The local server transcribes only Thai. Without this, the request language follows the UI locale, for example "en", and the server rejects it.
-    const transcriptionConfigSaved = await providerConfig.patchProviderConfig(transcriptionProviderId, { apiKey: 'shiro-local', baseUrl, language: 'th' })
+    // The Hearing settings page copies the provider config model into the active model when it opens, and uses "whisper-1" without one.
+    const transcriptionConfigSaved = await providerConfig.patchProviderConfig(transcriptionProviderId, { apiKey: 'shiro-local', baseUrl, language: 'th', model: transcriptionModel })
     if (!transcriptionConfigSaved)
       throw new Error('The transcription provider no longer exists')
     await providers.forceProviderConfigured(transcriptionProviderId)
