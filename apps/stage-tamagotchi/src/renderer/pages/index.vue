@@ -33,6 +33,7 @@ import { useSettings, useSettingsAudioDevice } from '@proj-airi/stage-ui/stores/
 import { refDebounced, useBroadcastChannel, useLocalStorage } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { computed, onMounted, onScopeDispose, onUnmounted, ref, shallowRef, toRef, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { toast } from 'vue-sonner'
 
 import ControlsIslandRoot from '../components/stage-islands/controls-island/controls-island-root.vue'
@@ -42,6 +43,7 @@ import ResourceStatusIsland from '../components/stage-islands/resource-status-is
 import { electronAppIsWayland, electronAssistantGetWakeWord, electronOpenOnboarding } from '../../shared/eventa'
 import { useModelSettingsRuntimeOwner } from '../composables/model-settings-runtime-owner'
 import { useScreenAmbientLight } from '../composables/use-screen-ambient-light'
+import { useShiroSpeechState } from '../composables/use-shiro-speech-state'
 import { stageOpaqueAttribute } from '../composables/use-stage-painted-mask'
 import { useControlsIslandStore } from '../stores/controls-island'
 import { useStageWindowLifecycleStore } from '../stores/stage-window-lifecycle'
@@ -56,6 +58,7 @@ import {
 } from '../utils/voice-input-suppression'
 import { resolveWakeWordInput, WAKE_WORD_COMMAND_WINDOW_MS } from '../utils/wake-word'
 
+const { t } = useI18n()
 const hearingStatusElement = ref<HTMLElement>()
 const { isOutside: outsideHearingStatus } = useElectronMouseInElement(hearingStatusElement)
 const controlsIslandRef = ref<InstanceType<typeof ControlsIsland>>()
@@ -374,6 +377,9 @@ useModelSettingsRuntimeOwner({
 
 const settingsAudioDeviceStore = useSettingsAudioDevice()
 const { stream, enabled } = storeToRefs(settingsAudioDeviceStore)
+// Speech sent while the offline speech service loads fails with "Failed to fetch", so listening waits until it is ready.
+const { state: speechServiceState } = useShiroSpeechState()
+const voiceInputActive = computed(() => enabled.value && speechServiceState.value !== 'starting')
 const { askPermission, startStream, stopStream } = settingsAudioDeviceStore
 const { nowSpeaking } = storeToRefs(useSpeakingStore())
 const hearingStore = useHearingStore()
@@ -548,7 +554,7 @@ function scheduleAssistantSpeechResume() {
 
   assistantSpeechResumeTimer.value = setTimeout(() => {
     assistantSpeechResumeTimer.value = undefined
-    if (!enabled.value || isVoiceInputSuppressed())
+    if (!voiceInputActive.value || isVoiceInputSuppressed())
       return
 
     void voiceInputInteractionLifecycle.start().catch(error => reportVoiceInputFailure('resume listening', error))
@@ -692,7 +698,7 @@ const voiceInputSession = useVoiceInputSession(stream, {
     }
     console.info(output, details ?? {})
   },
-  canStartSegment: () => enabled.value && !isVoiceInputSuppressed(),
+  canStartSegment: () => voiceInputActive.value && !isVoiceInputSuppressed(),
   inspectBeforeTranscription: ({ metadata }) => inspectVoiceInputProviderRequestGate(getVoiceInputGeneration(metadata)),
   inspectAfterTranscription: ({ metadata }) => inspectVoiceInputProviderRequestGate(getVoiceInputGeneration(metadata)),
   onRecordingReady: () => ({ generation: voiceInputGeneration }),
@@ -798,7 +804,12 @@ async function stopAudioInteractionConsumers(options: StopAudioInteractionOption
     voiceTranscriptBuffer.clear()
 }
 
-watch(enabled, async (val) => {
+watch(() => enabled.value && speechServiceState.value === 'starting', (waiting) => {
+  if (waiting)
+    toast(t('tamagotchi.settings.pages.local-ai.speech.state.starting'))
+}, { immediate: true })
+
+watch(voiceInputActive, async (val) => {
   try {
     if (val) {
       await askPermission()
@@ -821,7 +832,7 @@ watch(wakeWordRequired, () => {
 
 watch([activeTranscriptionProvider, activeTranscriptionModel, supportsStreamInput], async () => {
   streamingTranscriptionUnavailable.value = false
-  if (!enabled.value)
+  if (!voiceInputActive.value)
     return
 
   try {
@@ -875,7 +886,7 @@ onUnmounted(() => {
 })
 
 watch(stream, async (currentStream) => {
-  if (!enabled.value || !currentStream || voiceInputInteractionLifecycle.isStarting() || voiceInputInteractionLifecycle.isStopping() || isVoiceInputSuppressed())
+  if (!voiceInputActive.value || !currentStream || voiceInputInteractionLifecycle.isStarting() || voiceInputInteractionLifecycle.isStopping() || isVoiceInputSuppressed())
     return
 
   // NOTICE: The controls-island mic toggle and device changes can replace the underlying MediaStream
