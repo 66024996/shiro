@@ -24,6 +24,7 @@ spotlight:
 pages:
   gaming-avatar:
     title: Gaming avatar
+    menu-description: Make Shiro small while you play, and choose your games
     mode:
       title: Gaming Mode
       description: Shiro switches to the PNG avatar, moves into the bottom-right corner, and frees the GPU for the game. Voice commands still work.
@@ -75,12 +76,31 @@ pages:
       curious: Curious
   developer-mode:
     title: Developer Mode
+    menu-description: Resources, latency, tools, and logs
     description: Shows the model, tokens, latency, resources, tools, and logs. It samples only while this page is open.
     toggle: Developer Mode is on
     state: State
     mode: Mode
     microphone: Microphone
     tool: Running tool
+    values:
+      normal: Normal
+      gaming: Gaming
+      on: On
+      off: Off
+    avatar-states:
+      idle: Idle
+      listening: Listening
+      thinking: Thinking
+      speaking: Speaking
+      happy: Happy
+      angry: Angry
+      concerned: Concerned
+      sad: Sad
+      surprised: Surprised
+      gaming: Gaming
+      error: Error
+      permission: Waiting for permission
     llm-title: Language model
     last-round: 'Last round: first token {ttfb}, total {duration}, tokens {input} in / {output} out'
     time: Time
@@ -99,6 +119,7 @@ pages:
     error: Developer data could not be read.
   local-ai:
     title: Local AI
+    menu-description: Offline Thai voice, the chat model, and memory
     speech:
       title: Offline Thai speech
       description: Speech runs on this device. Import a voice clip that you have permission to use.

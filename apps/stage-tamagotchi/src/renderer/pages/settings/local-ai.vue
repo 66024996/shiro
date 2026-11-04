@@ -16,9 +16,10 @@ import LocalAiSpeechSection from '../../components/settings/local-ai-speech-sect
 meta:
   layout: settings
   titleKey: tamagotchi.settings.pages.local-ai.title
+  descriptionKey: tamagotchi.settings.pages.local-ai.menu-description
   subtitleKey: settings.title
   settingsEntry: true
-  order: 15
+  order: -2
   icon: i-solar:cpu-bolt-bold-duotone
   stageTransition:
     name: slide

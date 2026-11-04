@@ -1,12 +1,13 @@
 pages:
   gaming-avatar:
-    title: Avatar โหมดเกม
+    title: โหมดเล่นเกม
+    menu-description: ย่อชิโระตอนเล่นเกม และเลือกเกมที่ใช้
     mode:
-      title: Gaming Mode
-      description: ชิโระจะเปลี่ยนเป็น avatar แบบ PNG ย่อไปอยู่มุมขวาล่างของจอ และคืนการ์ดจอให้เกม ยังสั่งงานด้วยเสียงได้
-      toggle: เปิด Gaming Mode
-      auto-detect: เปิด Gaming Mode อัตโนมัติเมื่อเกมในรายการทำงาน
-      auto-detect-description: ชิโระตรวจโปรแกรมที่ทำงานทุก 5 วินาที ถ้าปิด Gaming Mode เองระหว่างเล่น จะปิดไว้จนกว่าเกมจะปิด
+      title: โหมดเล่นเกม
+      description: ชิโระจะย่อเป็นรูปเล็ก ๆ ที่มุมขวาล่างของจอ และคืนการ์ดจอให้เกม คุณยังสั่งงานด้วยเสียงได้
+      toggle: เปิดโหมดเล่นเกม
+      auto-detect: เปิดโหมดเล่นเกมเองเมื่อเกมในรายการเริ่มทำงาน
+      auto-detect-description: ชิโระตรวจโปรแกรมที่ทำงานทุก 5 วินาที ถ้าคุณปิดโหมดเล่นเกมเองระหว่างเล่น จะปิดไว้จนกว่าเกมจะปิด
       detected: 'กำลังเล่น: {game}'
       not-detected: ตอนนี้ไม่มีเกมในรายการทำงานอยู่
       games-title: 'เกม ({count})'
@@ -19,21 +20,21 @@ pages:
       process-name: ชื่อโปรเซส
       process-name-description: ชื่อไฟล์ของเกมที่ทำงานอยู่ ดูได้จาก Task Manager
       add: เพิ่มเกม
-      save-error: บันทึกการตั้งค่า Gaming Mode ไม่ได้
+      save-error: บันทึกการตั้งค่าโหมดเล่นเกมไม่ได้
     editor:
-      title: Avatar แบบ PNG
+      title: รูปตัวละครในโหมดเล่นเกม
       description: ใส่ภาพ 1 ภาพต่อ 1 อารมณ์ ต้องมีอย่างน้อยภาพ "ปกติ" ภาพ PNG พื้นหลังโปร่งใสจะดูดีที่สุด
       empty-slot: 'ใช้ภาพ {fallback} แทน'
       choose: ลากภาพมาวางหรือคลิกเพื่อเลือก
       remove-image: ลบภาพ
-      save: บันทึก avatar
+      save: บันทึกรูปตัวละคร
       saving: กำลังบันทึก…
-      saved: บันทึก avatar โหมดเกมแล้ว
-      delete: ลบ avatar
+      saved: บันทึกรูปตัวละครแล้ว
+      delete: ลบรูปตัวละคร
       opaque-warning: 'ภาพเหล่านี้ไม่มีพื้นหลังโปร่งใส: {emotions}'
       neutral-required: ใส่ภาพ "ปกติ" ก่อนบันทึก
-      load-error: โหลด avatar โหมดเกมไม่สำเร็จ
-      save-error: บันทึก avatar โหมดเกมไม่สำเร็จ
+      load-error: โหลดรูปตัวละครไม่สำเร็จ
+      save-error: บันทึกรูปตัวละครไม่สำเร็จ
     emotions:
       neutral: ปกติ
       listening: กำลังฟัง
@@ -52,12 +53,31 @@ pages:
       curious: อยากรู้
   developer-mode:
     title: โหมดนักพัฒนา
+    menu-description: ทรัพยากร ความหน่วง เครื่องมือ และ log
     description: แสดงโมเดล โทเคน ความหน่วง ทรัพยากร เครื่องมือ และ log ระบบเก็บข้อมูลเฉพาะตอนเปิดหน้านี้
     toggle: เปิดโหมดนักพัฒนา
     state: สถานะ
     mode: โหมด
     microphone: ไมโครโฟน
     tool: เครื่องมือที่ทำงานอยู่
+    values:
+      normal: ปกติ
+      gaming: เล่นเกม
+      on: เปิด
+      off: ปิด
+    avatar-states:
+      idle: ว่าง
+      listening: กำลังฟัง
+      thinking: กำลังคิด
+      speaking: กำลังพูด
+      happy: ดีใจ
+      angry: งอน
+      concerned: เป็นห่วง
+      sad: เศร้า
+      surprised: ตกใจ
+      gaming: โหมดเล่นเกม
+      error: มีข้อผิดพลาด
+      permission: รอการอนุญาต
     llm-title: โมเดลภาษา
     last-round: 'รอบล่าสุด: โทเคนแรก {ttfb} รวม {duration} โทเคน {input} เข้า / {output} ออก'
     time: เวลา
@@ -76,6 +96,7 @@ pages:
     error: อ่านข้อมูลนักพัฒนาไม่ได้
   local-ai:
     title: AI ในเครื่อง
+    menu-description: เสียงภาษาไทยแบบออฟไลน์ โมเดลแชต และความจำ
     speech:
       title: เสียงภาษาไทยแบบออฟไลน์
       description: ระบบเสียงทำงานบนอุปกรณ์นี้ โปรดนำเข้าไฟล์เสียงที่คุณได้รับอนุญาตให้ใช้

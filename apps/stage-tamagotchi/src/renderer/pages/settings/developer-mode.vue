@@ -121,9 +121,9 @@ function formatTime(time: number | string) {
       <section :class="['grid grid-cols-2 gap-3 sm:grid-cols-4']">
         <div
           v-for="item in [
-            { label: t('tamagotchi.settings.pages.developer-mode.state'), value: currentState },
-            { label: t('tamagotchi.settings.pages.developer-mode.mode'), value: gamingMode ? 'Gaming' : 'Normal' },
-            { label: t('tamagotchi.settings.pages.developer-mode.microphone'), value: microphoneEnabled && microphoneGranted ? 'On' : 'Off' },
+            { label: t('tamagotchi.settings.pages.developer-mode.state'), value: t(`tamagotchi.settings.pages.developer-mode.avatar-states.${currentState}`) },
+            { label: t('tamagotchi.settings.pages.developer-mode.mode'), value: t(`tamagotchi.settings.pages.developer-mode.values.${gamingMode ? 'gaming' : 'normal'}`) },
+            { label: t('tamagotchi.settings.pages.developer-mode.microphone'), value: t(`tamagotchi.settings.pages.developer-mode.values.${microphoneEnabled && microphoneGranted ? 'on' : 'off'}`) },
             { label: t('tamagotchi.settings.pages.developer-mode.tool'), value: runningTool?.name ?? '-' },
           ]" :key="item.label" :class="['rounded-xl bg-neutral-100/80 p-3 dark:bg-neutral-800/70']"
         >
@@ -277,6 +277,7 @@ function formatTime(time: number | string) {
 meta:
   layout: settings
   titleKey: tamagotchi.settings.pages.developer-mode.title
+  descriptionKey: tamagotchi.settings.pages.developer-mode.menu-description
   subtitleKey: settings.title
   settingsEntry: true
   order: 17

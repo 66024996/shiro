@@ -14,9 +14,10 @@ import GamingModeSection from '../../components/settings/gaming-mode-section.vue
 meta:
   layout: settings
   titleKey: tamagotchi.settings.pages.gaming-avatar.title
+  descriptionKey: tamagotchi.settings.pages.gaming-avatar.menu-description
   subtitleKey: settings.title
   settingsEntry: true
-  order: 16
+  order: -1
   icon: i-solar:gamepad-bold-duotone
   stageTransition:
     name: slide

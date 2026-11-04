@@ -20,8 +20,8 @@ operations:
   'switch-to-dark-mode': เปลี่ยนเป็นโหมดมืด
   'pin-on-top': ปักไว้ด้านบน
   'unpin-from-top': เลิกปักไว้ด้านบน
-  'gaming-mode-on': เปิด Gaming Mode
-  'gaming-mode-off': ปิด Gaming Mode
+  'gaming-mode-on': เปิดโหมดเล่นเกม
+  'gaming-mode-off': ปิดโหมดเล่นเกม
   'switch-profile': เปลี่ยนโปรไฟล์
   'close': ปิด
   'expand': ขยาย

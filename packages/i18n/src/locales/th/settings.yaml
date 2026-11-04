@@ -60,3 +60,68 @@ language:
   title: ภาษา
   description: |
     ภาษาของหน้าจอ สามารถตั้งภาษาของตัวละครได้ภายหลัง
+pages:
+  card:
+    title: การ์ดตัวละคร
+    description: บุคลิก ชื่อ และเสียงของตัวละคร
+  modules:
+    title: ความสามารถ
+    description: การคิด การมองเห็น การพูด การฟัง และอื่น ๆ
+    consciousness:
+      title: การคิด
+      description: บุคลิกและโมเดลที่ใช้คิด
+    speech:
+      title: การพูด
+      description: เสียงพูดของตัวละคร
+    hearing:
+      title: การฟัง
+      description: การแปลงเสียงพูดเป็นข้อความ
+    vision:
+      title: การมองเห็น
+      description: ให้ตัวละครดูภาพหน้าจอได้
+    web-search:
+      title: ค้นหาเว็บ
+      description: ให้ชิโระค้นข้อมูลล่าสุดจากเว็บ
+    artistry:
+      title: งานภาพ
+      description: สร้างภาพ ฉากหลัง และวาดรูป
+    messaging-discord:
+      title: Discord
+      description: แชตและคุยเสียงผ่าน Discord
+    x:
+      title: X / Twitter
+      description: อ่านและใช้งาน X / Twitter
+    gaming-minecraft:
+      title: Minecraft
+      description: เล่น Minecraft
+    gaming-factorio:
+      title: Factorio
+      description: เล่น Factorio
+    mcp-server:
+      title: เซิร์ฟเวอร์ MCP
+      description: ตั้งค่าเซิร์ฟเวอร์ MCP และนำเครื่องมือมาให้ชิโระใช้
+    beat_sync:
+      title: ขยับตามจังหวะ
+      description: ขยับตามจังหวะเพลงจากแหล่งเสียง
+  scene:
+    title: ฉาก
+    description: ปรับฉากที่ตัวละครอยู่
+  models:
+    title: โมเดลตัวละคร
+    description: Live2D, VRM, Spine, MMD และอื่น ๆ
+  providers:
+    title: ผู้ให้บริการ AI
+    description: โมเดลภาษา เสียงพูด และการฟังเสียง
+  data:
+    title: ข้อมูล
+    description: จัดการข้อมูลของชิโระ ส่งออก และรีเซ็ต
+  connection:
+    title: การเชื่อมต่อ
+    description: ตั้งค่าเซิร์ฟเวอร์ WebSocket
+  system:
+    title: ระบบ
+    description: ธีม ภาษา และการทำงานของแอป
+title: ตั้งค่า
+wip:
+  title: กำลังพัฒนา
+  description: ฟีเจอร์นี้ยังไม่พร้อมใช้งาน
