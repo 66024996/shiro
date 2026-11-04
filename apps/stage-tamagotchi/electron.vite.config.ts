@@ -242,6 +242,12 @@ export default defineConfig({
               '**/settings/models/index.vue',
               '**/settings/system/general.vue',
               '**/settings/modules/mcp.vue',
+              // Shiro hides upstream placeholder pages that show only "Work in Progress".
+              '**/settings/memory/index.vue',
+              '**/settings/modules/memory-short-term.vue',
+              '**/settings/modules/memory-long-term.vue',
+              '**/settings/providers/speech/app-local-audio-speech.vue',
+              '**/settings/providers/transcription/app-local-audio-transcription.vue',
               '**/devtools/index.vue',
               '**/settings/index.vue',
             ],

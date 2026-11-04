@@ -24,6 +24,7 @@ import { useSpeechStore } from '@proj-airi/stage-ui/stores/modules/speech'
 import { useVisionStore } from '@proj-airi/stage-ui/stores/modules/vision'
 import { usePerfTracerBridgeStore } from '@proj-airi/stage-ui/stores/perf-tracer-bridge'
 import { listProvidersForPluginHost, shouldPublishPluginHostCapabilities } from '@proj-airi/stage-ui/stores/plugin-host-capabilities'
+import { useProviderStore } from '@proj-airi/stage-ui/stores/providers/provider'
 import { useSettings, useSettingsAudioDevice } from '@proj-airi/stage-ui/stores/settings'
 import { useSettingsStageModel } from '@proj-airi/stage-ui/stores/settings/stage-model'
 import { useTheme } from '@proj-airi/ui'
@@ -126,6 +127,10 @@ llmStore.disabledFixedToolSources = ['mcp', 'debug', 'spark-command']
 llmStore.maxHistoryUserTurns = 5
 // Shiro speaks every reply, and the speech voice cannot read emoji.
 llmStore.removeEmojiFromReplies = true
+// The app local audio providers have only a "Work in Progress" page, so Shiro hides them from every provider list.
+const providersStore = useProviderStore()
+for (const providerId of ['app-local-audio-speech', 'app-local-audio-transcription'])
+  providersStore.setProviderAvailabilityOverride(providerId, false)
 // Only the leader composes chat requests, so only the leader loads memories into the prompt.
 let stopMemoryContextHook: (() => void) | undefined
 const stopLeadershipListener = syncedPinia.onLeadershipChange((isLeader) => {

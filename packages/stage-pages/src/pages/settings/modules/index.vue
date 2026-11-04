@@ -2,15 +2,23 @@
 import { IconStatusItem, RippleGrid } from '@proj-airi/stage-ui/components'
 import { useModulesList } from '@proj-airi/stage-ui/composables/use-modules-list'
 import { useRippleGridState } from '@proj-airi/stage-ui/composables/use-ripple-grid-state'
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const { modulesList } = useModulesList()
+// An app can leave out a module page. Its card would then lead to a missing page, so only modules with a registered page show.
+const routedModules = computed(() => {
+  const paths = new Set(router.getRoutes().map(route => route.path))
+  return modulesList.value.filter(module => paths.has(module.to))
+})
 const { lastClickedIndex, setLastClickedIndex } = useRippleGridState()
 </script>
 
 <template>
   <div>
     <RippleGrid
-      :items="modulesList"
+      :items="routedModules"
       :columns="{ default: 1, sm: 2 }"
       :origin-index="lastClickedIndex"
       @item-click="({ globalIndex }) => setLastClickedIndex(globalIndex)"
