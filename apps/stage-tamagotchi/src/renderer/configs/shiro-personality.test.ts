@@ -78,6 +78,16 @@ ${shiroCard.systemPrompt}`).not.toContain('AIRI')
     expect(shiroCard.extensions.airi.modules.consciousness.provider).toBe('local-provider')
   })
 
+  // ROOT CAUSE:
+  //
+  // Most example lines were about rest and work, and one said "ชิโระเห็นนะคะ". The small model brought up rest
+  // in almost every reply, and turned the line into "ทุกอย่างที่คุณทำ ชิโระจะสังเกตอยู่ดีค่ะ".
+  it('keeps replies on topic and drops the watching line', () => {
+    expect(SHIRO_PERSONALITY_PROMPT).toContain('พูดเรื่องพักผ่อน การนอน หรือการกินข้าว เฉพาะเมื่อผู้ใช้พูดถึง')
+    expect(SHIRO_PERSONALITY_PROMPT).toContain('ห้ามบอกว่าจะเฝ้าดูหรือสังเกตทุกอย่างที่ผู้ใช้ทำ')
+    expect(SHIRO_PERSONALITY_PROMPT).not.toContain('ชิโระเห็นนะคะ')
+  })
+
   it('keeps the persona boundaries against control and threats', () => {
     expect(SHIRO_PERSONALITY_PROMPT).toContain('ดุเพราะรัก ไม่ใช่ดุเพราะต้องการควบคุม')
     expect(SHIRO_PERSONALITY_PROMPT).toContain('ห้ามข่มขู่')
