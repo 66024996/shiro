@@ -9,7 +9,7 @@ import { useSpeechStore } from '@proj-airi/stage-ui/stores/modules/speech'
 import { useProviderConfigStore } from '@proj-airi/stage-ui/stores/providers/config'
 import { useProviderStore } from '@proj-airi/stage-ui/stores/providers/provider'
 import { Button, FieldInput } from '@proj-airi/ui'
-import { computed, onMounted, onUnmounted, ref, shallowRef } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import {
@@ -37,17 +37,11 @@ const status = ref<ShiroSpeechServiceStatus>({
   voiceConfigured: false,
 })
 const transcript = ref('')
-const transcriptionPrompt = shallowRef('')
-const savedTranscriptionPrompt = shallowRef('')
-const transcriptionPromptLoaded = shallowRef(false)
-const transcriptionPromptError = shallowRef('')
 const error = ref('')
 const busy = ref(false)
 const speechConfigured = computed(() => speech.activeSpeechProvider === 'openai-compatible-audio-speech'
   && hearing.activeTranscriptionProvider === 'openai-compatible-audio-transcription'
   && hearing.activeTranscriptionModel === transcriptionModel)
-const transcriptionPromptDirty = computed(() => transcriptionPrompt.value.trim() !== savedTranscriptionPrompt.value)
-const transcriptionPromptTooLong = computed(() => transcriptionPrompt.value.length > 1000)
 const statusMessage = computed(() => {
   const message = status.value.message
   if (!message)
@@ -67,45 +61,6 @@ async function refreshStatus() {
   }
   catch (cause) {
     error.value = errorMessageFrom(cause) ?? t('tamagotchi.settings.pages.local-ai.speech.status-error')
-  }
-}
-
-async function loadTranscriptionPrompt() {
-  try {
-    await providers.initializeProvider(transcriptionProviderId)
-    const storedPrompt = providerConfig.configs[transcriptionProviderId]?.prompt
-    const prompt = typeof storedPrompt === 'string' ? storedPrompt.trim() : ''
-    transcriptionPrompt.value = prompt
-    savedTranscriptionPrompt.value = prompt
-    transcriptionPromptLoaded.value = true
-    transcriptionPromptError.value = ''
-  }
-  catch (cause) {
-    transcriptionPromptError.value = errorMessageFrom(cause) ?? t('tamagotchi.settings.pages.local-ai.speech.prompt-load-error')
-  }
-}
-
-async function saveTranscriptionPrompt() {
-  if (busy.value || !transcriptionPromptLoaded.value || transcriptionPromptTooLong.value)
-    return
-
-  busy.value = true
-  transcriptionPromptError.value = ''
-  const prompt = transcriptionPrompt.value.trim()
-  try {
-    await providers.initializeProvider(transcriptionProviderId)
-    const saved = await providerConfig.patchProviderConfig(transcriptionProviderId, { prompt })
-    if (!saved)
-      throw new Error('The transcription provider no longer exists')
-
-    savedTranscriptionPrompt.value = prompt
-    transcriptionPrompt.value = prompt
-  }
-  catch (cause) {
-    transcriptionPromptError.value = errorMessageFrom(cause) ?? t('tamagotchi.settings.pages.local-ai.speech.prompt-save-error')
-  }
-  finally {
-    busy.value = false
   }
 }
 
@@ -132,15 +87,13 @@ async function importVoiceReference() {
 }
 
 async function activateSpeech() {
-  if (busy.value || !transcriptionPromptLoaded.value || transcriptionPromptTooLong.value)
+  if (busy.value)
     return
 
   busy.value = true
   error.value = ''
-  transcriptionPromptError.value = ''
   try {
     const baseUrl = 'http://127.0.0.1:5052/v1/'
-    const prompt = transcriptionPrompt.value.trim()
 
     await providers.initializeProvider(speechProviderId)
     // The stage speech pipeline reads the model and the voice of an OpenAI-compatible provider from its provider config.
@@ -151,7 +104,7 @@ async function activateSpeech() {
     await providers.forceProviderConfigured(speechProviderId)
     await providers.initializeProvider(transcriptionProviderId)
     // The local server transcribes only Thai. Without this, the request language follows the UI locale, for example "en", and the server rejects it.
-    const transcriptionConfigSaved = await providerConfig.patchProviderConfig(transcriptionProviderId, { apiKey: 'shiro-local', baseUrl, prompt, language: 'th' })
+    const transcriptionConfigSaved = await providerConfig.patchProviderConfig(transcriptionProviderId, { apiKey: 'shiro-local', baseUrl, language: 'th' })
     if (!transcriptionConfigSaved)
       throw new Error('The transcription provider no longer exists')
     await providers.forceProviderConfigured(transcriptionProviderId)
@@ -163,8 +116,6 @@ async function activateSpeech() {
       throw new Error('The active character card could not be updated')
     hearing.activeTranscriptionProvider = transcriptionProviderId
     hearing.activeTranscriptionModel = transcriptionModel
-    savedTranscriptionPrompt.value = prompt
-    transcriptionPrompt.value = prompt
   }
   catch (cause) {
     error.value = errorMessageFrom(cause) ?? t('tamagotchi.settings.pages.local-ai.speech.activate-error')
@@ -176,7 +127,6 @@ async function activateSpeech() {
 
 onMounted(() => {
   void refreshStatus()
-  void loadTranscriptionPrompt()
   statusTimer = window.setInterval(() => void refreshStatus(), 5000)
 })
 
@@ -216,22 +166,6 @@ onUnmounted(() => {
       :placeholder="t('tamagotchi.settings.pages.local-ai.speech.transcript-placeholder')"
     />
 
-    <FieldInput
-      v-model="transcriptionPrompt"
-      :label="t('tamagotchi.settings.pages.local-ai.speech.prompt-label')"
-      :description="t('tamagotchi.settings.pages.local-ai.speech.prompt-description')"
-      :placeholder="t('tamagotchi.settings.pages.local-ai.speech.prompt-placeholder')"
-      :disabled="busy || !transcriptionPromptLoaded"
-      :single-line="false"
-    />
-
-    <p v-if="transcriptionPromptTooLong" :class="['text-sm text-red-600 dark:text-red-400']">
-      {{ t('tamagotchi.settings.pages.local-ai.speech.prompt-too-long') }}
-    </p>
-    <p v-if="transcriptionPromptError" role="alert" :class="['text-sm text-red-600 dark:text-red-400']">
-      {{ transcriptionPromptError }}
-    </p>
-
     <div :class="['flex flex-wrap gap-2']">
       <Button
         :label="t('tamagotchi.settings.pages.local-ai.speech.import')"
@@ -241,20 +175,12 @@ onUnmounted(() => {
         @click="importVoiceReference"
       />
       <Button
-        :label="transcriptionPromptDirty
-          ? t('tamagotchi.settings.pages.local-ai.speech.prompt-save')
-          : t('tamagotchi.settings.pages.local-ai.speech.prompt-saved')"
-        :loading="busy"
-        :disabled="busy || !transcriptionPromptLoaded || !transcriptionPromptDirty || transcriptionPromptTooLong"
-        @click="saveTranscriptionPrompt"
-      />
-      <Button
         v-if="status.state === 'ready' && status.voiceConfigured"
         :label="speechConfigured
           ? t('tamagotchi.settings.pages.local-ai.speech.configured')
           : t('tamagotchi.settings.pages.local-ai.speech.activate')"
         :loading="busy"
-        :disabled="speechConfigured || !transcriptionPromptLoaded || transcriptionPromptTooLong"
+        :disabled="speechConfigured"
         icon="i-solar:check-circle-bold-duotone"
         @click="activateSpeech"
       />

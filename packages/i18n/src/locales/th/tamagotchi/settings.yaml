@@ -97,14 +97,6 @@ pages:
       transcript-label: ข้อความในคลิปเสียง
       transcript-description: กรอกข้อความที่พูดในคลิปเสียงให้ตรงตามต้นฉบับ
       transcript-placeholder: วางข้อความถอดเสียง
-      prompt-label: บริบทการรู้จำเสียง
-      prompt-description: เพิ่มชื่อหรือคำศัพท์เฉพาะที่คาดว่าจะอยู่ในเสียง บริบทที่ไม่ตรงอาจทำให้ความแม่นยำลดลง
-      prompt-placeholder: ชื่อบุคคล สถานที่ คำศัพท์เฉพาะ หรือคำสั่ง
-      prompt-save: บันทึกบริบท
-      prompt-saved: บันทึกบริบทแล้ว
-      prompt-too-long: บริบทต้องมีไม่เกิน 1,000 ตัวอักษร
-      prompt-load-error: โหลดบริบทการรู้จำเสียงไม่สำเร็จ
-      prompt-save-error: บันทึกบริบทการรู้จำเสียงไม่สำเร็จ
       import: นำเข้าไฟล์เสียง
       configured: เปิดใช้ระบบเสียงแล้ว
       activate: ใช้ระบบเสียงออฟไลน์

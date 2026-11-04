@@ -120,14 +120,6 @@ pages:
       transcript-label: Voice transcript
       transcript-description: Enter the exact words spoken in your audio clip.
       transcript-placeholder: Paste the transcript
-      prompt-label: Recognition context
-      prompt-description: Add names or technical terms that are likely to appear. A wrong context can reduce accuracy.
-      prompt-placeholder: Names, places, technical terms, or commands
-      prompt-save: Save context
-      prompt-saved: Context saved
-      prompt-too-long: Keep the context within 1,000 characters.
-      prompt-load-error: Failed to load the recognition context.
-      prompt-save-error: Failed to save the recognition context.
       import: Import voice clip
       configured: Speech is active
       activate: Use offline speech
