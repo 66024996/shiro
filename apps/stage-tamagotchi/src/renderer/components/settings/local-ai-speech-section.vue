@@ -27,6 +27,8 @@ const cards = useAiriCardStore()
 const hearing = useHearingStore()
 const speechProviderId = 'openai-compatible-audio-speech'
 const transcriptionProviderId = 'openai-compatible-audio-transcription'
+const speechModel = 'omnivoice-thai'
+const speechVoice = 'shiro'
 
 const status = ref<ShiroSpeechServiceStatus>({
   state: 'starting',
@@ -138,7 +140,9 @@ async function activateSpeech() {
     const prompt = transcriptionPrompt.value.trim()
 
     await providers.initializeProvider(speechProviderId)
-    const speechConfigSaved = await providerConfig.patchProviderConfig(speechProviderId, { apiKey: 'shiro-local', baseUrl })
+    // The stage speech pipeline reads the model and the voice of an OpenAI-compatible provider from its provider config.
+    // Without them, it sends the OpenAI defaults "tts-1" and "alloy".
+    const speechConfigSaved = await providerConfig.patchProviderConfig(speechProviderId, { apiKey: 'shiro-local', baseUrl, model: speechModel, voice: speechVoice })
     if (!speechConfigSaved)
       throw new Error('The speech provider no longer exists')
     await providers.forceProviderConfigured(speechProviderId)
@@ -151,7 +155,7 @@ async function activateSpeech() {
 
     // The active card applies its speech module at every start. Saving the choice on the card keeps it after a restart.
     // Setting the speech store alone was replaced by the card's inherited speech-noop at the next start.
-    const speechSaved = await cards.updateActiveCardSpeech({ provider: speechProviderId, model: 'omnivoice-thai', voice_id: 'shiro' })
+    const speechSaved = await cards.updateActiveCardSpeech({ provider: speechProviderId, model: speechModel, voice_id: speechVoice })
     if (!speechSaved)
       throw new Error('The active character card could not be updated')
     hearing.activeTranscriptionProvider = transcriptionProviderId
