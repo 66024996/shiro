@@ -151,6 +151,13 @@ computer-use:
   approval-required-windows: Windows จะแสดงคำขออนุมัติก่อนทำแต่ละคำสั่ง
 
 status:
+  assistant:
+    permission: รอให้คุณอนุญาต
+    error: มีบางอย่างผิดพลาด
+    listening: กำลังฟัง
+    thinking: กำลังคิด
+    speaking: กำลังพูด
+    gaming: โหมดเล่นเกม
   preparing: กำลังเตรียมไมโครโฟน
   listening: กำลังฟังอยู่ค่ะ
   paused: หยุดฟังชั่วคราวระหว่างที่ชิโระพูด

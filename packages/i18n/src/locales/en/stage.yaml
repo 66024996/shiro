@@ -193,6 +193,13 @@ computer-use:
   approval-required-windows: Windows asks you to approve each computer action.
 
 status:
+  assistant:
+    permission: Waiting for your approval
+    error: Something went wrong
+    listening: Listening
+    thinking: Thinking
+    speaking: Speaking
+    gaming: Gaming Mode
   preparing: Preparing microphone
   listening: Listening
   paused: Listening paused while AIRI speaks
