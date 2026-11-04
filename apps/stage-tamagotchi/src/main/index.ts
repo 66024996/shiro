@@ -62,6 +62,7 @@ import { setupArtistryBridge } from './services/airi/widgets/artistry-bridge'
 import { setupAutoUpdater } from './services/electron/auto-updater'
 import { setupGlobalShortcutService } from './services/electron/global-shortcut'
 import { setupPermissionHandlers } from './services/electron/media-permissions'
+import { OllamaLauncher } from './services/electron/ollama-launcher'
 import { getOllamaStatus } from './services/electron/ollama-status'
 import { setupSherpawModelAssetsProtocol } from './services/electron/sherpaw-model-assets'
 import { createShiroSpeechRuntime } from './services/electron/shiro-speech-runtime'
@@ -473,7 +474,15 @@ app.whenReady().then(async () => {
       defineInvokeHandler(context, electronAssistantGetWakeWord, () => assistantRuntimeProfile.wakeWord)
       defineInvokeHandler(context, electronShiroSpeechStatusGet, () => deps.shiroSpeechRuntime.getStatus())
       defineInvokeHandler(context, electronShiroSpeechVoiceImport, payload => deps.shiroSpeechRuntime.importVoice(payload.transcript))
-      defineInvokeHandler(context, electronOllamaStatusGet, () => getOllamaStatus())
+      // Shiro cannot think without Ollama, so it starts the Ollama app when it stopped, for example after a crash.
+      const ollamaLauncher = new OllamaLauncher()
+      void ollamaLauncher.ensureRunning()
+      const ollamaLauncherTimer = setInterval(() => void ollamaLauncher.ensureRunning(), 60_000)
+      onAppBeforeQuit(() => clearInterval(ollamaLauncherTimer))
+      defineInvokeHandler(context, electronOllamaStatusGet, async () => {
+        await ollamaLauncher.ensureRunning()
+        return getOllamaStatus()
+      })
       defineInvokeHandler(context, electronBeatSyncHostEnsure, async () => {
         await beatSyncHost.ensure()
       })
