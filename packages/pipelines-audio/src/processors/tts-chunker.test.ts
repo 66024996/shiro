@@ -35,6 +35,25 @@ describe('chunkTtsInput boost', () => {
   })
 })
 
+describe('chunkTtsInput grapheme clusters', () => {
+  // ROOT CAUSE:
+  //
+  // The chunker skipped every grapheme cluster longer than one code unit, to drop emoji.
+  // A Thai consonant with a vowel or tone mark is such a cluster, so "สวัสดีค่ะ" became "สสะ"
+  // and the speech voice read nonsense.
+  it('keeps Thai letters that carry vowel or tone marks', async () => {
+    const chunks = await collectChunks('สวัสดีค่ะ คุณกลับมาแล้วนะ ไปทำอะไรกันดีไหมคะ?')
+
+    expect(chunks.map(chunk => chunk.text).join(' ')).toBe('สวัสดีค่ะ คุณกลับมาแล้วนะ ไปทำอะไรกันดีไหมคะ?')
+  })
+
+  it('still drops multi code unit emoji', async () => {
+    const chunks = await collectChunks('Hello there 👍🏽 my friend.')
+
+    expect(chunks.map(chunk => chunk.text).join(' ')).not.toContain('👍')
+  })
+})
+
 describe('tTS Chunker Logic Cleanup', () => {
   describe('isProbablyAngleTag Heuristics', () => {
     it('should identify narrative tags', () => {

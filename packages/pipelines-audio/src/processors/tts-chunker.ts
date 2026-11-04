@@ -10,6 +10,7 @@ export const TTS_FLUSH_INSTRUCTION = '\u200B'
 export const TTS_SPECIAL_TOKEN = '\u2063'
 
 const regexpAnySingleDigit = /\d/
+const regexpEmojiCluster = /\p{Extended_Pictographic}|\p{Regional_Indicator}/u
 
 const keptPunctuations = new Set('?？!！')
 const hardPunctuations = new Set('.。?？!！…⋯～~\n\t\r')
@@ -84,7 +85,11 @@ export async function* chunkTtsInput(
   while (!current.done) {
     let value = current.value
 
+    // A cluster of more than one code unit is never punctuation. Skip emoji clusters, and keep
+    // letters with combining marks, for example Thai "ดี" or "ค่", as text.
     if (value.length > 1) {
+      if (!regexpEmojiCluster.test(value))
+        buffer += value
       previousValue = value
       current = await iterator.next()
       continue
