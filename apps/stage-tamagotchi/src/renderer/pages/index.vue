@@ -731,6 +731,8 @@ function getVoiceInputGeneration(metadata?: Record<string, unknown>) {
 
 const voiceInputSession = useVoiceInputSession(stream, {
   shouldUseStreamInput,
+  // The padded VAD buffer keeps the start of a command. The volume fallback cut it off and split commands at short pauses.
+  volumeFallback: { onlyWithoutVad: true },
   onLog(level, event, message, details) {
     const output = `[Voice Input] ${event}: ${message}`
     if (level === 'error') {

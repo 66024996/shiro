@@ -422,4 +422,63 @@ describe('useVoiceInputSession', () => {
     expect(stopRecord).toHaveBeenCalledOnce()
     expect(session.activeRecordingTrigger.value).toBeUndefined()
   })
+
+  // ROOT CAUSE:
+  //
+  // The volume fallback detected speech before VAD, so it owned every segment. Its recorder started late
+  // and cut the first syllables, and its short silence timeout split one command into two segments.
+  it('keeps the volume fallback off while VAD runs when asked', async () => {
+    const audioContexts: unknown[] = []
+    vi.stubGlobal('AudioContext', class {
+      constructor() {
+        audioContexts.push(this)
+      }
+    })
+
+    const { useVoiceInputSession } = await import('./voice-input-session')
+    const session = useVoiceInputSession(shallowRef(createMediaStream()), {
+      volumeFallback: { enabled: true, onlyWithoutVad: true },
+    })
+    await session.startAutoSegmentation()
+
+    expect(vadMock.start).toHaveBeenCalledOnce()
+    expect(audioContexts).toHaveLength(0)
+  })
+
+  it('still starts the volume fallback when VAD cannot start', async () => {
+    vadMock.init.mockRejectedValue(new Error('VAD model missing'))
+    const audioContexts: unknown[] = []
+    vi.stubGlobal('AudioContext', class {
+      state = 'running'
+      destination = {}
+      constructor() {
+        audioContexts.push(this)
+      }
+
+      createMediaStreamSource() {
+        return { connect: vi.fn(), disconnect: vi.fn() }
+      }
+
+      createAnalyser() {
+        return { fftSize: 512, smoothingTimeConstant: 0, connect: vi.fn(), disconnect: vi.fn(), getByteTimeDomainData: vi.fn() }
+      }
+
+      createGain() {
+        return { gain: { value: 1 }, connect: vi.fn(), disconnect: vi.fn() }
+      }
+
+      resume = vi.fn()
+      close = vi.fn()
+    })
+    vi.stubGlobal('requestAnimationFrame', vi.fn(() => 1))
+    vi.stubGlobal('cancelAnimationFrame', vi.fn())
+
+    const { useVoiceInputSession } = await import('./voice-input-session')
+    const session = useVoiceInputSession(shallowRef(createMediaStream()), {
+      volumeFallback: { enabled: true, onlyWithoutVad: true },
+    })
+    await session.startAutoSegmentation()
+
+    expect(audioContexts).toHaveLength(1)
+  })
 })

@@ -46,6 +46,16 @@ export interface VoiceInputSessionVadOptions {
 
 export interface VoiceInputSessionVolumeFallbackOptions {
   enabled?: MaybeRefOrGetter<boolean>
+  /**
+   * Starts the volume fallback only when VAD could not start.
+   *
+   * The fallback starts its recorder when the volume rises, so it loses the first syllables, and it ends a
+   * segment after a short pause. While both run, the fallback usually detects speech first and owns the segment,
+   * so the padded VAD buffer is never used.
+   *
+   * @default false
+   */
+  onlyWithoutVad?: boolean
   startThreshold?: number
   stopThreshold?: number
   startFrames?: number
@@ -564,7 +574,7 @@ export function useVoiceInputSession(
     if (!stream)
       throw new Error('No microphone stream available for voice input')
 
-    await startVoiceInputVadDetectionSafely({
+    const vadStarted = await startVoiceInputVadDetectionSafely({
       init: initVAD,
       loaded: () => vadLoaded.value,
       start: startVAD,
@@ -572,6 +582,10 @@ export function useVoiceInputSession(
       getError: () => vadError.value,
       log,
     })
+    if (vadStarted && options.volumeFallback?.onlyWithoutVad) {
+      log('info', 'volume-fallback-skipped', 'VAD is running, so the volume-based recorder fallback stays off.')
+      return
+    }
     await startVolumeFallback(stream)
   }
 
