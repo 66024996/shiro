@@ -3,6 +3,7 @@ import type { ShiroSpeechServiceStatus } from '../../../shared/eventa'
 
 import { errorMessageFrom } from '@moeru/std'
 import { useElectronEventaInvoke } from '@proj-airi/electron-vueuse'
+import { useAiriCardStore } from '@proj-airi/stage-ui/stores/modules/airi-card'
 import { useHearingStore } from '@proj-airi/stage-ui/stores/modules/hearing'
 import { useSpeechStore } from '@proj-airi/stage-ui/stores/modules/speech'
 import { useProviderConfigStore } from '@proj-airi/stage-ui/stores/providers/config'
@@ -22,6 +23,7 @@ const importVoice = useElectronEventaInvoke(electronShiroSpeechVoiceImport)
 const providers = useProviderStore()
 const providerConfig = useProviderConfigStore()
 const speech = useSpeechStore()
+const cards = useAiriCardStore()
 const hearing = useHearingStore()
 const speechProviderId = 'openai-compatible-audio-speech'
 const transcriptionProviderId = 'openai-compatible-audio-transcription'
@@ -141,14 +143,17 @@ async function activateSpeech() {
       throw new Error('The speech provider no longer exists')
     await providers.forceProviderConfigured(speechProviderId)
     await providers.initializeProvider(transcriptionProviderId)
-    const transcriptionConfigSaved = await providerConfig.patchProviderConfig(transcriptionProviderId, { apiKey: 'shiro-local', baseUrl, prompt })
+    // The local server transcribes only Thai. Without this, the request language follows the UI locale, for example "en", and the server rejects it.
+    const transcriptionConfigSaved = await providerConfig.patchProviderConfig(transcriptionProviderId, { apiKey: 'shiro-local', baseUrl, prompt, language: 'th' })
     if (!transcriptionConfigSaved)
       throw new Error('The transcription provider no longer exists')
     await providers.forceProviderConfigured(transcriptionProviderId)
 
-    speech.activeSpeechProvider = speechProviderId
-    speech.activeSpeechModel = 'omnivoice-thai'
-    speech.activeSpeechVoiceId = 'shiro'
+    // The active card applies its speech module at every start. Saving the choice on the card keeps it after a restart.
+    // Setting the speech store alone was replaced by the card's inherited speech-noop at the next start.
+    const speechSaved = await cards.updateActiveCardSpeech({ provider: speechProviderId, model: 'omnivoice-thai', voice_id: 'shiro' })
+    if (!speechSaved)
+      throw new Error('The active character card could not be updated')
     hearing.activeTranscriptionProvider = transcriptionProviderId
     hearing.activeTranscriptionModel = 'whisper-small'
     savedTranscriptionPrompt.value = prompt
