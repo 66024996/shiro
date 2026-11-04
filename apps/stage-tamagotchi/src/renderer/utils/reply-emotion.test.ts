@@ -21,6 +21,17 @@ describe('inferReplyEmotion', () => {
     expect(inferReplyEmotion('อย่าเล่นเกมทั้งคืนสิคะ')).toBe('angry')
   })
 
+  // ROOT CAUSE:
+  //
+  // The first matching rule won, and care came first. Most replies mention rest or "อย่าลืม",
+  // so nearly every reply showed the same worried pose, even a success or a greeting.
+  it('picks the emotion with the most matches, so a success reply looks happy', () => {
+    expect(inferReplyEmotion('เปิดเครื่องคิดเลขสำเร็จค่ะ ใช้ได้ทันทีนะคะ ถ้าต้องการอีกก็บอกได้เลย อย่าลืมพักด้วยนะ')).toBe('happy')
+    expect(inferReplyEmotion('สวัสดีค่ะ วันนี้มีอะไรให้ชิโระช่วยไหมคะ')).toBe('happy')
+    expect(inferReplyEmotion('ง่วงมากเลยสินะคะ ชิโระเป็นห่วงนะ ไปพักก่อนค่ะ')).toBe('concerned')
+    expect(inferReplyEmotion('ชิโระไม่สามารถเปิดคลิปนั้นได้ค่ะ ขอโทษนะคะ')).toBe('sad')
+  })
+
   it('returns undefined for a plain reply', () => {
     expect(inferReplyEmotion('GPU ใช้งานอยู่ที่ 28% ค่ะ')).toBeUndefined()
   })

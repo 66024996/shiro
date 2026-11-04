@@ -285,6 +285,9 @@ const { activeBackgroundUrl } = storeToRefs(backgroundStore)
 
 const { currentMotion, availableMotions: live2dAvailableMotions, faceEmotion: live2dFaceEmotion } = storeToRefs(useLive2dParams())
 
+/** The emotion motion that played last, so the next emotion picks a different pose when it can. */
+let lastEmotionMotion: { group: string, index?: number } | undefined
+
 const emotionsQueue = createQueue<EmotionPayload>({
   handlers: [
     async (ctx) => {
@@ -299,9 +302,11 @@ const emotionsQueue = createQueue<EmotionPayload>({
       else if (stageModelRenderer.value === 'live2d') {
         // The face shows every emotion. A motion plays only when the model has a fitting group.
         live2dFaceEmotion.value = ctx.data.name
-        const motion = resolveEmotionMotion(ctx.data.name, live2dAvailableMotions.value)
-        if (motion)
+        const motion = resolveEmotionMotion(ctx.data.name, live2dAvailableMotions.value, { previous: lastEmotionMotion })
+        if (motion) {
+          lastEmotionMotion = motion
           currentMotion.value = { ...motion }
+        }
       }
       else if (stageModelRenderer.value === 'spine') {
         spineSceneRef.value?.setEmotion(ctx.data.name, ctx.data.intensity)

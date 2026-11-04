@@ -29,16 +29,34 @@ describe('resolveEmotionMotion', () => {
     [Emotion.Surprise, { group: 'Tap', index: 0 }],
     [Emotion.Sad, { group: 'Flick@Body' }],
     [Emotion.Awkward, { group: 'Tap@Body' }],
-  ])('maps %s to the Hiyori motion %o', (emotion, motion) => {
-    expect(resolveEmotionMotion(emotion, hiyoriMotions)).toEqual(motion)
+    [Emotion.Think, { group: 'FlickDown' }],
+  ])('maps %s to the Hiyori motion %o first', (emotion, motion) => {
+    expect(resolveEmotionMotion(emotion, hiyoriMotions, { random: () => 0 })).toEqual(motion)
   })
 
-  it('uses the next fallback when a motion index is missing', () => {
-    expect(resolveEmotionMotion(Emotion.Happy, [{ motionName: 'Tap', motionIndex: 0 }])).toEqual({ group: 'Tap' })
+  // ROOT CAUSE:
+  //
+  // Each emotion always played the same motion, so the avatar looked repetitive.
+  it('does not repeat the previous motion when another one fits', () => {
+    const first = resolveEmotionMotion(Emotion.Happy, hiyoriMotions, { random: () => 0 })
+    for (const value of [0, 0.5, 0.99]) {
+      const next = resolveEmotionMotion(Emotion.Happy, hiyoriMotions, { previous: first, random: () => value })
+      expect(next).not.toEqual(first)
+      expect(next).toBeDefined()
+    }
+  })
+
+  it('repeats a motion when it is the only one that fits', () => {
+    const only = { group: 'Tap', index: 0 }
+    expect(resolveEmotionMotion(Emotion.Surprise, hiyoriMotions, { previous: only })).toEqual(only)
+  })
+
+  it('skips a fallback whose motion index the model does not have', () => {
+    expect(resolveEmotionMotion(Emotion.Happy, [{ motionName: 'Tap', motionIndex: 0 }, { motionName: 'FlickUp', motionIndex: 0 }])).toEqual({ group: 'FlickUp' })
   })
 
   it('keeps the current motion when no motion fits', () => {
-    expect(resolveEmotionMotion(Emotion.Think, hiyoriMotions)).toBeUndefined()
+    expect(resolveEmotionMotion(Emotion.Think, [{ motionName: 'Idle', motionIndex: 0 }])).toBeUndefined()
     expect(resolveEmotionMotion(Emotion.Happy, [{ motionName: 'Idle', motionIndex: 0 }])).toBeUndefined()
   })
 })
