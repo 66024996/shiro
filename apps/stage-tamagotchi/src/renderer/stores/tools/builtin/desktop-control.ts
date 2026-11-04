@@ -4,6 +4,7 @@ import type { SystemStatusSection } from '../../../../shared/eventa/desktop-cont
 
 import { defineInvoke } from '@moeru/eventa'
 import { createContext } from '@moeru/eventa/adapters/electron/renderer'
+import { useChatSessionStore } from '@proj-airi/stage-ui/stores/chat/session-store'
 import { rawTool } from '@xsai/tool'
 
 import {
@@ -34,6 +35,21 @@ function createInvokers() {
     fileDelete: defineInvoke(context, desktopControlFileDelete),
     terminalRun: defineInvoke(context, desktopControlTerminalRun),
   }
+}
+
+/** The text of the latest user message in the active chat, for checking the app name that the model chose. */
+function latestUserText(): string | undefined {
+  const session = useChatSessionStore()
+  const messages = session.sessionMessages[session.activeSessionId] ?? []
+  const message = messages.findLast(item => item.role === 'user')
+  if (!message)
+    return undefined
+  if (typeof message.content === 'string')
+    return message.content
+  return message.content
+    .map(part => (part.type === 'text' ? part.text : ''))
+    .join(' ')
+    .trim() || undefined
 }
 
 /** IPC client for the main-process desktop control service. Created on first use in the calling renderer. */
@@ -99,14 +115,14 @@ export async function desktopControlTools(): Promise<Tool[]> {
     }),
     rawTool({
       name: 'app_open',
-      description: 'Open an installed app or game from the Start menu by name, for example "VS Code", "Discord", or "Steam". If the result status is "ambiguous" or "not-found", ask the user which listed app they mean, then call again with its exact name.',
+      description: 'Open an installed app or game from the Start menu by name. Pass the name in the user\'s own words, even when it looks misspelled. The app list corrects common speech recognition errors. Do not swap it for another app you guess. If the result status is "ambiguous" or "not-found", ask the user which listed app they mean, then call again with its exact name.',
       parameters: {
         type: 'object',
-        properties: { name: { type: 'string', description: 'The app name as the user said it.' } },
+        properties: { name: { type: 'string', description: 'The app name exactly as the user said it, for example "เครื่องคิดเลข" or "Discord". Do not translate it or replace it.' } },
         required: ['name'],
         additionalProperties: false,
       },
-      execute: async input => JSON.stringify(await client().appOpen({ name: (input as { name: string }).name })),
+      execute: async input => JSON.stringify(await client().appOpen({ name: (input as { name: string }).name, userText: latestUserText()?.slice(0, 2000) })),
     }),
     rawTool({
       name: 'app_close',

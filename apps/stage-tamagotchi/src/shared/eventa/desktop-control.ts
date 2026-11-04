@@ -41,6 +41,8 @@ export interface ProcessSummary {
 
 export interface AppOpenRequest {
   name: string
+  /** The user's latest message. When it names a known app that differs from `name`, that app opens. */
+  userText?: string
 }
 
 export interface AppCandidate {

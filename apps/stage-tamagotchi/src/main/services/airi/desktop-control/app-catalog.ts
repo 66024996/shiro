@@ -7,6 +7,7 @@ import { resolve } from 'node:path'
 
 import { object, pipe, string, transform } from 'valibot'
 
+import { canonicalThaiForm, editDistance } from '../../../../shared/utils/thai-text-match'
 import { powerShellList, queryPowerShellJson } from './windows-shell'
 
 /** Spoken or short names mapped to words in the Start menu name. Keys are normalized. */
@@ -25,6 +26,9 @@ const APP_ALIASES: Record<string, string> = {
   'เทอร์มินัล': 'terminal',
   'powershell': 'windows powershell',
   'เครื่องคิดเลข': 'calculator',
+  'คิดเลข': 'calculator',
+  'แคลคูเลเตอร์': 'calculator',
+  'calc': 'calculator',
   'โน้ตแพด': 'notepad',
   'ตั้งค่า': 'settings',
   'ดิสคอร์ด': 'discord',
@@ -35,6 +39,8 @@ const APP_ALIASES: Record<string, string> = {
 /** Words in a Start menu name that mark a helper entry, not the app itself. */
 const HELPER_WORDS = /\b(?:uninstall|readme|help|support|documentation|manual|release notes|website)\b/i
 
+const THAI_LETTER = /\p{Script=Thai}/u
+
 const MATCH_THRESHOLD = 50
 const MAX_CANDIDATES = 5
 
@@ -42,9 +48,81 @@ export function normalizeAppName(name: string) {
   return name.normalize('NFKC').toLowerCase().replace(/[^\p{L}\p{N}\p{M}]+/gu, ' ').trim()
 }
 
-/** Returns the English app name for a spoken or short name, for example "เครื่องคิดเลข" to "calculator". */
+/**
+ * Returns the English app name for a spoken or short name, for example "เครื่องคิดเลข" to "calculator".
+ *
+ * A Thai name also matches an alias that sounds alike, because speech recognition changes tone marks and
+ * final letters. For example, it heard "คิดเลข" as "คิดเล็ก". The match must be unique, or no alias is used.
+ */
 export function appAliasOf(normalizedName: string): string | undefined {
-  return APP_ALIASES[normalizedName]
+  const exact = APP_ALIASES[normalizedName]
+  if (exact || !THAI_LETTER.test(normalizedName))
+    return exact
+
+  const query = canonicalThaiForm(normalizedName)
+  const matches = new Set<string>()
+  for (const [alias, target] of Object.entries(APP_ALIASES)) {
+    const key = canonicalThaiForm(alias)
+    if (!THAI_LETTER.test(key) || key.length < 4)
+      continue
+    if (editDistance(query, key) <= (key.length >= 8 ? 2 : 1))
+      matches.add(target)
+  }
+  return matches.size === 1 ? [...matches][0] : undefined
+}
+
+/** Aliases that are also common words, so they do not name an app inside a sentence. */
+const GENERIC_ALIASES = new Set(['ไฟล์', 'ตั้งค่า', 'code', 'terminal', 'explorer', 'เทอร์มินัล'])
+
+function containsSoundAlike(text: string, alias: string) {
+  if (text.includes(alias))
+    return true
+  const key = canonicalThaiForm(alias)
+  if (key.length < 5)
+    return false
+  const canonicalText = canonicalThaiForm(text)
+  const maxDistance = key.length >= 8 ? 2 : 1
+  for (let length = key.length - 1; length <= key.length + 1; length++) {
+    for (let start = 0; start + length <= canonicalText.length; start++) {
+      if (editDistance(canonicalText.slice(start, start + length), key) <= maxDistance)
+        return true
+    }
+  }
+  return false
+}
+
+/**
+ * Returns the English app name when the text names exactly one known app, for example "calculator" for
+ * "เปิดคิดเล็กให้หน่อย". A Thai name also matches when it sounds alike. Common words such as "ไฟล์" do not count.
+ */
+export function findSpokenApp(text: string): string | undefined {
+  const normalized = normalizeAppName(text)
+  const padded = ` ${normalized} `
+  const targets = new Set<string>()
+  for (const [alias, target] of Object.entries(APP_ALIASES)) {
+    if (GENERIC_ALIASES.has(alias))
+      continue
+    const found = THAI_LETTER.test(alias) ? containsSoundAlike(normalized, alias) : padded.includes(` ${alias} `)
+    if (found)
+      targets.add(target)
+  }
+  return targets.size === 1 ? [...targets][0] : undefined
+}
+
+/**
+ * Picks the app name to open. The model can replace a misheard name with an app from the chat history,
+ * so the user's words win when they name a known app that differs from the model's name.
+ */
+export function resolveAppQuery(name: string, userText?: string): string {
+  if (!userText)
+    return name
+  const requested = normalizeAppName(name)
+  if (requested && normalizeAppName(userText).includes(requested))
+    return name
+  const spoken = findSpokenApp(userText)
+  if (!spoken || (appAliasOf(requested) ?? requested) === spoken)
+    return name
+  return spoken
 }
 
 function scoreName(name: string, query: string) {
@@ -68,7 +146,7 @@ export function matchApps(query: string, apps: AppCandidate[]): AppOpenResult {
   const normalized = normalizeAppName(query)
   if (!normalized)
     return { status: 'not-found', suggestions: [] }
-  const queries = [...new Set([normalized, APP_ALIASES[normalized]].filter((value): value is string => !!value))]
+  const queries = [...new Set([normalized, appAliasOf(normalized)].filter((value): value is string => !!value))]
   const queryMentionsHelper = HELPER_WORDS.test(normalized)
 
   const ranked = apps

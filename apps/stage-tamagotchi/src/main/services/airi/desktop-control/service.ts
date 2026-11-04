@@ -28,6 +28,7 @@ import process from 'node:process'
 import { errorMessageFrom } from '@moeru/std'
 import { array, boolean, integer, maxLength, maxValue, minLength, minValue, number, object, optional, parse, picklist, pipe, string, trim } from 'valibot'
 
+import { resolveAppQuery } from './app-catalog'
 import { DESKTOP_ACTION_PERMISSIONS, findForbiddenCommandReason, isExecutablePath, MAX_TERMINAL_COMMAND_LENGTH, normalizeWebUrl } from './policy'
 import { closeProcesses, findCloseTargets, listProcesses, listRunningProcesses } from './processes'
 import { readSystemStatus, SYSTEM_STATUS_SECTIONS } from './system-status'
@@ -73,7 +74,7 @@ const nameText = pipe(string(), trim(), minLength(1), maxLength(200))
 const pathText = pipe(string(), trim(), minLength(1), maxLength(1000))
 const systemStatusSchema = object({ sections: optional(pipe(array(picklist(SYSTEM_STATUS_SECTIONS)), maxLength(SYSTEM_STATUS_SECTIONS.length))) })
 const processListSchema = object({ sortBy: optional(picklist(['memory', 'cpu'])), limit: optional(pipe(number(), integer(), minValue(1), maxValue(50))) })
-const appOpenSchema = object({ name: nameText })
+const appOpenSchema = object({ name: nameText, userText: optional(pipe(string(), maxLength(2000))) })
 const appCloseSchema = object({ name: optional(nameText), pid: optional(pipe(number(), integer(), minValue(1))), force: optional(boolean()) })
 const webOpenSchema = object({ url: pipe(string(), trim(), minLength(1), maxLength(2048)) })
 const fileSearchSchema = object({ query: nameText, folder: optional(pathText), limit: optional(pipe(number(), integer(), minValue(1), maxValue(50))) })
@@ -110,9 +111,11 @@ export class DesktopControlService {
   }
 
   appOpen(request: AppOpenRequest): Promise<AppOpenResult> {
-    const { name } = parse(appOpenSchema, request)
-    return this.perform('app-open', `Open app "${name}"`, async () => ({
-      run: () => this.options.apps.open(name),
+    const { name, userText } = parse(appOpenSchema, request)
+    const query = resolveAppQuery(name, userText)
+    const summary = query === name ? `Open app "${name}"` : `Open app "${query}" (the model asked for "${name}")`
+    return this.perform('app-open', summary, async () => ({
+      run: () => this.options.apps.open(query),
     }))
   }
 
