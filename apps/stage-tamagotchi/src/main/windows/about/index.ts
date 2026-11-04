@@ -20,7 +20,7 @@ export function setupAboutWindowReusable(params: {
 }) {
   return createReusableWindow(async () => {
     const window = new BrowserWindow({
-      title: 'About AIRI',
+      title: 'About Shiro',
       width: 670,
       height: 880,
       show: false,

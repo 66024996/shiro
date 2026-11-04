@@ -4,7 +4,7 @@ allow-visible-on-all-workspaces:
 microphone-permission:
   prompt:
     title: Allow microphone access?
-    description: AIRI uses your microphone for voice input and transcription. This choice remains active until you reset it in Settings.
+    description: Shiro uses your microphone for voice input and transcription. This choice remains active until you reset it in Settings.
     allow: Allow
     deny: Deny
   states:
@@ -13,7 +13,7 @@ microphone-permission:
     denied: Denied
   settings:
     title: Microphone
-    description: Control whether AIRI can use the microphone. Resetting this choice stops the current microphone stream and asks again next time.
+    description: Control whether Shiro can use the microphone. Resetting this choice stops the current microphone stream and asks again next time.
     revoke: Revoke access
     reset: Reset decision
 spotlight:
@@ -159,7 +159,7 @@ pages:
     general:
       hide-app-icon:
         title: Hide taskbar / Dock icon
-        description: Keep AIRI in the tray only. Use the tray menu to open windows or quit. Changes apply immediately.
+        description: Keep Shiro in the tray only. Use the tray menu to open windows or quit. Changes apply immediately.
         load-error: Failed to load the app icon setting.
         save-error: Failed to update the app icon setting.
     sections:
@@ -211,7 +211,7 @@ devtools:
       unread:
         title: Unread messages
         description: Shown as a panel on the head, with a mark and the count.
-      main-window-note: Changes appear in the main AIRI window.
+      main-window-note: Changes appear in the main Shiro window.
     live2d-ambient-light:
       title: Live2D Ambient Light
       description: Tune screen sampling and the Live2D color-light shader
@@ -239,10 +239,10 @@ devtools:
       squint:
         title: Squint at bright changes
         description: Narrow the eyes when the screen brightens faster than the character has adapted to it. A screen that stays bright leaves the eyes open. 0 turns this off.
-      main-window-note: Changes appear in the main AIRI window.
+      main-window-note: Changes appear in the main Shiro window.
       diagnostics:
         title: Capture diagnostics
-        waiting: Waiting for diagnostics from the main AIRI window.
+        waiting: Waiting for diagnostics from the main Shiro window.
         status:
           disabled: Disabled
           starting: Starting
@@ -255,14 +255,14 @@ devtools:
           display: Display and bounds
           video-size: Source video
           sample-size: Sample frame
-          window-bounds: AIRI window bounds
+          window-bounds: Shiro window bounds
           excluded-region: Excluded region
           exposure: Screen exposure
           behind-luminance: Light behind the character
           updated: Last update
         preview:
           title: Downscaled capture
-          description: The red rectangle marks the AIRI window. The dashed rectangle marks the area that the light maps cover.
+          description: The red rectangle marks the Shiro window. The dashed rectangle marks the area that the light maps cover.
           unavailable: No captured frame is available.
         pixels:
           title: Pixel decisions
@@ -273,7 +273,7 @@ devtools:
           see-through: See-through
         maps:
           title: Light maps
-          window: Each map covers the AIRI window and half a window on every side. The outline marks the window.
+          window: Each map covers the Shiro window and half a window on every side. The outline marks the window.
           unavailable: No environment is available.
           target: Measured
           applied: Applied after smoothing
@@ -336,7 +336,7 @@ devtools:
         filtered: Shader output
         unavailable: The preview needs WebGL, and this window could not create a context.
         environment:
-          live: Light comes from the latest snapshot that the main AIRI window published.
+          live: Light comes from the latest snapshot that the main Shiro window published.
           neutral: No snapshot has arrived yet, so the preview uses the neutral environment.
         regions:
           title: Test card regions
@@ -344,8 +344,8 @@ devtools:
           bars: The bars are {first}, {second}, {third}, {fourth}, and {fifth} pixels wide. They show how far the light wrap reaches into a thin shape.
           patches: The two patches are drawn at {strong} and {weak} alpha, which is what the translucent-wrap option acts on.
     editor:
-      title: AIRI Editor
-      description: Open the standalone AIRI Editor window
+      title: Shiro Editor
+      description: Open the standalone Shiro Editor window
       button: Open Editor
     lag-visualizer:
       title: Lag Visualizer
@@ -417,7 +417,7 @@ devtools:
         reset-view: Reset view
         export-project: Export project
         import-project: Import project
-        import-error: This file is not a valid AIRI Live2D motion project.
+        import-error: This file is not a valid Live2D motion project.
         playback:
           label: Timeline playback controls
           start: Go to start
@@ -599,7 +599,7 @@ devtools:
           recording: Recording motion
           playing: Playing motion
           ready: '{count} samples · {duration}'
-        import-error: This file is not a valid AIRI Live2D motion recording.
+        import-error: This file is not a valid Live2D motion recording.
     performance-visualizer:
       title: Performance Visualizer
       description: Inspect live performance metrics and runtime diagnostics
@@ -676,5 +676,5 @@ screen-capture:
     dismiss: Dismiss
     instructions:
       step-1: Open "System Preferences", select "Privacy & Security" from the sidebar.
-      step-2: In the "Screen & System Audio Recording" and "System Audio Recording Only" sections, turn on the switches for AIRI.
-      step-2-note: If AIRI is not listed, please add it manually by clicking the "+" button and selecting AIRI from the Applications folder.
+      step-2: In the "Screen & System Audio Recording" and "System Audio Recording Only" sections, turn on the switches for Shiro.
+      step-2-note: If Shiro is not listed, add it with the "+" button and select Shiro from the Applications folder.

@@ -266,7 +266,7 @@ export function useScreenAmbientLight(sources: {
         // platform gets the extra hint.
         if (screens.length === 0) {
           throw new Error(window.platform === 'darwin'
-            ? 'No screen-capture source is available. Check the screen-recording permission for AIRI.'
+            ? 'No screen-capture source is available. Check the screen-recording permission for Shiro.'
             : 'No screen-capture source is available.')
         }
 

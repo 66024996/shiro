@@ -34,7 +34,7 @@ export function setupEditorWindowManager(params: {
   const rendererBase = baseUrl(resolve(getElectronMainDirname(), '..', 'renderer'))
   const reusable = createReusableWindow(async () => {
     const window = new ElectronBrowserWindow({
-      title: 'AIRI Editor',
+      title: 'Shiro Editor',
       width: 1200,
       height: 800,
       minWidth: 800,

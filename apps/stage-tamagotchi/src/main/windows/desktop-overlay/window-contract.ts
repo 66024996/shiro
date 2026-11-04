@@ -19,7 +19,7 @@ export function createDesktopOverlayWindowOptions(params: {
   preloadPath: string
 }): BrowserWindowConstructorOptions {
   return {
-    title: 'AIRI Desktop Overlay',
+    title: 'Shiro Desktop Overlay',
     width: params.bounds.width,
     height: params.bounds.height,
     x: params.bounds.x,

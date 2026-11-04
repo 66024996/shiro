@@ -67,6 +67,9 @@ about:
     higgs: ตัวแปลงเสียง Higgs Audio 2
     higgs-source: 'แหล่งที่มา: https://huggingface.co/eustlb/higgs-audio-v2-tokenizer'
     higgs-attribution: “Boson Higgs Audio 2 is licensed under the Boson Community License, Copyright © Boson AI USA, Inc. All Rights Reserved.”
+    typhoon: โมเดล Typhoon ASR Realtime สร้างโดย Typhoon (SCB 10X) และใช้สัญญาอนุญาต CC BY 4.0 ชิโระแปลงโมเดลเป็น ONNX
+    typhoon-source: 'แหล่งที่มา: https://huggingface.co/typhoon-ai/typhoon-asr-realtime'
+    typhoon-attribution: 'สัญญาอนุญาต: https://creativecommons.org/licenses/by/4.0/ การใช้งานต้องเป็นไปตามข้อกำหนด OpenTyphoon ด้วย'
     license-files: ชุดแอปมีไฟล์สัญญาอนุญาต Apache, Boson และ Meta Llama 3
   common:
     cancel: ยกเลิก

@@ -45,7 +45,7 @@ chat:
     stop: Stop response
   message:
     character-name:
-      airi: AIRI
+      airi: Shiro
       core-system: Core System
       you: You
   reply:
@@ -202,7 +202,7 @@ status:
     gaming: Gaming Mode
   preparing: Preparing microphone
   listening: Listening
-  paused: Listening paused while AIRI speaks
+  paused: Listening paused while Shiro speaks
   transcribing: Transcribing
   hearing-error: Could not transcribe audio
   no-transcript: Recognized speech will appear here.

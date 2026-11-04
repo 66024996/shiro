@@ -88,6 +88,9 @@ about:
     higgs: Higgs Audio 2 tokenizer
     higgs-source: 'Source: https://huggingface.co/eustlb/higgs-audio-v2-tokenizer'
     higgs-attribution: “Boson Higgs Audio 2 is licensed under the Boson Community License, Copyright © Boson AI USA, Inc. All Rights Reserved.”
+    typhoon: Typhoon ASR Realtime was created by Typhoon (SCB 10X). It is licensed under CC BY 4.0. Shiro converts it to ONNX.
+    typhoon-source: 'Source: https://huggingface.co/typhoon-ai/typhoon-asr-realtime'
+    typhoon-attribution: 'License: https://creativecommons.org/licenses/by/4.0/. Use is also subject to the OpenTyphoon Terms and Conditions.'
     license-files: The app bundle includes the Apache, Boson, and Meta Llama 3 license files.
   common:
     cancel: Cancel

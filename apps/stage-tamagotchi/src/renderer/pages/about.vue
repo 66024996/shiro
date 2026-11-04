@@ -442,6 +442,20 @@ onMounted(() => {
             <p :class="['text-sm text-neutral-600 dark:text-neutral-300']">
               {{ t('tamagotchi.stage.about.model-notices.higgs-attribution') }}
             </p>
+            <p :class="['text-sm font-medium']">
+              {{ t('tamagotchi.stage.about.model-notices.typhoon') }}
+            </p>
+            <a
+              href="https://huggingface.co/typhoon-ai/typhoon-asr-realtime"
+              target="_blank"
+              rel="noreferrer"
+              :class="['text-sm text-blue-600 dark:text-blue-400']"
+            >
+              {{ t('tamagotchi.stage.about.model-notices.typhoon-source') }}
+            </a>
+            <p :class="['text-sm text-neutral-600 dark:text-neutral-300']">
+              {{ t('tamagotchi.stage.about.model-notices.typhoon-attribution') }}
+            </p>
             <p :class="['text-xs text-neutral-500 dark:text-neutral-400']">
               {{ t('tamagotchi.stage.about.model-notices.license-files') }}
             </p>
