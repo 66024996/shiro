@@ -38,6 +38,39 @@ def pause_after(phrase, base_pause):
     return base_pause
 
 
+def shorten_pauses(audio, sample_rate, scale, min_gap=0.2, threshold=0.02):
+    """Shortens each silent run of at least `min_gap` seconds to `scale` times its length.
+
+    The Thai model puts about 0.5 s of silence at each space, which sounds slow.
+    Shorter quiet runs are gaps between syllables, so they stay unchanged.
+    """
+    import numpy as np
+
+    window = max(1, round(sample_rate * 0.01))
+    count = audio.size // window
+    if scale >= 1 or count == 0:
+        return audio
+
+    peaks = np.abs(audio[:count * window]).reshape(count, window).max(axis=1)
+    quiet = peaks < threshold
+    min_windows = max(1, round(min_gap * sample_rate / window))
+    keep = np.ones(audio.size, dtype=bool)
+    start = None
+    for index in range(count + 1):
+        if index < count and quiet[index]:
+            if start is None:
+                start = index
+            continue
+        if start is not None and index - start >= min_windows:
+            length = (index - start) * window
+            removed = length - round(length * scale)
+            # Cut the middle of the run, so the fade at each edge stays.
+            cut_start = start * window + (length - removed) // 2
+            keep[cut_start:cut_start + removed] = False
+        start = None
+    return audio[keep]
+
+
 def load_voices(directory: Path):
     voices = {}
     for audio_path in sorted(

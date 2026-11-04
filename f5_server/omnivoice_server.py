@@ -12,12 +12,12 @@ if os.name == "nt":
 
 import numpy as np
 
-from speech_api import SR, create_app, load_voices, pause_after, split_text
+from speech_api import SR, create_app, load_voices, pause_after, shorten_pauses, split_text
 from transcription import ThaiTranscriber
 
 
 class OmniVoiceEngine:
-    def __init__(self, model_id, device, steps, guidance_scale, volume, pause, rhythm):
+    def __init__(self, model_id, device, steps, guidance_scale, volume, pause, rhythm, pause_scale):
         import torch
         from huggingface_hub import snapshot_download
         from omnivoice import OmniVoice
@@ -44,6 +44,7 @@ class OmniVoiceEngine:
         self.volume = volume
         self.pause = pause
         self.rhythm = rhythm
+        self.pause_scale = pause_scale
         self.sample_rate = int(self.model.sampling_rate)
         if self.sample_rate != SR:
             raise RuntimeError(
@@ -57,7 +58,7 @@ class OmniVoiceEngine:
             f"torch {torch.__version__} | cuda={torch.cuda.is_available()} | "
             f"device={self.model.device} | sample_rate={self.sample_rate} | "
             f"steps={self.steps} cfg={self.guidance_scale} | "
-            f"volume={self.volume} pause={self.pause} rhythm={self.rhythm}"
+            f"volume={self.volume} pause={self.pause} rhythm={self.rhythm} pause_scale={self.pause_scale}"
         )
 
     def _synth_phrase(self, ref_audio, ref_text, text, speed, phrase_index):
@@ -109,7 +110,7 @@ class OmniVoiceEngine:
                 silence = round(self.sample_rate * pause_after(phrase, self.pause))
                 if silence:
                     pieces.append(np.zeros(silence, dtype=np.float32))
-        return np.concatenate(pieces)
+        return shorten_pauses(np.concatenate(pieces), self.sample_rate, self.pause_scale)
 
 
 def main():
@@ -128,6 +129,12 @@ def main():
     parser.add_argument("--volume", type=float, default=0.9)
     parser.add_argument("--pause", type=float, default=0.3)
     parser.add_argument("--rhythm", choices=("gentle", "off"), default="gentle")
+    parser.add_argument(
+        "--pause-scale",
+        type=float,
+        default=0.5,
+        help="Length factor for silent runs of 0.2 s or more. 1 keeps them unchanged.",
+    )
     parser.add_argument("--stt-model", default="small")
     args = parser.parse_args()
 
@@ -137,6 +144,8 @@ def main():
         parser.error("--volume must be between 0.1 and 1.0")
     if not 0 <= args.pause <= 3:
         parser.error("--pause must be between 0 and 3 seconds")
+    if not 0.1 <= args.pause_scale <= 1:
+        parser.error("--pause-scale must be between 0.1 and 1")
     os.environ.setdefault("HF_HOME", str(Path(__file__).resolve().parent / "hf_cache"))
     voice_directory = Path(args.voices_dir)
     voices = load_voices(voice_directory)
@@ -153,6 +162,7 @@ def main():
         args.volume,
         args.pause,
         args.rhythm,
+        args.pause_scale,
     )
     transcriber = ThaiTranscriber(
         args.stt_model,
