@@ -1360,7 +1360,10 @@ export const useHearingSpeechInputPipeline = defineStore('modules:hearing:speech
         const responseSummary = result.mode === 'generate'
           ? describeEmptyTranscriptionResponse(result)
           : 'stream result returned empty text'
-        error.value = `No transcription result returned from provider (${responseSummary})`
+        // A segment of noise or breath gives empty text. That is a normal result, not a failure,
+        // so the caller reports "no text" instead of an error. The summary helps find a provider
+        // that returns its text under another field.
+        console.warn(`[Hearing Pipeline] No transcription text returned from provider (${responseSummary})`)
         return
       }
 
