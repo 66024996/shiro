@@ -19,7 +19,7 @@ export interface AvatarStateSignals {
   listening: boolean
   /** The assistant voice is playing. */
   speaking: boolean
-  /** A chat request is running. */
+  /** A chat request is running, or the reply voice is still being made. */
   thinking: boolean
   /** The emotion of the current or the last reply. */
   emotion?: AvatarReplyEmotion

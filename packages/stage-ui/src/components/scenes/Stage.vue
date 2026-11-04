@@ -264,12 +264,14 @@ const chatPresence = computed<PresenceBubbleState>(() => chatSending.value ? pre
 const presenceBubble = computed<PresenceBubbleState>(() => presenceOverride.value ?? chatPresence.value)
 const { gamingMode } = storeToRefs(useAssistantModeStore())
 const avatarStateStore = useAvatarStateStore()
+/** Speech synthesis requests in flight. The avatar keeps thinking until the voice starts. */
+const pendingSpeechRequests = ref(0)
 const shiroAvatarState = computed<ShiroAvatarState>(() => resolveAvatarState({
   permissionPending: avatarStateStore.pendingApprovals > 0,
   error: avatarStateStore.errorActive,
   listening: avatarStateStore.userSpeaking || avatarStateStore.awaitingCommand,
   speaking: nowSpeaking.value,
-  thinking: chatSending.value,
+  thinking: chatSending.value || pendingSpeechRequests.value > 0,
   emotion: avatarStateStore.replyEmotion,
   gaming: gamingMode.value,
 }))
@@ -584,19 +586,26 @@ const speechPipeline = createSpeechPipeline<AudioBuffer>({
       // Non-streaming providers only: synth via REST. Streaming provider
       // was already early-returned above; it owns its own ws path opened
       // in `onBeforeMessageComposed`.
-      const res = await speechStore.speech(
-        provider,
-        model,
-        speechRequest.input,
-        voice.id,
-        speechRequest.providerConfig,
-        {
-          trigger: 'auto',
-          source: 'chat_auto_tts',
-          voice_type: resolveStageVoiceType(),
-          ...(request.turnId != null && { turn_id: request.turnId }),
-        },
-      )
+      pendingSpeechRequests.value++
+      let res: ArrayBuffer | undefined
+      try {
+        res = await speechStore.speech(
+          provider,
+          model,
+          speechRequest.input,
+          voice.id,
+          speechRequest.providerConfig,
+          {
+            trigger: 'auto',
+            source: 'chat_auto_tts',
+            voice_type: resolveStageVoiceType(),
+            ...(request.turnId != null && { turn_id: request.turnId }),
+          },
+        )
+      }
+      finally {
+        pendingSpeechRequests.value--
+      }
 
       if (signal.aborted || !res || res.byteLength === 0)
         return null
