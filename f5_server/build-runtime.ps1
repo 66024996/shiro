@@ -80,7 +80,7 @@ Set-Content -Path (Join-Path $pythonSitePackages 'shiro-runtime.pth') -Value @(
 Copy-Tree (Join-Path $serverRoot '.venv\Lib\site-packages') (Join-Path $sitePackagesRoot 'core')
 Copy-Tree (Join-Path $serverRoot '.venv_omnivoice\Lib\site-packages') (Join-Path $sitePackagesRoot 'omnivoice')
 
-foreach ($fileName in @('omnivoice_server.py', 'speech_api.py', 'transcription.py')) {
+foreach ($fileName in @('omnivoice_server.py', 'speech_api.py', 'transcription.py', 'thai_text.py')) {
   $source = Join-Path $serverRoot $fileName
   if (!(Test-Path $source)) {
     throw "Required speech source file is missing: $source"

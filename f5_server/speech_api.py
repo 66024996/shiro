@@ -7,6 +7,8 @@ import time
 from collections import OrderedDict
 from pathlib import Path
 
+from thai_text import normalize_for_speech
+
 
 SR = 24000
 HEARTBEAT = 20
@@ -198,7 +200,7 @@ def create_app(engine, voices, default_voice, transcriber, default_speed=0.9, vo
 
     @app.post("/v1/audio/speech")
     def speech(request: SpeechReq):
-        text = clean_text(request.input)
+        text = normalize_for_speech(clean_text(request.input))
         print("[request] TTS request received", flush=True)
         if text and not re.search(r"[\u0e00-\u0e7fA-Za-z0-9]", text):
             print("[warning] input has no Thai/English letters or digits; returning silence", flush=True)
