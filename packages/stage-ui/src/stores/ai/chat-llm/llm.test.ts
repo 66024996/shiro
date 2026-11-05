@@ -278,6 +278,30 @@ describe('isToolRelatedError', () => {
     expect(sent).not.toContain('old question')
   })
 
+  it('sends small talk to the routed chat model without tools', async () => {
+    const store = useLLM()
+    store.disabledFixedToolSources = ['mcp', 'debug', 'spark-command']
+    store.routeRequest = () => ({ model: 'chat-model', tools: false })
+    streamTextMock.mockImplementationOnce(() => createMockStreamResult())
+
+    await store.stream('model-a', provider, helloTurns, { tools: [customTool] })
+
+    expect(streamTextMock.mock.calls[0]?.[0]?.model).toBe('chat-model')
+    expect(streamTextMock.mock.calls[0]?.[0]?.tools ?? []).toEqual([])
+  })
+
+  it('keeps the configured model and tools when the route gives no answer', async () => {
+    const store = useLLM()
+    store.disabledFixedToolSources = ['mcp', 'debug', 'spark-command']
+    store.routeRequest = () => undefined
+    streamTextMock.mockImplementationOnce(() => createMockStreamResult())
+
+    await store.stream('model-a', provider, helloTurns, { tools: [customTool] })
+
+    expect(streamTextMock.mock.calls[0]?.[0]?.model).toBe('model-a')
+    expect(streamTextMock.mock.calls[0]?.[0]?.tools?.map(toolNameFrom)).toEqual(['custom-tool'])
+  })
+
   it('removes emoji from streamed reply text when the app asks for it', async () => {
     const store = useLLM()
     store.removeEmojiFromReplies = true

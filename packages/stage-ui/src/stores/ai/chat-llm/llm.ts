@@ -12,6 +12,19 @@ import { removeEmoji } from './emoji'
 import { keepRecentUserTurns } from './history-window'
 import { resolveLlmTools } from './tool-resolver'
 
+/** What a request router reads: the configured model and the conversation that the request sends. */
+export interface LlmRouteInput {
+  model: string
+  conversation: Conversation
+}
+
+/** The model and the tool use that one request gets. */
+export interface LlmRequestRoute {
+  model: string
+  /** When false, the request has no tools, so the model can only reply with text. */
+  tools: boolean
+}
+
 /** A transform for streamed reply text. `flush` returns the text that `push` held back. */
 export interface ReplyTextTransform {
   push: (text: string) => string
@@ -50,6 +63,11 @@ export const useLLM = defineStore('llm', () => {
    * The transform can hold back the end of a chunk until the next chunk arrives, because a word can span two chunks.
    */
   const replyTextTransform = ref<() => ReplyTextTransform>()
+  /**
+   * Picks the model and the tool use for one request from the conversation, for example a chat model for
+   * small talk and a tool model for computer commands. Undefined keeps the configured model and tools.
+   */
+  const routeRequest = ref<(input: LlmRouteInput) => LlmRequestRoute | undefined>()
 
   function resolveRequestTools(customTools: StreamOptions['tools'], describeImage?: DescribeToolImage) {
     const disabled = new Set(disabledFixedToolSources.value)
@@ -63,20 +81,24 @@ export const useLLM = defineStore('llm', () => {
   }
 
   async function stream(model: string, chatProvider: GenerationProvider, context: Conversation, options?: LlmStreamOptions) {
-    const key = modelKey(model, chatProvider.generation(model))
     let toolExecutionStarted = false
     const transform = replyTextTransform.value?.()
     let lastTextEvent: Extract<Parameters<NonNullable<LlmStreamOptions['onStreamEvent']>>[0], { type: 'text-delta' }> | undefined
     // Becomes true once the person could already have seen output from this attempt.
     let outputStarted = false
     const { tools: customTools, describeToolImage, ...streamOptions } = options ?? {}
-    const builtinToolsResolver = () => resolveRequestTools(customTools, describeToolImage)
     const conversation = maxHistoryUserTurns.value === undefined
       ? context
       : keepRecentUserTurns(context, maxHistoryUserTurns.value)
+    const route = routeRequest.value?.({ model, conversation })
+    const requestModel = route?.model ?? model
+    const key = modelKey(requestModel, chatProvider.generation(requestModel))
+    const builtinToolsResolver = route?.tools === false
+      ? async () => []
+      : () => resolveRequestTools(customTools, describeToolImage)
 
     const runStream = () => coreStreamFrom({
-      model,
+      model: requestModel,
       chatProvider,
       conversation,
       options: {
@@ -170,6 +192,7 @@ export const useLLM = defineStore('llm', () => {
     maxHistoryUserTurns,
     removeEmojiFromReplies,
     replyTextTransform,
+    routeRequest,
     models,
     stream,
   }
