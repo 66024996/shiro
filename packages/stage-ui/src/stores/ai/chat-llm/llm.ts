@@ -12,6 +12,12 @@ import { removeEmoji } from './emoji'
 import { keepRecentUserTurns } from './history-window'
 import { resolveLlmTools } from './tool-resolver'
 
+/** A transform for streamed reply text. `flush` returns the text that `push` held back. */
+export interface ReplyTextTransform {
+  push: (text: string) => string
+  flush: () => string
+}
+
 export type { StreamEvent, StreamOptions } from '@proj-airi/core-agent'
 export { isContentArrayRelatedError, isToolRelatedError } from '@proj-airi/core-agent'
 
@@ -39,6 +45,11 @@ export const useLLM = defineStore('llm', () => {
   const maxHistoryUserTurns = ref<number>()
   /** Removes emoji from streamed reply text, so the chat and the speech voice never get them. */
   const removeEmojiFromReplies = ref(false)
+  /**
+   * Creates a transform for the streamed reply text of one request, for example a spelling fix.
+   * The transform can hold back the end of a chunk until the next chunk arrives, because a word can span two chunks.
+   */
+  const replyTextTransform = ref<() => ReplyTextTransform>()
 
   function resolveRequestTools(customTools: StreamOptions['tools'], describeImage?: DescribeToolImage) {
     const disabled = new Set(disabledFixedToolSources.value)
@@ -54,6 +65,8 @@ export const useLLM = defineStore('llm', () => {
   async function stream(model: string, chatProvider: GenerationProvider, context: Conversation, options?: LlmStreamOptions) {
     const key = modelKey(model, chatProvider.generation(model))
     let toolExecutionStarted = false
+    const transform = replyTextTransform.value?.()
+    let lastTextEvent: Extract<Parameters<NonNullable<LlmStreamOptions['onStreamEvent']>>[0], { type: 'text-delta' }> | undefined
     // Becomes true once the person could already have seen output from this attempt.
     let outputStarted = false
     const { tools: customTools, describeToolImage, ...streamOptions } = options ?? {}
@@ -73,12 +86,19 @@ export const useLLM = defineStore('llm', () => {
             toolExecutionStarted = true
           if (event.type === 'tool-call' || event.type === 'text-delta')
             outputStarted = true
-          if (event.type === 'text-delta' && removeEmojiFromReplies.value) {
-            const text = removeEmoji(event.text)
+          if (event.type === 'text-delta') {
+            lastTextEvent = event
+            let text = removeEmojiFromReplies.value ? removeEmoji(event.text) : event.text
+            if (transform)
+              text = transform.push(text)
             if (text)
               await streamOptions.onStreamEvent?.({ ...event, text })
             return
           }
+          // Any other event, such as a tool call or the end of the reply, ends the current text run.
+          const held = transform?.flush()
+          if (held && lastTextEvent)
+            await streamOptions.onStreamEvent?.({ ...lastTextEvent, text: held })
           await streamOptions.onStreamEvent?.(event)
         },
         toolsCompatibility: toolsCompatibility.value,
@@ -149,6 +169,7 @@ export const useLLM = defineStore('llm', () => {
     disabledFixedToolSources,
     maxHistoryUserTurns,
     removeEmojiFromReplies,
+    replyTextTransform,
     models,
     stream,
   }
