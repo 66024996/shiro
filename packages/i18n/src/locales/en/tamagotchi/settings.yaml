@@ -123,6 +123,9 @@ pages:
     error: Developer data could not be read.
   local-ai:
     title: Local AI
+    setup:
+      description: Run the first-run setup again to check the chat model, the voice, and a voice command.
+      open: Open setup
     menu-description: Offline Thai voice, the chat model, and memory
     speech:
       title: Offline Thai speech

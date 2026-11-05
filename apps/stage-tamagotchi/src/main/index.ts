@@ -26,6 +26,7 @@ import { describeAssistantRuntime, resolveAssistantRuntimeProfile, resolveToolPe
 import {
   electronAssistantGetWakeWord,
   electronOllamaStatusGet,
+  electronShiroSetupOpen,
   electronShiroSpeechStatusGet,
   electronShiroSpeechVoiceImport,
 } from '../shared/eventa'
@@ -479,6 +480,11 @@ app.whenReady().then(async () => {
       void ollamaLauncher.ensureRunning()
       const ollamaLauncherTimer = setInterval(() => void ollamaLauncher.ensureRunning(), 60_000)
       onAppBeforeQuit(() => clearInterval(ollamaLauncherTimer))
+      defineInvokeHandler(context, electronShiroSetupOpen, async () => {
+        const setupWindow = await deps.onboardingWindow.getWindow()
+        setupWindow.show()
+        setupWindow.focus()
+      })
       defineInvokeHandler(context, electronOllamaStatusGet, async () => {
         await ollamaLauncher.ensureRunning()
         return getOllamaStatus()

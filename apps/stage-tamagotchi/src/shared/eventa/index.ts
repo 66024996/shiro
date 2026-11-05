@@ -68,6 +68,8 @@ export interface OllamaServiceStatus {
 export const electronShiroSpeechStatusGet = defineInvokeEventa<ShiroSpeechServiceStatus>('eventa:invoke:electron:shiro:speech:status:get')
 export const electronShiroSpeechVoiceImport = defineInvokeEventa<{ imported: boolean }, { transcript: string }>('eventa:invoke:electron:shiro:speech:voice:import')
 export const electronOllamaStatusGet = defineInvokeEventa<OllamaServiceStatus>('eventa:invoke:electron:ollama:status:get')
+/** Opens Shiro's first-run setup from any window, for example from the Local AI settings page. */
+export const electronShiroSetupOpen = defineInvokeEventa<void>('eventa:invoke:electron:shiro:setup:open')
 
 export const ioTraceRecordingChanged = defineEventa<IOTraceRecordingState>('eventa:event:electron:io-trace-recording:changed')
 export const ioTraceRecordingGet = defineInvokeEventa<IOTraceRecordingState>('eventa:invoke:electron:io-trace-recording:get')
