@@ -77,6 +77,7 @@ import {
   useTamagotchiPluginToolsStore,
 } from './stores/tools'
 import { syncMemoryContext } from './stores/tools/builtin/memory'
+import { createThaiParticleTransform } from './utils/thai-particles'
 import { resolveInitialRendererRoutePath, resolveRendererWindowContext } from './window-context'
 
 const { isDark: dark } = useTheme()
@@ -127,6 +128,8 @@ llmStore.disabledFixedToolSources = ['mcp', 'debug', 'spark-command']
 llmStore.maxHistoryUserTurns = 5
 // Shiro speaks every reply, and the speech voice cannot read emoji.
 llmStore.removeEmojiFromReplies = true
+// The local model often writes "นะค่ะ" or "ไหมค่ะ". The fix runs on the stream, so the chat, the voice, and the history get it.
+llmStore.replyTextTransform = createThaiParticleTransform
 // The app local audio providers have only a "Work in Progress" page, so Shiro hides them from every provider list.
 const providersStore = useProviderStore()
 for (const providerId of ['app-local-audio-speech', 'app-local-audio-transcription'])
