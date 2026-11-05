@@ -699,7 +699,9 @@ export function createChatOrchestratorRuntime(deps: ChatOrchestratorRuntimeDeps)
           const speechOnly = categorizer.filterToSpeech(literal, streamPosition)
           streamPosition += literal.length
 
-          if (speechOnly.trim()) {
+          // A literal can be only a space, for example the space between two Thai sentences. Dropping it joined
+          // the sentences, so only leading whitespace before any text is skipped.
+          if (speechOnly.trim() || (speechOnly && buildingMessage.content)) {
             buildingMessage.content += speechOnly
 
             await hooks.emitTokenLiteralHooks(speechOnly, streamingMessageContext)

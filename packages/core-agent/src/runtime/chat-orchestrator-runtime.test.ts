@@ -185,6 +185,29 @@ describe('createChatOrchestratorRuntime', () => {
 
   // ROOT CAUSE:
   //
+  // A literal that was only whitespace was dropped. Models often send the space between two Thai sentences
+  // as its own token, so "สบายดีค่ะ ได้อยู่" was stored as "สบายดีค่ะได้อยู่".
+  it('keeps a space that arrives as its own token', async () => {
+    const harness = createHarness()
+    harness.stream.mockImplementationOnce(async (_model, _chatProvider, _messages, options) => {
+      for (const text of ['สบายดีค่ะ', ' ', 'ได้อยู่กับคุณ'])
+        await options?.onStreamEvent?.({ type: 'text-delta', text })
+      await options?.onStreamEvent?.({ type: 'finish' })
+    })
+
+    await harness.runtime.ingest('วันนี้เป็นไงบ้าง', {
+      model: 'gpt-test',
+      chatProvider: provider,
+    })
+
+    expect(harness.sessionMessages['session-1']?.at(-1)).toMatchObject({
+      role: 'assistant',
+      content: 'สบายดีค่ะ ได้อยู่กับคุณ',
+    })
+  })
+
+  // ROOT CAUSE:
+  //
   // A transport failure cleared the foreground stream before the assistant
   // message was stored. Text that was already visible therefore disappeared.
   //
