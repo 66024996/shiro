@@ -11,7 +11,8 @@ export type WakeWordInputResult = { status: 'ignored' }
   | { status: 'command', text: string }
 
 /** How long the app accepts a command after the wake word alone. */
-export const WAKE_WORD_COMMAND_WINDOW_MS = 8000
+// 8 seconds was too short: users waited for a sign that Shiro heard the name before they spoke.
+export const WAKE_WORD_COMMAND_WINDOW_MS = 15_000
 const WAKE_WORD_SEPARATORS
   = /^[\s,，.!?。！？:：-]+/u
 const WAKE_WORD_BOUNDARY = /[\s,，.!?。！？:：-]/u

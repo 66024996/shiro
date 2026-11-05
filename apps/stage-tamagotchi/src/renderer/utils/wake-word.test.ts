@@ -30,12 +30,16 @@ describe('resolveWakeWordInput', () => {
     expect(resolveWakeWordInput('เปิดไฟ', 'ชิโระ', state, 100)).toEqual({ status: 'ignored' })
   })
 
-  it('expires the command window after eight seconds', () => {
+  // ROOT CAUSE:
+  //
+  // The window was 8 seconds. Users waited for a sign that Shiro heard the name, then spoke too late.
+  it('keeps the command window open for fifteen seconds', () => {
     const state = { commandExpiresAt: 0 }
-
     resolveWakeWordInput('ชิโระ', 'ชิโระ', state, 100)
+    expect(resolveWakeWordInput('เปิดไฟ', 'ชิโระ', state, 14_000)).toEqual({ status: 'command', text: 'เปิดไฟ' })
 
-    expect(resolveWakeWordInput('เปิดไฟ', 'ชิโระ', state, 8100)).toEqual({ status: 'ignored' })
+    resolveWakeWordInput('ชิโระ', 'ชิโระ', state, 20_000)
+    expect(resolveWakeWordInput('เปิดไฟ', 'ชิโระ', state, 35_100)).toEqual({ status: 'ignored' })
   })
 
   it('uses the entire utterance as the command after activation', () => {

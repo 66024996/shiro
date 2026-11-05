@@ -50,6 +50,7 @@ import { stageOpaqueAttribute } from '../composables/use-stage-painted-mask'
 import { useControlsIslandStore } from '../stores/controls-island'
 import { useStageWindowLifecycleStore } from '../stores/stage-window-lifecycle'
 import { useVoiceLogStore } from '../stores/voice-log'
+import { playListeningChime } from '../utils/chime'
 import { resolveFadeOnHoverInteraction } from '../utils/fade-on-hover'
 import { shouldSampleStageTransparency } from '../utils/stage-three-transparency'
 import { createVoiceInputInteractionLifecycle } from '../utils/voice-input-lifecycle'
@@ -94,6 +95,12 @@ const wakeWordInputState = { commandExpiresAt: 0 }
 let voiceCommandShortcutUntil = 0
 /** Extra time when the shortcut also turns the microphone on, because the stream takes a moment to start. */
 const VOICE_COMMAND_MICROPHONE_START_MS = 3000
+/** After Shiro answers a voice command, the user can reply without the wake word for this long. */
+const VOICE_FOLLOW_UP_MS = 8000
+/** When the follow-up window ends. Like the shortcut, it keeps its own deadline across the pause while Shiro speaks. */
+let voiceFollowUpUntil = 0
+/** True after a voice command, so the next spoken reply opens a follow-up window. */
+let lastCommandFromVoice = false
 
 const { isOutside: isOutsideWindow } = useElectronMouseInWindow()
 // The island already pairs its cursor signal with a DOM one and owns that decision, so
@@ -621,6 +628,7 @@ function postSpeakerCaption(text: string, operation: NonNullable<CaptionChannelE
  */
 async function sendVoiceInputTextToChat(text: string) {
   voiceLog.add('command', text)
+  lastCommandFromVoice = true
   try {
     await chatStore.send({
       sessionId: chatSession.activeSessionId,
@@ -639,12 +647,17 @@ let wakeWordAvatarTimer: ReturnType<typeof setTimeout> | undefined
 function resolveWakeWordForAvatar(text: string) {
   const now = Date.now()
   const fromShortcut = now < voiceCommandShortcutUntil
-  if (fromShortcut) {
-    wakeWordInputState.commandExpiresAt = Math.max(wakeWordInputState.commandExpiresAt, voiceCommandShortcutUntil)
+  const fromFollowUp = !fromShortcut && now < voiceFollowUpUntil
+  if (fromShortcut || fromFollowUp) {
+    wakeWordInputState.commandExpiresAt = Math.max(wakeWordInputState.commandExpiresAt, fromShortcut ? voiceCommandShortcutUntil : voiceFollowUpUntil)
     voiceCommandShortcutUntil = 0
+    voiceFollowUpUntil = 0
   }
   const result = resolveWakeWordInput(text, assistantWakeWord.value, wakeWordInputState, now)
-  voiceLog.add('heard', text, fromShortcut ? `shortcut: ${result.status}` : `wake word: ${result.status}`)
+  const source = fromShortcut ? 'shortcut' : fromFollowUp ? 'follow-up' : 'wake word'
+  voiceLog.add('heard', text, `${source}: ${result.status}`)
+  if (result.status === 'activated')
+    playListeningChime()
   if (wakeWordAvatarTimer)
     clearTimeout(wakeWordAvatarTimer)
   wakeWordAvatarTimer = undefined
@@ -668,6 +681,7 @@ function startVoiceCommandFromShortcut() {
     enabled.value = true
   voiceCommandShortcutUntil = Date.now() + WAKE_WORD_COMMAND_WINDOW_MS + (microphoneWasOff ? VOICE_COMMAND_MICROPHONE_START_MS : 0)
   voiceLog.add('heard', '', 'shortcut: waiting for a command')
+  playListeningChime()
   if (wakeWordAvatarTimer)
     clearTimeout(wakeWordAvatarTimer)
   avatarState.awaitingCommand = true
@@ -733,6 +747,8 @@ const voiceInputSession = useVoiceInputSession(stream, {
   shouldUseStreamInput,
   // The padded VAD buffer keeps the start of a command. The volume fallback cut it off and split commands at short pauses.
   volumeFallback: { onlyWithoutVad: true },
+  // The default 0.52 missed quiet speech on the user's microphone. Noise that passes gives empty text, which the app ignores.
+  vad: { threshold: 0.45 },
   onLog(level, event, message, details) {
     const output = `[Voice Input] ${event}: ${message}`
     if (level === 'error') {
@@ -749,6 +765,8 @@ const voiceInputSession = useVoiceInputSession(stream, {
   inspectBeforeTranscription: ({ metadata }) => inspectVoiceInputProviderRequestGate(getVoiceInputGeneration(metadata)),
   inspectAfterTranscription: ({ metadata }) => inspectVoiceInputProviderRequestGate(getVoiceInputGeneration(metadata)),
   onRecordingReady: () => ({ generation: voiceInputGeneration }),
+  // A dropped segment explains a command that was never heard, so the voice log keeps it.
+  onRecordingSkipped: ({ trigger, gate }) => voiceLog.add('heard', '', `${trigger}: skipped${gate?.skip ? ` (${gate.reason ?? 'gate'})` : ''}`),
   onTranscriptionResult: ({ text }) => {
     const command = wakeWordRequired.value
       ? resolveWakeWordForAvatar(text)
@@ -906,6 +924,19 @@ watch(nowSpeaking, async (speaking) => {
 
   assistantSpeechSuppressedUntil.value = assistantSpeechCooldownDeadline()
   scheduleAssistantSpeechResume()
+
+  // After a spoken reply to a voice command, the user can answer without the wake word for a short time.
+  if (lastCommandFromVoice && wakeWordRequired.value) {
+    lastCommandFromVoice = false
+    voiceFollowUpUntil = assistantSpeechSuppressedUntil.value + VOICE_FOLLOW_UP_MS
+    if (wakeWordAvatarTimer)
+      clearTimeout(wakeWordAvatarTimer)
+    avatarState.awaitingCommand = true
+    wakeWordAvatarTimer = setTimeout(() => {
+      avatarState.awaitingCommand = false
+      wakeWordAvatarTimer = undefined
+    }, voiceFollowUpUntil - Date.now())
+  }
 })
 
 onMounted(() => {
