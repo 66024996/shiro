@@ -353,6 +353,161 @@ pages:
   providers:
     title: ผู้ให้บริการ AI
     description: โมเดลภาษา เสียงพูด และการฟังเสียง
+    catalog:
+      edit:
+        config-id-not-found: ไม่พบการตั้งค่าผู้ให้บริการ
+        definition-id-not-found: ไม่พบข้อมูลผู้ให้บริการ
+        actions:
+          more-options: ตัวเลือกเพิ่มเติม
+          delete: ลบ
+        validation:
+          failed:
+            title: ตรวจการตั้งค่าไม่ผ่าน กรุณาตรวจการตั้งค่าผู้ให้บริการ
+            description: ยังบันทึกการตั้งค่าตอนนี้ได้ ถ้าต้องการทำต่อ
+            action: บันทึกต่อ
+        config:
+          loading: กำลังโหลดการตั้งค่าผู้ให้บริการ...
+          load-error: โหลดการตั้งค่าผู้ให้บริการไม่สำเร็จ
+          save-error: บันทึกการตั้งค่าผู้ให้บริการไม่สำเร็จ
+          retry: ลองอีกครั้ง
+          common:
+            fields:
+              field:
+                web-search:
+                  label: ค้นหาเว็บ
+                  description: ให้โมเดล OpenAI ที่รองรับค้นหาเว็บเมื่อจำเป็น ใช้ API key ของคุณ และอาจมีค่าใช้จ่ายการค้นหา ต้องใช้ Responses API
+                api-protocol:
+                  label: รูปแบบ API
+                  description: เลือก API ที่ผู้ให้บริการและโมเดลนี้รองรับ
+                api-key:
+                  label: API Key
+                  description: API Key สำหรับยืนยันสิทธิ์กับผู้ให้บริการนี้
+                  placeholder: sk-...
+                base-url:
+                  label: Base URL
+                  description: 'ที่อยู่สำหรับเชื่อมต่อบริการ เช่น http://localhost:11434/v1 หรือ https://example.com/v1'
+                  placeholder: Base URL...
+                download-model:
+                  label: ดาวน์โหลดโมเดล
+                  description: ดาวน์โหลดโมเดล Chromium Prompt API
+                headers:
+                  label: HTTP Header เพิ่มเติม
+                  description: เพิ่ม HTTP header เอง
+                  key:
+                    placeholder: ชื่อ
+                  value:
+                    placeholder: ค่า
+                thinking-mode:
+                  label: โหมดคิดก่อนตอบ
+                  description: ควบคุมการคิดก่อนตอบของ Ollama โมเดล GPT-OSS รองรับเฉพาะระดับต่ำ กลาง และสูง
+                  options:
+                    auto: อัตโนมัติ (ค่าเริ่มต้นของผู้ให้บริการ)
+                    disable: ปิด
+                    enable: เปิด
+                    low: ต่ำ
+                    medium: กลาง
+                    high: สูง
+        validators:
+          actions:
+            validate: ตรวจสอบ
+          empty: ไม่มีขั้นตอนตรวจสอบ
+          openai-compatible:
+            check-config:
+              title: การตั้งค่า
+            check-connectivity:
+              title: การเชื่อมต่อ
+            check-supports-model-listing:
+              title: รายการโมเดล
+            check-supports-chat-completion:
+              title: การแชต
+          apple-vision:
+            check-availability:
+              title: ความพร้อมใช้งาน
+          prompt-api:
+            check-availability:
+              title: ความพร้อมใช้งาน
+          status:
+            validating: กำลังตรวจสอบ...
+            valid: ผ่าน
+            invalid: ไม่ผ่าน
+          title: การตรวจสอบ
+        providers:
+          provider:
+            ollama:
+              troubleshooting:
+                validators:
+                  openai-compatible-check-connectivity:
+                    label: Ollama ต้องตั้งค่าเพิ่ม
+                    content: 'เชื่อมต่อ Ollama ไม่ผ่าน ต้องตั้งค่า <code>OLLAMA_HOST</code> ตอนเปิดแอป Ollama หรือ Ollama CLI ดูรายละเอียดได้ที่ <a href="https://airi.moeru.ai/docs/en/docs/manual/integrations/providers/chat/ollama">คู่มือ Ollama</a>'
+    common:
+      continueAnyway: ทำต่อ
+      goToModelSelection: เลือกโมเดล →
+      fields:
+        field:
+          api-key:
+            label: API Key
+      section:
+        advanced:
+          fields:
+            field:
+              headers:
+                description: เพิ่ม HTTP header เอง
+                key:
+                  placeholder: ชื่อ
+                label: HTTP Header
+                value:
+                  placeholder: ค่า
+          title: ขั้นสูง
+        basic:
+          description: การตั้งค่าที่จำเป็น
+          title: พื้นฐาน
+        voice:
+          title: ตั้งค่าเสียง
+    labels:
+      recommended: แนะนำ
+    sync:
+      synced: ซิงก์แล้ว
+      pending: รออัปโหลด
+      not-uploaded: ยังไม่ได้อัปโหลด ตั้งค่าผู้ให้บริการนี้ให้เสร็จในเครื่องนี้
+    filters:
+      pricing: ราคา
+      deployment: ที่ทำงาน
+      all: ทั้งหมด
+      free: ฟรี
+      paid: เสียเงิน
+      internal: ภายใน
+      local: ในเครื่อง
+      cloud: คลาวด์
+    categories:
+      chat:
+        title: แชต
+        description: ผู้ให้บริการโมเดลสร้างข้อความ เช่น OpenRouter, OpenAI และ Ollama
+      vision:
+        title: การมองเห็น
+        description: ผู้ให้บริการโมเดลที่เข้าใจภาพ
+      speech:
+        title: เสียงพูด
+        description: ผู้ให้บริการแปลงข้อความเป็นเสียงพูด เช่น ElevenLabs และ Azure Speech
+      transcription:
+        title: การฟัง
+        description: ผู้ให้บริการแปลงเสียงพูดเป็นข้อความ เช่น Whisper.cpp, OpenAI และ Azure Speech
+      artistry:
+        title: งานภาพ
+        description: ผู้ให้บริการสร้างภาพและออกแบบ เช่น ComfyUI และ Replicate
+        items:
+          comfyui:
+            description: สร้างภาพในเครื่อง
+          replicate:
+            description: บริการโมเดลบนคลาวด์
+          nanobanana:
+            description: Google AI Studio Image Preview
+    helpinfo:
+      title: มาครั้งแรกใช่ไหม
+      description: 'ชิโระต้องมีผู้ให้บริการ{chat}อย่างน้อยหนึ่งราย เพื่อคิดและตอบได้ ผู้ให้บริการนี้เป็นสมองของตัวละคร'
+    explained:
+      chat: ผู้ให้บริการโมเดลสร้างข้อความ เช่น OpenRouter, OpenAI และ Ollama
+      Speech: ผู้ให้บริการแปลงข้อความเป็นเสียงพูด เช่น ElevenLabs และ Azure Speech
+      Transcription: ผู้ให้บริการแปลงเสียงพูดเป็นข้อความ เช่น Whisper.cpp, OpenAI และ Azure Speech
   data:
     title: ข้อมูล
     description: จัดการข้อมูลของชิโระ ส่งออก และรีเซ็ต
