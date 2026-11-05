@@ -83,7 +83,15 @@ ${shiroCard.systemPrompt}`).not.toContain('AIRI')
   // Most example lines were about rest and work, and one said "ชิโระเห็นนะคะ". The small model brought up rest
   // in almost every reply, and turned the line into "ทุกอย่างที่คุณทำ ชิโระจะสังเกตอยู่ดีค่ะ".
   it('keeps replies on topic and drops the watching line', () => {
-    expect(SHIRO_PERSONALITY_PROMPT).toContain('พูดเรื่องพักผ่อน การนอน หรือการกินข้าว เฉพาะเมื่อผู้ใช้พูดถึง')
+    // ROOT CAUSE:
+    //
+    // The Thai chat model added rest talk to unrelated replies, for example "เก่งมาก" got "อย่าลืมพักบ้างนะคะ".
+    // The late-night example and the list of "นอนน้อย ไม่กินข้าว" planted the topic, so the prompt drops both.
+    expect(SHIRO_PERSONALITY_PROMPT).toContain('ห้ามพูดเรื่องพักผ่อน นอน หรือกินข้าว ถ้าผู้ใช้ไม่ได้พูดถึง')
+    expect(SHIRO_PERSONALITY_PROMPT).not.toContain('ตีสองแล้ว')
+    expect(SHIRO_PERSONALITY_PROMPT).not.toContain('นอนน้อย ไม่กินข้าว')
+    // The chat model has no tools, so it must not promise computer work that nobody asked for.
+    expect(SHIRO_PERSONALITY_PROMPT).toContain('ห้ามบอกว่าจะเปิดแอป เปิดไฟล์ หรือทำอะไรในคอมพิวเตอร์ ถ้าผู้ใช้ไม่ได้สั่ง')
     expect(SHIRO_PERSONALITY_PROMPT).toContain('ห้ามบอกว่าจะเฝ้าดูหรือสังเกตทุกอย่างที่ผู้ใช้ทำ')
     expect(SHIRO_PERSONALITY_PROMPT).not.toContain('ชิโระเห็นนะคะ')
   })
