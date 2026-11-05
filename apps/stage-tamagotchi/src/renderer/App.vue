@@ -30,7 +30,7 @@ import { useSettingsStageModel } from '@proj-airi/stage-ui/stores/settings/stage
 import { useTheme } from '@proj-airi/ui'
 import { isEqual } from 'es-toolkit'
 import { storeToRefs } from 'pinia'
-import { onMounted, onUnmounted, watch } from 'vue'
+import { onMounted, onUnmounted, shallowRef, watch } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
 import { toast, Toaster } from 'vue-sonner'
 
@@ -40,6 +40,7 @@ import {
   electronGetServerChannelConfig,
   electronGodotStageGetStatus,
   electronGodotStageStatusChanged,
+  electronOllamaStatusGet,
   electronSettingsNavigate,
   electronStartTrackMousePosition,
   i18nGetLocale,
@@ -77,6 +78,7 @@ import {
   useTamagotchiPluginToolsStore,
 } from './stores/tools'
 import { syncMemoryContext } from './stores/tools/builtin/memory'
+import { routeShiroRequest } from './utils/model-route'
 import { createThaiParticleTransform } from './utils/thai-particles'
 import { resolveInitialRendererRoutePath, resolveRendererWindowContext } from './window-context'
 
@@ -130,6 +132,28 @@ llmStore.maxHistoryUserTurns = 5
 llmStore.removeEmojiFromReplies = true
 // The local model often writes "นะค่ะ" or "ไหมค่ะ". The fix runs on the stream, so the chat, the voice, and the history get it.
 llmStore.replyTextTransform = createThaiParticleTransform
+// Shiro uses two local models: shiro-chat (Typhoon, better Thai) for small talk, and shiro for computer commands,
+// because the Thai model misses tool calls. Without shiro-chat installed, every request uses the configured model.
+const SHIRO_CHAT_MODEL = 'shiro-chat'
+const getOllamaStatus = useElectronEventaInvoke(electronOllamaStatusGet)
+const shiroChatModelInstalled = shallowRef(false)
+async function refreshShiroChatModel() {
+  try {
+    const status = await getOllamaStatus()
+    shiroChatModelInstalled.value = status.models.some(name => name === SHIRO_CHAT_MODEL || name.startsWith(`${SHIRO_CHAT_MODEL}:`))
+  }
+  catch {
+    shiroChatModelInstalled.value = false
+  }
+}
+void refreshShiroChatModel()
+const shiroChatModelTimer = setInterval(() => void refreshShiroChatModel(), 60_000)
+onUnmounted(() => clearInterval(shiroChatModelTimer))
+llmStore.routeRequest = ({ model, conversation }) => {
+  if (!shiroChatModelInstalled.value || !/^shiro(?::|$)/.test(model))
+    return undefined
+  return routeShiroRequest(conversation, { toolModel: model, chatModel: SHIRO_CHAT_MODEL })
+}
 // The app local audio providers have only a "Work in Progress" page, so Shiro hides them from every provider list.
 const providersStore = useProviderStore()
 for (const providerId of ['app-local-audio-speech', 'app-local-audio-transcription'])

@@ -23,6 +23,19 @@ Then select `shiro:latest` in **Settings → Local AI** and click **Use model**.
 - Do not use `shiro-gemma` or `shiro-gemma-fs` for chat. Ollama rejects tools for them, so the app sends requests without tools.
 - Do not use a thinking model, such as `qwen3:4b`. It writes English reasoning into the reply and takes about 90 seconds per command.
 
+### Optional Thai chat model
+
+Shiro can also use `shiro-chat`, built on Typhoon 2.5 (Qwen3 4B tuned for Thai). It writes better Thai, but it misses tool calls.
+When `shiro-chat` is installed and `shiro` is selected, Shiro sends small talk to `shiro-chat` without tools and computer commands to `shiro`.
+Without `shiro-chat`, every request uses `shiro`.
+
+```sh
+ollama pull hf.co/typhoon-ai/typhoon2.5-qwen3-4b-gguf:Q4_K_M
+ollama create shiro-chat -f apps/stage-tamagotchi/ollama/shiro-chat.Modelfile
+```
+
+The two models do not fit on a 4 GB GPU together, so a switch between small talk and a command reloads a model.
+
 On a 4 GB GPU, set these user environment variables, then restart Ollama. They cut the model from 4.2 GB to 3.6 GB and keep more of it on the GPU.
 
 ```powershell
