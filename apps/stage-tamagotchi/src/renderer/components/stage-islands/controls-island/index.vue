@@ -490,7 +490,7 @@ function resetMainWindowPosition() {
           <ControlButtonTooltip side="inward">
             <ControlsIslandHearingConfig :show="blockingOverlays.has('hearing')" @update:show="setOverlay('hearing', $event)">
               <div class="relative">
-                <ControlButton :button-style="adjustStyleClasses.button">
+                <ControlButton :button-style="adjustStyleClasses.button" :aria-label="t('tamagotchi.stage.controls-island.open-hearing-controls')">
                   <Transition name="fade" mode="out-in">
                     <IndicatorMicVolume v-if="enabled" :class="adjustStyleClasses.icon" />
                     <div v-else i-ph:microphone-slash :class="adjustStyleClasses.icon" text="neutral-800 dark:neutral-300" />
@@ -509,7 +509,7 @@ function resetMainWindowPosition() {
           />
 
           <ControlButtonTooltip side="inward">
-            <ControlButton :button-style="adjustStyleClasses.button" cursor-move :class="{ 'drag-region': isLinux }" @mousedown="startDraggingWindow?.()">
+            <ControlButton :button-style="adjustStyleClasses.button" :aria-label="t('tamagotchi.stage.controls-island.drag-to-move-window')" cursor-move :class="{ 'drag-region': isLinux }" @mousedown="startDraggingWindow?.()">
               <div i-ph:arrows-out-cardinal :class="adjustStyleClasses.icon" text="neutral-800 dark:neutral-300" />
             </ControlButton>
             <template #tooltip>
