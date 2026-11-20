@@ -29,7 +29,7 @@ import { useBroadcastChannel } from '@vueuse/core'
 // import embedWorkerURL from '@xsai-transformers/embed/worker?worker&url'
 // import { embed } from '@xsai/embed'
 import { storeToRefs } from 'pinia'
-import { computed, nextTick, onUnmounted, ref, shallowRef, watch } from 'vue'
+import { computed, nextTick, onUnmounted, readonly, ref, shallowRef, watch } from 'vue'
 
 import StageRenderError from './stage-render-error.vue'
 
@@ -501,6 +501,10 @@ const speechPipeline = createSpeechPipeline<AudioBuffer>({
     if (speechMuted.value)
       return null
 
+    // Gaming Mode replies with text only. The voice model is not loaded, so the game keeps the memory.
+    if (gamingMode.value)
+      return null
+
     if (activeSpeechProvider.value === 'speech-noop')
       return null
 
@@ -656,6 +660,12 @@ speechPipeline.on('onSpecial', (segment) => {
   }
 })
 
+// Without audio nothing plays, so in Gaming Mode the reply text goes to the caption surfaces when it is ready.
+speechPipeline.on('onTtsRequest', (request) => {
+  if (gamingMode.value && request.text)
+    showAssistantText(request.text)
+})
+
 speechPipeline.on('onTurnEnd', (turnId) => {
   streamingControl.completeTurn(turnId)
 })
@@ -676,25 +686,27 @@ bindSpeakingStateToPlaybackManager(playbackManager, {
     else
       nowSpeaking.value = true
   },
-  onStart: ({ item }) => {
-    // NOTICE: postCaption and postPresent may throw errors if the BroadcastChannel is closed
-    // (e.g., when navigating away from the page). We wrap these in try-catch to prevent
-    // breaking playback when the channel is unavailable.
-    assistantCaption.value += ` ${item.text}`
-    try {
-      postCaption({ type: 'caption-assistant', text: item.text })
-    }
-    catch {
-      // BroadcastChannel may be closed - don't break playback
-    }
-    try {
-      postPresent({ type: 'assistant-append', text: item.text })
-    }
-    catch {
-      // BroadcastChannel may be closed - don't break playback
-    }
-  },
+  onStart: ({ item }) => showAssistantText(item.text),
 })
+
+function showAssistantText(text: string) {
+  // NOTICE: postCaption and postPresent may throw errors if the BroadcastChannel is closed
+  // (e.g., when navigating away from the page). We wrap these in try-catch to prevent
+  // breaking playback when the channel is unavailable.
+  assistantCaption.value += ` ${text}`
+  try {
+    postCaption({ type: 'caption-assistant', text })
+  }
+  catch {
+    // BroadcastChannel may be closed - don't break playback
+  }
+  try {
+    postPresent({ type: 'assistant-append', text })
+  }
+  catch {
+    // BroadcastChannel may be closed - don't break playback
+  }
+}
 
 playbackManager.onStart(({ item }) => {
   speechBusContext.emit(speechOutputSpeakingEvent, { intentId: item.intentId, speaking: true })
@@ -1026,7 +1038,8 @@ if (typeof window !== 'undefined') {
 }
 
 watch([stageModelRenderer, () => props.paused], ([renderer]) => {
-  if (renderer === 'godot') {
+  // These renderers mount no scene that reports its state, so nothing is left to load.
+  if (renderer === 'godot' || renderer === 'disabled') {
     componentState.value = 'mounted'
   }
 
@@ -1091,6 +1104,8 @@ onUnmounted(() => {
 })
 
 defineExpose({
+  /** The text of the current assistant reply. A new user message clears it. */
+  assistantCaption: readonly(assistantCaption),
   canvasElement,
   /**
    * The frame already carries the scene: every renderer paints it into the canvas it

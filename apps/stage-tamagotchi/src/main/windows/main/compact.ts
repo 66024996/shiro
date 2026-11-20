@@ -5,27 +5,27 @@ import { screen } from 'electron'
 /** Gap between the compact window and the work-area edge, in DIPs. */
 const COMPACT_MARGIN = 16
 
+/** Default size of the Gaming Mode reply box, in DIPs. It holds a few lines of reply text. */
+const COMPACT_DEFAULT_SIZE = { width: 360, height: 150 }
+
 /**
- * Computes the compact window bounds in the bottom-right corner of a display work area.
+ * Computes the compact window bounds in the top-left corner of a display work area.
  *
- * The default size is a portrait card about one third of the work-area height, so the
- * avatar stays visible without covering the middle of a game. A remembered size is
- * clamped to the work area.
+ * In Gaming Mode the main window is a small reply box there, like a chat overlay in a game.
+ * A remembered size is clamped to the work area.
  *
  * @example
  * computeCompactBounds({ x: 0, y: 0, width: 1920, height: 1040 })
- * // => { x: 1644, y: 677, width: 260, height: 347 }
+ * // => { x: 16, y: 16, width: 360, height: 150 }
  */
 export function computeCompactBounds(workArea: Rectangle, size?: Pick<Rectangle, 'width' | 'height'>): Rectangle {
-  const defaultHeight = Math.round(Math.min(420, workArea.height / 3))
-  const height = Math.min(size?.height ?? defaultHeight, workArea.height - COMPACT_MARGIN * 2)
-  const width = Math.min(size?.width ?? Math.round(height * 0.75), workArea.width - COMPACT_MARGIN * 2)
+  const { width, height } = size ?? COMPACT_DEFAULT_SIZE
 
   return {
-    x: workArea.x + workArea.width - width - COMPACT_MARGIN,
-    y: workArea.y + workArea.height - height - COMPACT_MARGIN,
-    width,
-    height,
+    x: workArea.x + COMPACT_MARGIN,
+    y: workArea.y + COMPACT_MARGIN,
+    width: Math.min(width, workArea.width - COMPACT_MARGIN * 2),
+    height: Math.min(height, workArea.height - COMPACT_MARGIN * 2),
   }
 }
 

@@ -155,6 +155,9 @@ tool-permission:
     finished: The voice has finished
     muted: The voice is muted. You can read the message.
     unavailable: The voice is not available. You can read the message.
+gaming-reply:
+  name: Shiro
+  label: Shiro's replies in Gaming Mode
 voice-command:
   heard: 'Heard: {text}'
   started: Listening. Say your command.

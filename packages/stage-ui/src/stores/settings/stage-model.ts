@@ -57,6 +57,11 @@ export const useSettingsStageModel = defineStore('settings-stage-model', () => {
    * Gaming Mode. It is runtime state: the saved selection and the model settings never change.
    */
   const stageModelOverrideId = ref<string>()
+  /**
+   * While true, the stage shows no model. No scene mounts, so the renderer gives its GPU memory back.
+   * Gaming Mode uses it. It is runtime state: the saved selection and the model settings never change.
+   */
+  const stageModelHidden = ref(false)
 
   function revokeStageModelUrl(url?: string) {
     if (url?.startsWith('blob:'))
@@ -181,7 +186,7 @@ export const useSettingsStageModel = defineStore('settings-stage-model', () => {
     // Direct ThreeScene routes mount from the refs and cannot start with stale identity state.
     stageModelBuiltInRenderer.value = builtInRenderer
     if (stageModelRenderer.value !== 'godot')
-      stageModelRenderer.value = builtInRenderer
+      stageModelRenderer.value = stageModelHidden.value ? 'disabled' : builtInRenderer
     replaceStageModelUrl(nextUrl)
     stageModelSelectedDisplayModel.value = model
   }
@@ -200,7 +205,14 @@ export const useSettingsStageModel = defineStore('settings-stage-model', () => {
   }
 
   function restoreBuiltInStageModelRenderer() {
-    stageModelRenderer.value = stageModelBuiltInRenderer.value ?? 'disabled'
+    stageModelRenderer.value = stageModelHidden.value ? 'disabled' : stageModelBuiltInRenderer.value ?? 'disabled'
+  }
+
+  /** Hides or shows the model. A Godot stage runs in its own process and stays as it is. */
+  function setStageModelHidden(hidden: boolean) {
+    stageModelHidden.value = hidden
+    if (stageModelRenderer.value !== 'godot')
+      restoreBuiltInStageModelRenderer()
   }
 
   async function initializeStageModel() {
@@ -235,9 +247,11 @@ export const useSettingsStageModel = defineStore('settings-stage-model', () => {
     stageModelSelectedDisplayModel,
     stageViewControlsEnabled,
     stageModelOverrideId,
+    stageModelHidden,
 
     initializeStageModel,
     restoreBuiltInStageModelRenderer,
+    setStageModelHidden,
     setStageModelOverride,
     setStageModelRenderer,
     updateStageModel,

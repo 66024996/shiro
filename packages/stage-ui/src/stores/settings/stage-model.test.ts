@@ -166,6 +166,30 @@ describe('settings stage model store', () => {
     expect(store.stageModelSelectedUrl).toBe(selectedModel.url)
   })
 
+  it('hides the model until it is shown again, also when the model reloads in between', async () => {
+    const selectedModel: DisplayModelURL = {
+      id: 'preset-live2d-1',
+      format: DisplayModelFormat.Live2dZip,
+      type: 'url',
+      url: 'https://example.com/preset-live2d.zip',
+      name: 'Preset Live2D',
+      importedAt: 1,
+    }
+    vi.spyOn(useDisplayModelsStore(), 'getDisplayModel').mockImplementation(async id => id === selectedModel.id ? selectedModel : undefined)
+    const store = useSettingsStageModel()
+    await store.initializeStageModel()
+
+    store.setStageModelHidden(true)
+    expect(store.stageModelRenderer).toBe('disabled')
+
+    await store.updateStageModel()
+    expect(store.stageModelRenderer).toBe('disabled')
+    expect(store.stageModelSelected).toBe('preset-live2d-1')
+
+    store.setStageModelHidden(false)
+    expect(store.stageModelRenderer).toBe('live2d')
+  })
+
   it('keeps the saved model when the override model was deleted', async () => {
     const selectedModel: DisplayModelURL = {
       id: 'preset-live2d-1',

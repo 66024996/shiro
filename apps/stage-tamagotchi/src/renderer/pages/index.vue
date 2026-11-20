@@ -24,6 +24,7 @@ import {
 import { WidgetStage } from '@proj-airi/stage-ui/components/scenes'
 import { useVoiceInputSession } from '@proj-airi/stage-ui/composables'
 import { useCanvasPixelIsTransparentAtPoint } from '@proj-airi/stage-ui/composables/canvas-alpha'
+import { useAssistantModeStore } from '@proj-airi/stage-ui/stores/assistant-mode'
 import { useSpeakingStore } from '@proj-airi/stage-ui/stores/audio'
 import { useAvatarStateStore } from '@proj-airi/stage-ui/stores/avatar-state'
 import { useChatStore } from '@proj-airi/stage-ui/stores/chat'
@@ -39,6 +40,7 @@ import { toast } from 'vue-sonner'
 
 import ControlsIslandRoot from '../components/stage-islands/controls-island/controls-island-root.vue'
 import ControlsIsland from '../components/stage-islands/controls-island/index.vue'
+import GamingReplyBox from '../components/stage-islands/gaming-reply-box.vue'
 import ResourceStatusIsland from '../components/stage-islands/resource-status-island/index.vue'
 
 import { electronAppIsWayland, electronAssistantGetWakeWord, electronOpenOnboarding } from '../../shared/eventa'
@@ -84,6 +86,9 @@ const getAssistantWakeWord = useElectronEventaInvoke(electronAssistantGetWakeWor
 const assistantWakeWord = shallowRef('')
 const wakeWordRequired = useLocalStorage('settings/hearing/wake-word-required', true)
 // Tells a new user how to start a voice command while nothing was heard yet.
+const { gamingMode } = storeToRefs(useAssistantModeStore())
+// Gaming Mode hides the model and speaks no reply, so the reply shows as text in a small box.
+const gamingReplyText = computed(() => widgetStageRef.value?.assistantCaption ?? '')
 const hearingIdleHint = computed(() => wakeWordRequired.value && assistantWakeWord.value
   ? t('stage.status.wake-word-hint', { wakeWord: assistantWakeWord.value })
   : undefined)
@@ -998,7 +1003,7 @@ const cursorPosition = computed(() => ({
     transition="opacity duration-500 ease-in-out"
   >
     <!-- Shiro's activity and the microphone status stay visible at the bottom of the stage. -->
-    <div v-show="!settingsStore.streamerMode" ref="hearingStatusElement" :class="['absolute bottom-3 left-1/2 z-30 w-fit -translate-x-1/2', 'flex items-end gap-1']">
+    <div v-show="!settingsStore.streamerMode && !gamingMode" ref="hearingStatusElement" :class="['absolute bottom-3 left-1/2 z-30 w-fit -translate-x-1/2', 'flex items-end gap-1']">
       <AssistantStatus align="center" />
       <HearingStatus align="center" show-when-off :idle-hint="hearingIdleHint" />
     </div>
@@ -1037,6 +1042,13 @@ const cursorPosition = computed(() => ({
           :paused="stagePaused"
         />
         <HoloCoupon />
+        <GamingReplyBox
+          v-if="gamingMode"
+          class="absolute inset-0"
+          :text="gamingReplyText"
+          :idle-hint="hearingIdleHint"
+          :[stageOpaqueAttribute]="true"
+        />
         <ControlsIslandRoot :frozen="controlsIslandInteractionActive">
           <ControlsIsland
             ref="controlsIslandRef"

@@ -43,8 +43,8 @@ function createWindow(bounds: Rectangle) {
 }
 
 describe('computeCompactBounds', () => {
-  it('places a portrait card in the bottom-right corner', () => {
-    expect(computeCompactBounds(workArea)).toEqual({ x: 1644, y: 677, width: 260, height: 347 })
+  it('places a small reply box in the top-left corner', () => {
+    expect(computeCompactBounds(workArea)).toEqual({ x: 16, y: 16, width: 360, height: 150 })
   })
 
   it('keeps a remembered size inside a small work area', () => {
