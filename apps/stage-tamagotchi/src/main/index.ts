@@ -498,6 +498,7 @@ app.whenReady().then(async () => {
       setupDesktopControlService(context, deps.desktopControl)
       const gamingResources = new GamingResources({
         ollamaBaseUrl: 'http://127.0.0.1:11434',
+        speechBaseUrl: 'http://127.0.0.1:5052',
         listProcesses: listProcessesWithTasklist,
         setPriority: (pid, priority) => setPriority(pid, priority === 'below-normal' ? osConstants.priority.PRIORITY_BELOW_NORMAL : osConstants.priority.PRIORITY_NORMAL),
         speechPid: () => deps.shiroSpeechRuntime.processId(),

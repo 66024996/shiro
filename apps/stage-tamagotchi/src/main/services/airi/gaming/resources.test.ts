@@ -7,6 +7,7 @@ function createResources() {
   const fetchMock = vi.fn<typeof fetch>(async input => new Response(String(input).endsWith('/api/ps') ? JSON.stringify({ models: [{ name: 'shiro:latest' }] }) : '{}'))
   const resources = new GamingResources({
     ollamaBaseUrl: 'http://127.0.0.1:11434',
+    speechBaseUrl: 'http://127.0.0.1:5052',
     listProcesses: async () => [{ name: 'llama-server.exe', pid: 10 }, { name: 'chrome.exe', pid: 11 }],
     setPriority,
     speechPid: () => 20,
@@ -45,6 +46,21 @@ describe('gamingResources', () => {
     resources.lowerPriorities([{ name: 'llama-server.exe', pid: 10 }, { name: 'llama-server.exe', pid: 30 }])
 
     expect(setPriority.mock.calls).toEqual([[30, 'below-normal']])
+  })
+
+  // ROOT CAUSE:
+  //
+  // In Gaming Mode the speech server still held the voice model and used about 6 GB of memory.
+  it('turns the speech memory saver on for a game and off after it', async () => {
+    const { resources, fetchMock } = createResources()
+    const saverBodies = () => fetchMock.mock.calls
+      .filter(([url]) => String(url) === 'http://127.0.0.1:5052/v1/system/memory-saver')
+      .map(([, init]) => JSON.parse(String((init as RequestInit).body)))
+
+    await resources.setGaming(true)
+    await resources.setGaming(false)
+
+    expect(saverBodies()).toEqual([{ enabled: true }, { enabled: false }])
   })
 
   it('does nothing to priorities outside Gaming Mode', () => {

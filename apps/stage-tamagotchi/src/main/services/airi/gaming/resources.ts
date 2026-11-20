@@ -10,6 +10,8 @@ const MODEL_PROCESS_NAMES = new Set(['llama-server.exe', 'ollama_llama_server.ex
 
 export interface GamingResourcesOptions {
   ollamaBaseUrl: string
+  /** Shiro's speech server. In Gaming Mode it loads the voice model only to speak a reply. */
+  speechBaseUrl?: string
   listProcesses: () => Promise<RunningProcess[]>
   /** Sets a process priority. Throws when the process is gone or not accessible. */
   setPriority: (pid: number, priority: 'below-normal' | 'normal') => void
@@ -27,6 +29,8 @@ export interface GamingResourcesOptions {
  * Frees resources for a game while Gaming Mode is on.
  *
  * - It unloads the Ollama models, so the game gets the GPU memory. Ollama loads a model again for the next command.
+ * - It turns on the speech server's memory saver. The voice model then loads only to speak a reply,
+ *   and it unloads after a quiet period. Without the voice model, the speech server needs about 1 GB instead of 6 GB.
  * - It lowers the CPU priority of the model and speech processes, so the game runs first.
  *
  * Voice, speech, and commands keep working, only slower.
@@ -45,6 +49,7 @@ export class GamingResources {
     if (gaming === this.gaming)
       return
     this.gaming = gaming
+    await this.setSpeechMemorySaver(gaming)
     if (gaming) {
       await this.unloadModels()
       this.lowerPriorities(await this.options.listProcesses().catch(() => []))
@@ -84,6 +89,23 @@ export class GamingResources {
     }
     catch {
       return false
+    }
+  }
+
+  private async setSpeechMemorySaver(enabled: boolean) {
+    if (!this.options.speechBaseUrl)
+      return
+    const request = this.options.fetch ?? fetch
+    try {
+      await request(`${this.options.speechBaseUrl}/v1/system/memory-saver`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled }),
+        signal: AbortSignal.timeout(10_000),
+      })
+    }
+    catch (error) {
+      console.warn('[gaming] Failed to change the speech memory saver:', errorMessageFrom(error) ?? 'Unknown error')
     }
   }
 
