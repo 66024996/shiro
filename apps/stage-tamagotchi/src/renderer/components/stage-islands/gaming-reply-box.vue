@@ -36,7 +36,7 @@ watch(() => props.text, async () => {
     <div
       ref="body"
       aria-live="polite"
-      class="min-h-0 flex-1 overflow-y-auto break-words text-[0.95rem] leading-snug"
+      class="min-h-0 flex-1 overflow-y-auto break-words text-[0.95rem] leading-snug scrollbar-none"
     >
       <p v-if="text.trim()">
         {{ text.trim() }}
