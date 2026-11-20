@@ -73,5 +73,25 @@ It accepts Thai transcription requests with model `typhoon-asr-realtime`.
 Typhoon ignores the optional `prompt` field.
 With `--stt-engine whisper`, the model is `whisper-small`, and a `prompt` of up to 1,000 characters guides Whisper with names or technical terms.
 
+## Memory saver
+
+The TTS model runs in a child process. Speech recognition stays in the main process.
+When `POST /v1/system/memory-saver` gets `{"enabled": true}`, the child process stops.
+The next speech request starts it again, and it stops after 20 seconds without a request.
+Shiro turns memory saver on in Gaming Mode.
+
+| State | RAM | GPU memory |
+| --- | --- | --- |
+| Normal | about 1.3 GB | about 2 GB |
+| Memory saver, idle | about 0.5 GB | about 0.1 GB |
+
+With memory saver on, the first reply waits about 15 to 20 seconds for the model to load.
+`GET /health` reports the state in `tts.loaded` and `tts.memory_saver`.
+
+## Speech pace
+
+The default speed is 1.17, which is 30% faster than the earlier 0.9.
+The pause after a sentence is 0.33 seconds, and `--pause-scale 0.25` shortens each long silence to a quarter.
+
 The `build-runtime.ps1` script stages the Python runtime, offline model caches, and the current Shiro voice reference.
 The `licenses` folder contains the model license texts and attribution notice.
