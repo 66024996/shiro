@@ -71,6 +71,9 @@ describe('matchWakeWordPrefix', () => {
     ['ชิโรปิดเครื่องคิดเลขให้หน่อย', 'ปิดเครื่องคิดเลขให้หน่อย'],
     ['ชิโลปิดไฟ', 'ปิดไฟ'],
     ['ชิโร่ เปิดเพลง', 'เปิดเพลง'],
+    // The packaged Typhoon ASR heard OmniVoice's "ชิโระ เปิดเครื่องคิดเลขให้หน่อย" as the first text.
+    ['ชิโฮเปิดเครื่องคิดเลขให้หน่อย', 'เปิดเครื่องคิดเลขให้หน่อย'],
+    ['ซิโระเปิดไฟ', 'เปิดไฟ'],
   ])('passes the command when %s has no separator after the name', (heard, command) => {
     expect(resolveWakeWordInput(heard, 'ชิโระ', { commandExpiresAt: 0 }, 0)).toEqual({ status: 'command', text: command })
   })

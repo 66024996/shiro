@@ -31,13 +31,25 @@ function stripLeadingFiller(text: string) {
   return filler ? text.slice(filler.length).replace(WAKE_WORD_SEPARATORS, '') : undefined
 }
 
+function differsInAtMostOneLetter(left: string, right: string) {
+  if (left.length !== right.length)
+    return false
+  let differences = 0
+  for (let index = 0; index < left.length; index++) {
+    if (left[index] !== right[index])
+      differences++
+  }
+  return differences <= 1
+}
+
 /**
  * Returns the length of the wake word at the start of the text, or 0 when it is not there.
  *
  * An exact prefix always counts. A recognition variant counts when a separator or the text end follows it,
  * and its canonical form differs from the wake word by at most one character.
- * Typhoon ASR often writes the command right after the name, as in "ชิโลปิดไฟ". So a variant with the same
- * canonical form also counts without a separator, when no Thai mark that belongs to the name follows it.
+ * Typhoon ASR often writes the command right after the name, as in "ชิโลปิดไฟ" or "ชิโฮเปิดไฟ". So a variant
+ * also counts without a separator, when its canonical form has the wake word's length and differs in at most one
+ * letter, and no Thai mark that belongs to the name follows it. An added letter, as in "ชิวโร", still needs a separator.
  */
 export function matchWakeWordPrefix(text: string, wakeWord: string): number {
   if (text.startsWith(wakeWord))
@@ -53,7 +65,7 @@ export function matchWakeWordPrefix(text: string, wakeWord: string): number {
   }
   for (let length = minLength; length < maxLength; length++) {
     const next = text[length]!
-    if (!WAKE_WORD_NAME_MARK.test(next) && canonicalThaiForm(text.slice(0, length)) === target)
+    if (!WAKE_WORD_NAME_MARK.test(next) && differsInAtMostOneLetter(canonicalThaiForm(text.slice(0, length)), target))
       return length
   }
   return 0
