@@ -75,7 +75,8 @@ try {
     throw new Error('The portable Shiro executable was not created.')
 
   rmSync(temporaryArchive, { force: true })
-  execFileSync('tar.exe', [
+  // Git Bash puts GNU tar first on PATH, and GNU tar cannot write ZIP files. Windows ships bsdtar in System32.
+  execFileSync(resolve(process.env.SystemRoot ?? 'C:\\Windows', 'System32', 'tar.exe'), [
     '-a',
     '-c',
     '--options',
@@ -102,6 +103,11 @@ required = {
     "resources/shiro-speech/licenses/MIT-LICENSE.txt",
     "resources/shiro-speech/voices/shiro.wav",
     "resources/shiro-speech/voices/shiro.txt",
+    "resources/shiro-speech/server/models/typhoon-asr-realtime/config.json",
+    "resources/shiro-speech/server/models/typhoon-asr-realtime/encoder-model.onnx",
+    "resources/shiro-speech/server/models/typhoon-asr-realtime/decoder_joint-model.onnx",
+    "resources/shiro-speech/server/models/typhoon-asr-realtime/preprocessor.npz",
+    "resources/shiro-speech/server/models/typhoon-asr-realtime/tokens.txt",
 }
 voice_files_expected = {
     "resources/shiro-speech/voices/shiro.wav",
@@ -110,7 +116,6 @@ voice_files_expected = {
 model_prefixes = (
     "resources/shiro-speech/hf_cache/hub/models--hotdogs--omnivoice-thai/",
     "resources/shiro-speech/hf_cache/hub/models--eustlb--higgs-audio-v2-tokenizer/",
-    "resources/shiro-speech/hf_cache/faster-whisper/models--Systran--faster-whisper-small/",
 )
 
 with zipfile.ZipFile(sys.argv[1]) as archive:
