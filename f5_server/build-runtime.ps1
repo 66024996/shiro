@@ -112,8 +112,19 @@ $modelDirectories = @(
   }
 )
 
+# A Hugging Face cache keeps every downloaded revision. The app runs offline and reads the revision
+# that refs\main names, so the other snapshots only make the package bigger.
+function Get-StaleSnapshots([string] $repository) {
+  $reference = Join-Path $repository 'refs\main'
+  if (!(Test-Path $reference)) {
+    return @()
+  }
+  $current = (Get-Content $reference -Raw).Trim()
+  return @(Get-ChildItem (Join-Path $repository 'snapshots') -Directory | Where-Object { $_.Name -ne $current } | ForEach-Object { $_.FullName })
+}
+
 foreach ($modelDirectory in $modelDirectories) {
-  Copy-Tree $modelDirectory.Source $modelDirectory.Destination
+  Copy-Tree $modelDirectory.Source $modelDirectory.Destination (Get-StaleSnapshots $modelDirectory.Source)
 }
 
 Copy-Tree (Join-Path $serverRoot 'licenses') $licenseOutput
