@@ -36,7 +36,7 @@ def pause_after(phrase, base_pause):
     if phrase.endswith((",", "，", ";", "；")):
         return min(base_pause, 0.3)
     if phrase.endswith((".", "!", "?", "。", "！", "？")):
-        return max(base_pause, 0.65)
+        return max(base_pause, 0.33)
     return base_pause
 
 
@@ -100,7 +100,7 @@ def load_voices(directory: Path):
     return voices
 
 
-def create_app(engine, voices, default_voice, transcriber, default_speed=0.9, voices_dir=None):
+def create_app(engine, voices, default_voice, transcriber, default_speed=1.17, voices_dir=None):
     import numpy as np
     import soundfile as sf
     from fastapi import FastAPI, File, Form, HTTPException, UploadFile
@@ -150,7 +150,17 @@ def create_app(engine, voices, default_voice, transcriber, default_speed=0.9, vo
             "default": default_voice if default_voice in voice_names else None,
             "voice_configured": bool(voice_names),
             "stt": {"model": transcriber.model_name, "loaded": transcriber.loaded},
+            "tts": {"loaded": engine.loaded, "memory_saver": engine.memory_saver},
         }
+
+    class MemorySaverReq(BaseModel):
+        enabled: bool
+
+    @app.post("/v1/system/memory-saver")
+    def memory_saver(request: MemorySaverReq):
+        """Unloads the TTS model between replies. Shiro turns this on in Gaming Mode."""
+        engine.set_memory_saver(request.enabled)
+        return {"memory_saver": engine.memory_saver, "tts_loaded": engine.loaded}
 
     @app.get("/v1/models")
     def models():

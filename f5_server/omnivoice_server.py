@@ -15,6 +15,7 @@ import numpy as np
 
 from speech_api import SR, create_app, load_voices, pause_after, shorten_pauses, split_text
 from transcription import ThaiTranscriber
+from tts_process import TtsProcess
 from typhoon_onnx import TyphoonTranscriber
 
 
@@ -127,14 +128,15 @@ def main():
     parser.add_argument("--device", choices=("auto", "cuda", "cpu"), default="auto")
     parser.add_argument("--steps", type=int, default=32)
     parser.add_argument("--guidance-scale", type=float, default=2.0)
-    parser.add_argument("--speed", type=float, default=0.9)
+    # 1.17 is 30% faster than the earlier 0.9, which users found slow.
+    parser.add_argument("--speed", type=float, default=1.17)
     parser.add_argument("--volume", type=float, default=0.9)
-    parser.add_argument("--pause", type=float, default=0.3)
+    parser.add_argument("--pause", type=float, default=0.15)
     parser.add_argument("--rhythm", choices=("gentle", "off"), default="gentle")
     parser.add_argument(
         "--pause-scale",
         type=float,
-        default=0.5,
+        default=0.25,
         help="Length factor for silent runs of 0.2 s or more. 1 keeps them unchanged.",
     )
     parser.add_argument(
@@ -167,16 +169,18 @@ def main():
     elif args.voice not in voices:
         parser.error(f"Voice '{args.voice}' not found; available voices: {', '.join(voices)}")
 
-    engine = OmniVoiceEngine(
-        args.model_id,
-        args.device,
-        args.steps,
-        args.guidance_scale,
-        args.volume,
-        args.pause,
-        args.rhythm,
-        args.pause_scale,
-    )
+    # The TTS model runs in its own process. In Gaming Mode the process stops between replies,
+    # and torch and CUDA give their memory back to the system.
+    engine = TtsProcess(dict(
+        model_id=args.model_id,
+        device=args.device,
+        steps=args.steps,
+        guidance_scale=args.guidance_scale,
+        volume=args.volume,
+        pause=args.pause,
+        rhythm=args.rhythm,
+        pause_scale=args.pause_scale,
+    ))
     if args.stt_engine == "typhoon":
         transcriber = TyphoonTranscriber(args.stt_model_dir)
         # The model loads in about 5 seconds. Loading it now keeps the first voice command fast.

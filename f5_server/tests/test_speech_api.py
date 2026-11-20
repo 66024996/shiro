@@ -6,12 +6,18 @@ from pathlib import Path
 import numpy as np
 from fastapi.testclient import TestClient
 
-from speech_api import create_app, shorten_pauses
+from speech_api import create_app, pause_after, shorten_pauses
 
 
 class FakeEngine:
     def __init__(self):
         self.last_reference = None
+        self.loaded = True
+        self.memory_saver = False
+
+    def set_memory_saver(self, enabled):
+        self.memory_saver = enabled
+        self.loaded = not enabled
 
     def synth(self, ref_audio, ref_text, text, speed):
         self.last_reference = (ref_audio, ref_text, text, speed)
@@ -75,6 +81,20 @@ class SpeechApiTests(unittest.TestCase):
         self.assertEqual(self.engine.last_reference[0], str(audio_path))
         self.assertEqual(self.engine.last_reference[1], "สวัสดีค่ะ")
         self.assertEqual(self.engine.last_reference[2], "สวัสดี")
+
+    def test_memory_saver_switch_reaches_the_engine(self):
+        response = self.client.post("/v1/system/memory-saver", json={"enabled": True})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"memory_saver": True, "tts_loaded": False})
+        self.assertEqual(self.client.get("/health").json()["tts"], {"loaded": False, "memory_saver": True})
+
+    def test_sentence_pause_is_half_of_the_earlier_value(self):
+        # ROOT CAUSE:
+        #
+        # Users found the pauses between sentences too long, so the sentence pause went from 0.65 s to 0.33 s.
+        self.assertEqual(pause_after("ดีค่ะ.", 0.15), 0.33)
+        self.assertEqual(pause_after("ดีค่ะ,", 0.15), 0.15)
 
 
 class ShortenPausesTests(unittest.TestCase):
