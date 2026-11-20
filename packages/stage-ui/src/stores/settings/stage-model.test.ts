@@ -132,40 +132,6 @@ describe('settings stage model store', () => {
     expect(store.stageModelSelectedUrl).toBe(vrmModel.url)
   })
 
-  it('shows an override model without changing the saved selection, then restores it', async () => {
-    const selectedModel: DisplayModelURL = {
-      id: 'preset-live2d-1',
-      format: DisplayModelFormat.Live2dZip,
-      type: 'url',
-      url: 'https://example.com/preset-live2d.zip',
-      name: 'Preset Live2D',
-      importedAt: 1,
-    }
-    const gamingModel: DisplayModelURL = {
-      id: 'gaming-avatar',
-      format: DisplayModelFormat.TachieZip,
-      type: 'url',
-      url: 'https://example.com/shiro.tachie.zip',
-      name: 'Shiro gaming avatar',
-      importedAt: 2,
-    }
-    const models = new Map([selectedModel, gamingModel].map(model => [model.id, model]))
-    vi.spyOn(useDisplayModelsStore(), 'getDisplayModel').mockImplementation(async id => models.get(id))
-    const store = useSettingsStageModel()
-    await store.initializeStageModel()
-
-    await store.setStageModelOverride('gaming-avatar')
-
-    expect(store.stageModelRenderer).toBe('tachie')
-    expect(store.stageModelSelectedUrl).toBe(gamingModel.url)
-    expect(store.stageModelSelected).toBe('preset-live2d-1')
-
-    await store.setStageModelOverride(undefined)
-
-    expect(store.stageModelRenderer).toBe('live2d')
-    expect(store.stageModelSelectedUrl).toBe(selectedModel.url)
-  })
-
   it('hides the model until it is shown again, also when the model reloads in between', async () => {
     const selectedModel: DisplayModelURL = {
       id: 'preset-live2d-1',
@@ -188,23 +154,5 @@ describe('settings stage model store', () => {
 
     store.setStageModelHidden(false)
     expect(store.stageModelRenderer).toBe('live2d')
-  })
-
-  it('keeps the saved model when the override model was deleted', async () => {
-    const selectedModel: DisplayModelURL = {
-      id: 'preset-live2d-1',
-      format: DisplayModelFormat.Live2dZip,
-      type: 'url',
-      url: 'https://example.com/preset-live2d.zip',
-      name: 'Preset Live2D',
-      importedAt: 1,
-    }
-    vi.spyOn(useDisplayModelsStore(), 'getDisplayModel').mockImplementation(async id => id === selectedModel.id ? selectedModel : undefined)
-    const store = useSettingsStageModel()
-
-    await store.setStageModelOverride('deleted-avatar')
-
-    expect(store.stageModelRenderer).toBe('live2d')
-    expect(store.stageModelSelected).toBe('preset-live2d-1')
   })
 })

@@ -86,27 +86,29 @@ Use this feature for local native applications. It does not expose a remote-devi
 The desktop package includes the platform CLI as an optional dependency and unpacks its executable from ASAR.
 Do not omit optional dependencies when building an installer. Windows ARM64 and Linux musl do not have a matching CLI in this version.
 
-## Gaming avatar
+## Gaming Mode
 
-Gaming Mode replaces the stage model with a PNG avatar and moves the main window into the bottom-right screen corner.
-Turn it on with the gamepad button in the controls island, in **Settings > Gaming avatar**, or by voice, for example "ชิโระ เข้าโหมดเล่นเกม".
+Gaming Mode gives the memory and the GPU to the game. Shiro still takes voice commands and replies as text.
+Turn it on with the gamepad button in the controls island, in **Settings > Gaming Mode**, or by voice, for example "ชิโระ เข้าโหมดเล่นเกม".
 
 Game detection turns Gaming Mode on while a listed game runs, and off when the game ends.
 
 - The main process checks `tasklist` every 5 seconds. The list has 18 common games, matched by process name.
-  Edit it in **Settings > Gaming avatar**. It is saved in `<userData>/gaming/options.json`.
+  Edit it in **Settings > Gaming Mode**. It is saved in `<userData>/gaming/options.json`.
 - If you turn Gaming Mode off during a game, it stays off until that game ends.
   If you turn it on yourself, it stays on after a game ends.
-- In Gaming Mode, the app unloads the Ollama models and lowers the CPU priority of the model and speech processes.
+
+While Gaming Mode is on:
+
+- The stage hides the character with `setStageModelHidden`. The Live2D or VRM scene unmounts, so it frees the GPU. The saved model selection does not change.
+- The stage requests no speech. The speech server stops the voice model, and the model stays unloaded. Speech recognition keeps running.
+- The main window becomes a 360 x 150 reply box in the top-left screen corner. It shows the current reply, the assistant status, and what the microphone heard.
+- The app unloads the Ollama models and lowers the CPU priority of the model and speech processes.
   The next voice command loads the model again, which takes about 8 seconds.
-- The vision capture loop stops, and the background image agent waits. Voice, speech, the avatar, memory, and commands keep working.
+- The vision capture loop stops, and the background image agent waits.
 
-- **Settings > Gaming avatar** has one image slot for each avatar state and emotion. Only Normal is required.
-- On save, the editor fits every image onto the canvas of the Normal image and stores the set as a `.tachie.zip` display model.
-- During Gaming Mode, the main stage window sets a stage model override. The Live2D or VRM scene unmounts, so it stops using the GPU. The saved model selection does not change.
-- The main window returns to its earlier bounds when Gaming Mode ends. A size that the user sets while compact is reused until the app quits.
-
-The override does not replace the Godot stage. When the Godot sidecar runs, Gaming Mode keeps the Godot renderer.
+When Gaming Mode ends, the character, the voice, and the earlier window bounds come back. A box size that the user sets is reused until the app quits.
+The Godot stage runs in its own process, so Gaming Mode does not hide it.
 
 ## Avatar states
 
@@ -228,11 +230,10 @@ Run the desktop control tests. On Windows, they also read this computer's hardwa
 pnpm -F @proj-airi/stage-tamagotchi exec vitest run src/main/services/airi/desktop-control src/renderer/stores/tools/built-in.test.ts
 ```
 
-Run the gaming avatar tests:
+Run the Gaming Mode window test:
 
 ```sh
 pnpm -F @proj-airi/stage-tamagotchi exec vitest run src/main/windows/main/compact.test.ts
-pnpm -F @proj-airi/stage-tamagotchi exec vitest run --project browser src/renderer/components/settings/gaming-avatar-editor.browser.test.ts
 ```
 
 Set `AIRI_COMPUTER_USE_LIVE=1` to include the bundled CLI/private-daemon test.

@@ -53,11 +53,6 @@ export const useSettingsStageModel = defineStore('settings-stage-model', () => {
 
   const stageViewControlsEnabled = refManualReset<boolean>(false)
   /**
-   * Display model shown instead of the saved selection, for example Shiro's PNG avatar in
-   * Gaming Mode. It is runtime state: the saved selection and the model settings never change.
-   */
-  const stageModelOverrideId = ref<string>()
-  /**
    * While true, the stage shows no model. No scene mounts, so the renderer gives its GPU memory back.
    * Gaming Mode uses it. It is runtime state: the saved selection and the model settings never change.
    */
@@ -132,19 +127,6 @@ export const useSettingsStageModel = defineStore('settings-stage-model', () => {
       return
     }
 
-    const overrideModelId = stageModelOverrideId.value
-    if (overrideModelId) {
-      const overrideModel = await displayModelsStore.getDisplayModel(overrideModelId)
-      if (requestId !== stageModelUpdateSequence)
-        return
-
-      // A deleted override model is not an error. The stage keeps showing the saved selection.
-      if (overrideModel) {
-        showDisplayModel(overrideModel, requestId)
-        return
-      }
-    }
-
     const model = await displayModelsStore.getDisplayModel(selectedModelId)
     if (requestId !== stageModelUpdateSequence)
       return
@@ -189,15 +171,6 @@ export const useSettingsStageModel = defineStore('settings-stage-model', () => {
       stageModelRenderer.value = stageModelHidden.value ? 'disabled' : builtInRenderer
     replaceStageModelUrl(nextUrl)
     stageModelSelectedDisplayModel.value = model
-  }
-
-  /** Shows another display model until the override is cleared with `undefined`. */
-  async function setStageModelOverride(modelId: string | undefined) {
-    if (stageModelOverrideId.value === modelId)
-      return
-
-    stageModelOverrideId.value = modelId
-    await updateStageModel()
   }
 
   function setStageModelRenderer(renderer: StageModelRenderer) {
@@ -246,13 +219,11 @@ export const useSettingsStageModel = defineStore('settings-stage-model', () => {
     stageModelSelectedUrl,
     stageModelSelectedDisplayModel,
     stageViewControlsEnabled,
-    stageModelOverrideId,
     stageModelHidden,
 
     initializeStageModel,
     restoreBuiltInStageModelRenderer,
     setStageModelHidden,
-    setStageModelOverride,
     setStageModelRenderer,
     updateStageModel,
     resetState,

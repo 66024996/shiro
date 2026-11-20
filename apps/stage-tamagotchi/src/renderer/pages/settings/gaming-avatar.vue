@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import GamingAvatarEditor from '../../components/settings/gaming-avatar-editor.vue'
 import GamingModeSection from '../../components/settings/gaming-mode-section.vue'
 </script>
 
 <template>
   <div :class="['flex flex-col gap-4 pb-12']">
     <GamingModeSection />
-    <GamingAvatarEditor />
   </div>
 </template>
 

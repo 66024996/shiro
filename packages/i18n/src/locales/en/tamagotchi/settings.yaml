@@ -27,11 +27,11 @@ pages:
       general: General
       advanced: Advanced
   gaming-avatar:
-    title: Gaming avatar
+    title: Gaming Mode
     menu-description: Make Shiro small while you play, and choose your games
     mode:
       title: Gaming Mode
-      description: Shiro switches to the PNG avatar, moves into the bottom-right corner, and frees the GPU for the game. Voice commands still work.
+      description: Shiro hides the character and replies as text in a small box in the top-left corner. The game gets the memory and the GPU. Voice commands still work.
       toggle: Gaming Mode is on
       auto-detect: Turn on Gaming Mode while a listed game runs
       auto-detect-description: Shiro checks the running apps every 5 seconds. If you turn Gaming Mode off during a game, it stays off until the game closes.
@@ -48,36 +48,6 @@ pages:
       process-name-description: The file name of the running game, for example from Task Manager.
       add: Add game
       save-error: Gaming Mode settings could not be saved.
-    editor:
-      title: PNG avatar
-      description: Add one image for each emotion. Only Normal is required. Transparent PNG images look best.
-      empty-slot: Uses {fallback}
-      choose: Drop an image or click to choose
-      remove-image: Remove image
-      save: Save avatar
-      saving: Saving…
-      saved: The gaming avatar is saved.
-      delete: Delete avatar
-      opaque-warning: 'These images have no transparent background: {emotions}'
-      neutral-required: Add a Normal image before you save.
-      load-error: Failed to load the gaming avatar.
-      save-error: Failed to save the gaming avatar.
-    emotions:
-      neutral: Normal
-      listening: Listening
-      think: Thinking
-      speaking: Speaking
-      happy: Happy
-      angry: Angry
-      concerned: Concerned
-      sad: Sad
-      surprised: Surprised
-      gaming: Gaming
-      error: Error
-      permission: Asking permission
-      awkward: Awkward
-      question: Questioning
-      curious: Curious
   developer-mode:
     title: Developer Mode
     menu-description: Resources, latency, tools, and logs
